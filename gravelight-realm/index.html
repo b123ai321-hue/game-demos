@@ -122,6 +122,11 @@
   #soundTip { position:fixed; left:50%; top:70px; transform:translateX(-50%); z-index:50; background:#1a1020ee; color:#ffcf7a;
     border:2px solid #e8913a; border-radius:10px; padding:10px 16px; font:14px sans-serif; pointer-events:none; }
   #fps { position:absolute; left:6px; bottom:6px; font:11px monospace; opacity:.8; pointer-events:none; }
+
+@media (max-width:900px), (pointer:coarse){
+  #title,.screen,#titleScreen{padding:calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 16px);box-sizing:border-box;max-width:100%}
+  #title h1, #title .logo{font-size:clamp(28px,8vw,42px)}
+}
 </style>
 </head>
 <body>
@@ -217,30 +222,6 @@
   // If the 3D engine can't download (no internet), say so instead of a stuck screen.
   setTimeout(function () { if (!window.G) document.getElementById('titleNote').textContent = 'Loading the 3D engine... (needs internet)'; }, 8000);
 </script>
-<div id="demo-pad"><button type="button" data-k="ArrowLeft">←</button><button type="button" data-k="ArrowUp">↑</button><button type="button" data-k="ArrowDown">↓</button><button type="button" data-k="ArrowRight">→</button><button type="button" data-k="w">W</button><button type="button" data-k="a">A</button><button type="button" data-k="s">S</button><button type="button" data-k="d">D</button><button type="button" data-k=" ">Space</button></div>
-<script>
-(function(){
-  var pad=document.getElementById('demo-pad');
-  if(!pad)return;
-  function fire(type,key,shift){
-    document.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
-    window.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
-  }
-  var held=null;
-  function down(ev){
-    var b=ev.target.closest('button[data-k]'); if(!b)return;
-    ev.preventDefault();
-    held=b; fire('keydown', b.getAttribute('data-k'), b.hasAttribute('data-shift'));
-  }
-  function up(){
-    if(!held)return;
-    fire('keyup', held.getAttribute('data-k'), held.hasAttribute('data-shift'));
-    held=null;
-  }
-  pad.addEventListener('pointerdown',down);
-  addEventListener('pointerup',up);
-  addEventListener('pointercancel',up);
-})();
-</script>
+
 </body>
 </html>

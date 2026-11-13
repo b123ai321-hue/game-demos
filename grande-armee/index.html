@@ -2,13 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>La Grande Armée · Español 1B — A Napoleonic Spanish Campaign</title>
 <style>
 
-#demo-pad{position:fixed;left:8px;right:8px;bottom:8px;z-index:9999;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;pointer-events:none;touch-action:manipulation}
-#demo-pad button{pointer-events:auto;touch-action:manipulation;min-width:44px;min-height:44px;padding:8px 10px;font:16px/1 system-ui,-apple-system,sans-serif;background:#000000bb;color:#fff;border:1px solid #ffffff55;border-radius:8px}
-html,body{touch-action:manipulation}
+
+#demo-pad{position:fixed;right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none;touch-action:manipulation;max-width:min(200px,50vw)}
+#demo-pad .demo-toggle{pointer-events:auto;touch-action:manipulation;min-width:40px;min-height:36px;padding:6px 10px;font:13px/1 system-ui,-apple-system,sans-serif;background:#000000cc;color:#fff;border:1px solid #ffffff66;border-radius:18px}
+#demo-pad .demo-keys{display:none;pointer-events:auto;flex-wrap:wrap;gap:4px;justify-content:flex-end;max-width:180px;background:#000000cc;padding:6px;border-radius:10px}
+#demo-pad.open .demo-keys{display:flex}
+#demo-pad .demo-keys button{pointer-events:auto;touch-action:manipulation;min-width:36px;min-height:36px;padding:4px 6px;font:13px/1 system-ui,-apple-system,sans-serif;background:#222;color:#fff;border:1px solid #ffffff55;border-radius:8px}
+@media (pointer:fine) and (min-width:901px){#demo-pad{display:none!important}}
+
 
 :root{--paper:#f2e7cc;--paper2:#e8d8b2;--ink:#2a1f14;--mut:#6b5a43;--line:#8a6d45;--blue:#1d3a8a;--red:#a1201b;--gold:#a8790f;--grn:#2f6b2f}
 *{box-sizing:border-box}
@@ -181,6 +186,21 @@ kbd{border:1px solid var(--ink);padding:0 5px;font-size:12px;font-family:inherit
 #skInfo{font-size:15px;line-height:1.5;min-height:48px;margin-top:8px}
 .spk{margin:6px 6px 0 0;font-size:14px}
 #qtext details{margin-top:6px;font-size:15px;color:var(--mut)}#qtext summary{cursor:pointer}
+
+@media (max-width:900px), (pointer:coarse){
+  html,body{max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}
+  canvas{max-width:100vw;height:auto;object-fit:contain}
+  canvas[id],canvas#c,canvas#cv,canvas#map,canvas#view{height:100%;max-height:100dvh}
+}
+
+@media (max-width:900px), (pointer:coarse){
+  #help,#topics{bottom:calc(env(safe-area-inset-bottom) + 48px);max-width:min(260px,70vw);font-size:12px}
+  #fpanel,.panel.side{max-height:30vh;bottom:calc(env(safe-area-inset-bottom) + 48px);left:8px;right:8px;width:auto;top:auto}
+  .card{max-height:86dvh;padding:12px;overflow:auto;box-sizing:border-box}
+  #hud{padding:calc(env(safe-area-inset-top) + 4px) 6px 4px;font-size:11px;flex-wrap:wrap}
+  .ov{padding:8px 8px 56px;align-items:flex-start;padding-top:max(8px,env(safe-area-inset-top))}
+  .nations{grid-template-columns:repeat(3,1fr)!important}
+}
 </style>
 </head>
 <body>
@@ -1488,17 +1508,24 @@ loadSave();persist();renderProg();
 newGame();
 if(!save.tutDone)openTut();
 </script>
-<div id="demo-pad"><button type="button" data-k="ArrowLeft">←</button><button type="button" data-k="ArrowUp">↑</button><button type="button" data-k="ArrowDown">↓</button><button type="button" data-k="ArrowRight">→</button><button type="button" data-k="w">W</button><button type="button" data-k="a">A</button><button type="button" data-k="s">S</button><button type="button" data-k="d">D</button><button type="button" data-k=" ">Space</button></div>
+<div id="demo-pad"><div class="demo-keys"><button type="button" data-k="ArrowLeft">←</button><button type="button" data-k="ArrowUp">↑</button><button type="button" data-k="ArrowDown">↓</button><button type="button" data-k="ArrowRight">→</button><button type="button" data-k="w">W</button><button type="button" data-k="a">A</button><button type="button" data-k="s">S</button><button type="button" data-k="d">D</button><button type="button" data-k=" ">Space</button></div><button type="button" class="demo-toggle" aria-label="Toggle keys">Keys</button></div>
 <script>
 (function(){
   var pad=document.getElementById('demo-pad');
   if(!pad)return;
+  var tog=pad.querySelector('.demo-toggle');
+  if(tog) tog.addEventListener('click',function(ev){
+    ev.preventDefault(); ev.stopPropagation();
+    pad.classList.toggle('open');
+    tog.textContent=pad.classList.contains('open')?'Hide':'Keys';
+  });
   function fire(type,key,shift){
     document.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
     window.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
   }
   var held=null;
   function down(ev){
+    if(ev.target.closest('.demo-toggle')) return;
     var b=ev.target.closest('button[data-k]'); if(!b)return;
     ev.preventDefault();
     held=b; fire('keydown', b.getAttribute('data-k'), b.hasAttribute('data-shift'));
@@ -1513,5 +1540,6 @@ if(!save.tutDone)openTut();
   addEventListener('pointercancel',up);
 })();
 </script>
+
 </body>
 </html>

@@ -2,14 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>戦国 Sengoku Ink · Study War</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%23080808%22/%3E%3Ccircle%20cx%3D%2244%22%20cy%3D%2222%22%20r%3D%2214%22%20fill%3D%22%23c0101a%22/%3E%3Cpath%20d%3D%22M6%2054%20L58%2010%22%20stroke%3D%22%23ece6da%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22/%3E%3C/svg%3E">
 <style>
 
-#demo-pad{position:fixed;left:8px;right:8px;bottom:8px;z-index:9999;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;pointer-events:none;touch-action:manipulation}
-#demo-pad button{pointer-events:auto;touch-action:manipulation;min-width:44px;min-height:44px;padding:8px 10px;font:16px/1 system-ui,-apple-system,sans-serif;background:#000000bb;color:#fff;border:1px solid #ffffff55;border-radius:8px}
-html,body{touch-action:manipulation}
+
+#demo-pad{position:fixed;right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none;touch-action:manipulation;max-width:min(200px,50vw)}
+#demo-pad .demo-toggle{pointer-events:auto;touch-action:manipulation;min-width:40px;min-height:36px;padding:6px 10px;font:13px/1 system-ui,-apple-system,sans-serif;background:#000000cc;color:#fff;border:1px solid #ffffff66;border-radius:18px}
+#demo-pad .demo-keys{display:none;pointer-events:auto;flex-wrap:wrap;gap:4px;justify-content:flex-end;max-width:180px;background:#000000cc;padding:6px;border-radius:10px}
+#demo-pad.open .demo-keys{display:flex}
+#demo-pad .demo-keys button{pointer-events:auto;touch-action:manipulation;min-width:36px;min-height:36px;padding:4px 6px;font:13px/1 system-ui,-apple-system,sans-serif;background:#222;color:#fff;border:1px solid #ffffff55;border-radius:8px}
+@media (pointer:fine) and (min-width:901px){#demo-pad{display:none!important}}
+
 
 :root{--ink:#22190f;--paper:#f3e9d2;--paper2:#e9dcbc;--blue:#2f5fb3;--red:#b8352b;--gold:#b8892a;--mut:#6d5c45;--grn:#2f7a3d}
 *{box-sizing:border-box}
@@ -81,6 +86,21 @@ kbd{border:1px solid var(--ink);border-radius:3px;padding:0 4px;font-size:.85em;
 .steps span{flex:1;height:6px;border-radius:3px;background:#d8c9a6}.steps span.on{background:var(--ink)}
 .stat-row{display:flex;justify-content:space-between;border-bottom:1px dashed #b9a67f;padding:2px 0;font-size:14px}
 @media (max-width:640px){.nations{grid-template-columns:repeat(4,1fr)}#fpanel{top:auto;bottom:8px;left:8px;right:8px;width:auto;max-height:34vh;font-size:12.5px}.panel.side{width:auto;left:8px;right:8px;max-width:none}#hud{font-size:12px;gap:4px;padding:4px}#hud .ttl{display:none}.btn{font-size:12px;padding:3px 7px}.choices{grid-template-columns:1fr}.subjects{grid-template-columns:1fr}#qtext{font-size:17px}#help{display:none}.card h1{font-size:24px}}
+
+@media (max-width:900px), (pointer:coarse){
+  html,body{max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}
+  canvas{max-width:100vw;height:auto;object-fit:contain}
+  canvas[id],canvas#c,canvas#cv,canvas#map,canvas#view{height:100%;max-height:100dvh}
+}
+
+@media (max-width:900px), (pointer:coarse){
+  #help,#topics{bottom:calc(env(safe-area-inset-bottom) + 48px);max-width:min(260px,70vw);font-size:12px}
+  #fpanel,.panel.side{max-height:30vh;bottom:calc(env(safe-area-inset-bottom) + 48px);left:8px;right:8px;width:auto;top:auto}
+  .card{max-height:86dvh;padding:12px;overflow:auto;box-sizing:border-box}
+  #hud{padding:calc(env(safe-area-inset-top) + 4px) 6px 4px;font-size:11px;flex-wrap:wrap}
+  .ov{padding:8px 8px 56px;align-items:flex-start;padding-top:max(8px,env(safe-area-inset-top))}
+  .nations{grid-template-columns:repeat(3,1fr)!important}
+}
 </style>
 <style>/* ===== Sengoku Ink · Vagabond cut: scratched sumi black, huge white dry-brush slashes, ink splatter, one thin red sun ===== */
 :root{--ink:#ece6da;--bg:#060606;--paper:#ece6da;--paper2:#c9c1b2;--blue:#8aa0b4;--red:#c0101a;--gold:#c9a45a;--mut:#948c80;--grn:#ece6da;--line:rgba(236,230,218,.42);
@@ -2044,17 +2064,24 @@ window.DOTS={get PL(){return PL;},build,recruit,research,resolveDip,openPM,TECH,
 provs=PROV_DEF.map(([name,lon,lat,owner,type,ter,reg],id)=>{const [x,y]=P(lon,lat);return{id,name,x,y,owner,orig:owner,type,ter,reg,cont:{},from:{}};});
 buildRaster();buildStatic();buildOverlay();resize();if(save.muted){$("bMute").innerHTML='<i class="ik">静</i>';$("bMute").classList.add("on");}if(save.music===false)$("bMusic").classList.add("on");showStart();requestAnimationFrame(frame);
 </script>
-<div id="demo-pad"><button type="button" data-k="ArrowLeft">←</button><button type="button" data-k="ArrowUp">↑</button><button type="button" data-k="ArrowDown">↓</button><button type="button" data-k="ArrowRight">→</button><button type="button" data-k="w">W</button><button type="button" data-k="a">A</button><button type="button" data-k="s">S</button><button type="button" data-k="d">D</button><button type="button" data-k=" ">Space</button></div>
+<div id="demo-pad"><div class="demo-keys"><button type="button" data-k="ArrowLeft">←</button><button type="button" data-k="ArrowUp">↑</button><button type="button" data-k="ArrowDown">↓</button><button type="button" data-k="ArrowRight">→</button><button type="button" data-k="w">W</button><button type="button" data-k="a">A</button><button type="button" data-k="s">S</button><button type="button" data-k="d">D</button><button type="button" data-k=" ">Space</button></div><button type="button" class="demo-toggle" aria-label="Toggle keys">Keys</button></div>
 <script>
 (function(){
   var pad=document.getElementById('demo-pad');
   if(!pad)return;
+  var tog=pad.querySelector('.demo-toggle');
+  if(tog) tog.addEventListener('click',function(ev){
+    ev.preventDefault(); ev.stopPropagation();
+    pad.classList.toggle('open');
+    tog.textContent=pad.classList.contains('open')?'Hide':'Keys';
+  });
   function fire(type,key,shift){
     document.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
     window.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
   }
   var held=null;
   function down(ev){
+    if(ev.target.closest('.demo-toggle')) return;
     var b=ev.target.closest('button[data-k]'); if(!b)return;
     ev.preventDefault();
     held=b; fire('keydown', b.getAttribute('data-k'), b.hasAttribute('data-shift'));
@@ -2069,5 +2096,6 @@ buildRaster();buildStatic();buildOverlay();resize();if(save.muted){$("bMute").in
   addEventListener('pointercancel',up);
 })();
 </script>
+
 </body>
 </html>

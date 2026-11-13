@@ -2,13 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
 <title>SHEER: a silent climb</title>
 <style>
 
-#demo-pad{position:fixed;left:8px;right:8px;bottom:8px;z-index:9999;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;pointer-events:none;touch-action:manipulation}
-#demo-pad button{pointer-events:auto;touch-action:manipulation;min-width:44px;min-height:44px;padding:8px 10px;font:16px/1 system-ui,-apple-system,sans-serif;background:#000000bb;color:#fff;border:1px solid #ffffff55;border-radius:8px}
-html,body{touch-action:manipulation}
+
+#demo-pad{position:fixed;right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none;touch-action:manipulation;max-width:min(200px,50vw)}
+#demo-pad .demo-toggle{pointer-events:auto;touch-action:manipulation;min-width:40px;min-height:36px;padding:6px 10px;font:13px/1 system-ui,-apple-system,sans-serif;background:#000000cc;color:#fff;border:1px solid #ffffff66;border-radius:18px}
+#demo-pad .demo-keys{display:none;pointer-events:auto;flex-wrap:wrap;gap:4px;justify-content:flex-end;max-width:180px;background:#000000cc;padding:6px;border-radius:10px}
+#demo-pad.open .demo-keys{display:flex}
+#demo-pad .demo-keys button{pointer-events:auto;touch-action:manipulation;min-width:36px;min-height:36px;padding:4px 6px;font:13px/1 system-ui,-apple-system,sans-serif;background:#222;color:#fff;border:1px solid #ffffff55;border-radius:8px}
+@media (pointer:fine) and (min-width:901px){#demo-pad{display:none!important}}
+
 
 html,body{margin:0;height:100%;background:#15161a;overflow:hidden;font-family:Georgia,"Times New Roman",serif;color:#111;user-select:none;-webkit-user-select:none}
 canvas{display:block;position:fixed;inset:0;width:100vw;height:100vh;cursor:crosshair;touch-action:none}
@@ -34,6 +39,20 @@ kbd{font-family:inherit;border:1px solid #111;border-bottom-width:2px;padding:0 
 .good{color:#1d4d22;margin-top:10px}.bad{color:#7a1913;margin-top:10px}
 #endov{background:none;align-items:flex-end;padding-bottom:7vh;box-sizing:border-box;pointer-events:none}
 #endov .row{pointer-events:auto}
+
+@media (max-width:900px), (pointer:coarse){
+  html,body{max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}
+  canvas{max-width:100vw;height:auto;object-fit:contain}
+  canvas[id],canvas#c,canvas#cv,canvas#map,canvas#view{height:100%;max-height:100dvh}
+}
+
+@media (max-width:900px), (pointer:coarse){
+  .panel{width:calc(100% - 24px);max-width:none;max-height:78dvh;padding:14px;overflow:auto}
+  #menu{padding-bottom:max(6vh, env(safe-area-inset-bottom) + 52px);align-items:center}
+  h2{font-size:16px}
+  .btn{font-size:15px;padding:8px 12px}
+  .small{font-size:12px}
+}
 </style>
 </head>
 <body>
@@ -1578,22 +1597,29 @@ window.SHEER.story={start:(ch,stage,x)=>storyStart(ch,stage||0,x||0),advance:cut
  state:()=>({state:G.state,ch:ST&&ST.ch,darkClimb:!!(ST&&ST.darkOn),flags:(sLoad().flags||{}),stage:ST&&ST.stage,cutPage:CUT&&CUT.pg,trav:TV&&G.state==='trav'?{x:+TV.x.toFixed(2),len:TV.len,zone:TV.zoneK,stam:+TV.stam.toFixed(1),warm:+TV.warm.toFixed(1),bal:+TV.bal.toFixed(2),dead:!!TV.dead,alt:+(TV.alt||0).toFixed(2),dario:TV.comp&&TV.def.race?+TV.comp.x.toFixed(1):null,helped:!!TV.helped,ev:evInfo(),log:TV.log}:null,evLog:G.evLog||[]}),
  setWarm:v=>{if(TV)TV.warm=v;},wall:()=>{const c={};for(const h of holds)c[h.t]=(c[h.t]||0)+1;return {H:H_SUM,style:!!G.wallStyle,counts:c,timed:ST&&ST.timed};},setX:x=>{if(TV){TV.x=x;TV.camX=x+2;TV.camY=gH(x)+1;}},save:()=>sLoad()};
 </script>
-<div id="demo-pad"><button type="button" data-k="ArrowLeft">←</button><button type="button" data-k="ArrowRight">→</button><button type="button" data-k="q">Q</button><button type="button" data-k="e">E</button><button type="button" data-k="s">Brace</button><button type="button" data-k="Shift" data-shift>Run</button><button type="button" data-k=" ">Jump</button></div>
+<div id="demo-pad"><div class="demo-keys"><button type="button" data-k="ArrowLeft">←</button><button type="button" data-k="ArrowRight">→</button><button type="button" data-k="q">Q</button><button type="button" data-k="e">E</button><button type="button" data-k="s">Brace</button><button type="button" data-k="Shift" data-shift>Run</button><button type="button" data-k=" ">Jump</button></div><button type="button" class="demo-toggle" aria-label="Toggle keys">Keys</button></div>
 <script>
 (function(){
   var pad=document.getElementById('demo-pad');
   if(!pad)return;
+  var tog=pad.querySelector('.demo-toggle');
+  if(tog) tog.addEventListener('click',function(ev){
+    ev.preventDefault(); ev.stopPropagation();
+    pad.classList.toggle('open');
+    tog.textContent=pad.classList.contains('open')?'Hide':'Keys';
+  });
   function fire(type,key,shift){
     document.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
     window.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
   }
   var held=null;
   function down(ev){
+    if(ev.target.closest('.demo-toggle')) return;
     var b=ev.target.closest('button[data-k]'); if(!b)return;
     ev.preventDefault();
     held=b; fire('keydown', b.getAttribute('data-k'), b.hasAttribute('data-shift'));
   }
-  function up(ev){
+  function up(){
     if(!held)return;
     fire('keyup', held.getAttribute('data-k'), held.hasAttribute('data-shift'));
     held=null;
@@ -1603,5 +1629,6 @@ window.SHEER.story={start:(ch,stage,x)=>storyStart(ch,stage||0,x||0),advance:cut
   addEventListener('pointercancel',up);
 })();
 </script>
+
 </body>
 </html>

@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><title>Sengoku War · 戦国合戦</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover">
 <style>
 
-#demo-pad{position:fixed;left:8px;right:8px;bottom:8px;z-index:9999;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;pointer-events:none;touch-action:manipulation}
-#demo-pad button{pointer-events:auto;touch-action:manipulation;min-width:44px;min-height:44px;padding:8px 10px;font:16px/1 system-ui,-apple-system,sans-serif;background:#000000bb;color:#fff;border:1px solid #ffffff55;border-radius:8px}
-html,body{touch-action:manipulation}
+
+#demo-pad{position:fixed;right:max(8px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none;touch-action:manipulation;max-width:min(200px,50vw)}
+#demo-pad .demo-toggle{pointer-events:auto;touch-action:manipulation;min-width:40px;min-height:36px;padding:6px 10px;font:13px/1 system-ui,-apple-system,sans-serif;background:#000000cc;color:#fff;border:1px solid #ffffff66;border-radius:18px}
+#demo-pad .demo-keys{display:none;pointer-events:auto;flex-wrap:wrap;gap:4px;justify-content:flex-end;max-width:180px;background:#000000cc;padding:6px;border-radius:10px}
+#demo-pad.open .demo-keys{display:flex}
+#demo-pad .demo-keys button{pointer-events:auto;touch-action:manipulation;min-width:36px;min-height:36px;padding:4px 6px;font:13px/1 system-ui,-apple-system,sans-serif;background:#222;color:#fff;border:1px solid #ffffff55;border-radius:8px}
+@media (pointer:fine) and (min-width:901px){#demo-pad{display:none!important}}
+
 
 :root{--ink:#16111a;--paper:#efe2c4;--red:#b8322a;--ind:#26305e;--gold:#e8b04a;--amber:#f0a35a;--mag:#b0507e;--mut:#cdb99a;
 --kf:"Yu Mincho","Hiragino Mincho ProN","Noto Serif CJK JP","Noto Serif JP","MS Mincho",serif;}
@@ -42,6 +47,24 @@ h2{margin:6px 0 14px;font-weight:normal;color:var(--amber);letter-spacing:3px}
 #recp{position:fixed;right:240px;bottom:10px;z-index:6;display:none;max-width:540px}
 #recL{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px}.rec{text-align:left;font-size:12.5px}.rec small{color:var(--mut)}
 .kj{font-family:var(--kf)}#scg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0 6px}.scB{text-align:left}.scB small{color:var(--mut)}
+
+@media (max-width:900px), (pointer:coarse){
+  html,body{max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}
+  canvas{max-width:100vw;height:auto;object-fit:contain}
+  canvas[id],canvas#c,canvas#cv,canvas#map,canvas#view{height:100%;max-height:100dvh}
+}
+
+@media (max-width:900px), (pointer:coarse){
+  #top{flex-wrap:wrap;gap:4px;font-size:11px;top:calc(env(safe-area-inset-top) + 4px);left:6px;right:6px}
+  #mini{width:120px;height:80px;right:6px;bottom:calc(env(safe-area-inset-bottom) + 44px)}
+  #selp{max-width:90vw;bottom:calc(env(safe-area-inset-bottom) + 44px)}
+  #terr{bottom:calc(env(safe-area-inset-bottom) + 4px);right:130px;font-size:11px}
+  #recp{right:8px;left:8px;max-width:none;bottom:calc(env(safe-area-inset-bottom) + 130px)}
+  h1{font-size:32px;letter-spacing:2px}
+  .card{padding:14px 16px;max-height:86dvh;overflow:auto;width:min(92vw,640px);box-sizing:border-box}
+  .how{font-size:13px;max-height:50dvh;overflow:auto}
+  #scg{grid-template-columns:1fr 1fr;gap:6px}
+}
 </style></head><body>
 <canvas id="cv"></canvas>
 <div id="top" style="display:none">
@@ -1133,22 +1156,29 @@ requestAnimationFrame(frame);
 window.SW={get G(){return G;},get units(){return units;},get sets(){return SETS;},step(sec){let n=Math.round(sec/0.05);while(n-->0&&G&&!G.over)step(0.05);},orderMove,orderAttack,orderPath,setSel,get sel(){return sel;},cam,toW,T,tAt,recruit,SCEN,
  get SC(){return SC;},get busy(){return genBusy;},pick:pickScen,mkUnit,step,get FX(){return FX;}};
 </script>
-<div id="demo-pad"><button type="button" data-k="ArrowLeft">←</button><button type="button" data-k="ArrowUp">↑</button><button type="button" data-k="ArrowDown">↓</button><button type="button" data-k="ArrowRight">→</button><button type="button" data-k="h">Hold</button><button type="button" data-k="r">Recruit</button></div>
+<div id="demo-pad"><div class="demo-keys"><button type="button" data-k="ArrowLeft">←</button><button type="button" data-k="ArrowUp">↑</button><button type="button" data-k="ArrowDown">↓</button><button type="button" data-k="ArrowRight">→</button><button type="button" data-k="h">Hold</button><button type="button" data-k="r">Recruit</button></div><button type="button" class="demo-toggle" aria-label="Toggle keys">Keys</button></div>
 <script>
 (function(){
   var pad=document.getElementById('demo-pad');
   if(!pad)return;
+  var tog=pad.querySelector('.demo-toggle');
+  if(tog) tog.addEventListener('click',function(ev){
+    ev.preventDefault(); ev.stopPropagation();
+    pad.classList.toggle('open');
+    tog.textContent=pad.classList.contains('open')?'Hide':'Keys';
+  });
   function fire(type,key,shift){
     document.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
     window.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
   }
   var held=null;
   function down(ev){
+    if(ev.target.closest('.demo-toggle')) return;
     var b=ev.target.closest('button[data-k]'); if(!b)return;
     ev.preventDefault();
     held=b; fire('keydown', b.getAttribute('data-k'), b.hasAttribute('data-shift'));
   }
-  function up(ev){
+  function up(){
     if(!held)return;
     fire('keyup', held.getAttribute('data-k'), held.hasAttribute('data-shift'));
     held=null;
@@ -1158,4 +1188,5 @@ window.SW={get G(){return G;},get units(){return units;},get sets(){return SETS;
   addEventListener('pointercancel',up);
 })();
 </script>
+
 </body></html>
