@@ -73,6 +73,11 @@
   #title h1, #title .logo{font-size:clamp(28px,8vw,42px)}
 }
 </style>
+
+<style>
+body.menu #pad, body.menu #hud, body.menu #hudBtns, body.menu #hint,
+body.menu #prompt, body.menu #quest, body.menu #bossBar { display:none !important; }
+</style>
 </head>
 <body>
 <div id="game">
@@ -136,5 +141,20 @@
 <script src="assets/music.js?v=3" onerror="this.remove()"></script>
 <script src="game.js?v=3"></script>
 
+
+<script>
+(function(){
+  function sync(){
+    var on=!!document.querySelector('.screen.show');
+    document.body.classList.toggle('menu', on);
+    document.body.classList.toggle('playing', !on);
+  }
+  sync();
+  var mo=new MutationObserver(sync);
+  document.querySelectorAll('.screen').forEach(function(el){
+    mo.observe(el,{attributes:true,attributeFilter:['class']});
+  });
+})();
+</script>
 </body>
 </html>
