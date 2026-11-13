@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>POLY//BREACH — A Napoleonic Pre-Calc Campaign</title>
+<style>
+
+#demo-pad{position:fixed;left:8px;right:8px;bottom:8px;z-index:9999;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;pointer-events:none;touch-action:manipulation}
+#demo-pad button{pointer-events:auto;touch-action:manipulation;min-width:44px;min-height:44px;padding:8px 10px;font:16px/1 system-ui,-apple-system,sans-serif;background:#000000bb;color:#fff;border:1px solid #ffffff55;border-radius:8px}
+html,body{touch-action:manipulation}
+
+:root{--paper:#f2e7cc;--paper2:#e8d8b2;--ink:#2a1f14;--mut:#6b5a43;--line:#8a6d45;--blue:#1d3a8a;--red:#a1201b;--gold:#a8790f;--grn:#2f6b2f}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;color:var(--ink);font-family:Georgia,"Palatino Linotype",Palatino,"Book Antiqua",serif}
+body{background:radial-gradient(ellipse at center,#e3d1a6 0%,#cdb383 70%,#a88d5e 100%) fixed}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 20px;border-bottom:3px double var(--line);background:rgba(242,231,204,.8);flex-wrap:wrap}
+h1{margin:0;font-size:26px;letter-spacing:2px;font-variant:small-caps}
+h1 span{color:var(--red)}
+.sub{color:var(--mut);font-size:13px;font-style:italic}
+.hdr{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.glory{font-size:16px;font-variant:small-caps;color:var(--gold);font-weight:bold}
+.glory.sp{color:var(--blue)}
+main{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;padding:16px;max-width:1640px;margin:0 auto}
+@media (max-width:1100px){main{grid-template-columns:1fr}}
+.panel{background:linear-gradient(180deg,var(--paper),var(--paper2));border:3px double var(--line);padding:12px 14px;box-shadow:0 4px 14px rgba(60,40,10,.35);min-width:0}
+.ptitle{font-size:14px;letter-spacing:2px;font-variant:small-caps;color:var(--mut);margin:0 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.stat{border:1px solid var(--line);padding:5px 10px;background:rgba(255,255,255,.25)}
+.stat small{font-variant:small-caps;letter-spacing:1px;font-size:13px}
+.stat b{display:block;font-size:17px}
+.stat.you small,.stat.you b{color:var(--blue)}.stat.ai small,.stat.ai b{color:var(--red)}
+.bar{height:7px;background:#d6c49c;margin-top:4px;position:relative;border:1px solid var(--line)}
+.bar i{position:absolute;top:0;bottom:0;left:0}
+.bar em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);left:25%}
+#mapwrap{overflow:auto;max-width:100%}
+#grid{display:grid;grid-template-columns:repeat(16,minmax(40px,1fr));gap:3px;user-select:none;border:2px solid var(--line);padding:3px;background:#bfa676;min-width:700px}
+.tile{aspect-ratio:1;position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;border:2px solid transparent;background:#e6d6ad}
+.tile.ridge{background:radial-gradient(circle at 50% 75%,#b0925a,#c9ad74 55%,#e0cb98)}
+.tile.forest{background:repeating-radial-gradient(circle at 30% 30%,#8ea56c 0 5px,#a3b77f 5px 10px)}
+.tile.river{background:repeating-linear-gradient(170deg,#7fa6bd 0 5px,#93b8cc 5px 10px);cursor:not-allowed}
+.tile.ford{background:repeating-linear-gradient(170deg,#a9c3cf 0 5px,#c9d6cf 5px 10px)}
+.tile.bridge{background:repeating-linear-gradient(90deg,#8a6236 0 5px,#a47a48 5px 10px)}
+.tile.town{background:#dcc8a0}
+.tile.hq{background:repeating-linear-gradient(45deg,#e6d6ad 0 7px,#d8c494 7px 14px)}
+.tile.redoubt{background:repeating-linear-gradient(135deg,#c2a56f 0 5px,#ad8f58 5px 10px)}
+.ico{width:1em;height:1em;fill:currentColor;display:inline-block;vertical-align:-.15em}
+.tile .ic{position:absolute;top:2px;left:3px;font-size:17px;line-height:1;color:#3d2e18;opacity:.85}
+.tile.river .ic,.tile.ford .ic{color:#1d4f73}.tile.bridge .ic{color:#3a2412}.tile.forest .ic{color:#2f5a22}.tile.town .ic{color:#6b3a1e}.tile.hq .ic{color:#7a5a12}.tile.redoubt .ic{color:#4a2c10}
+.unit .uico{width:62%;height:52%;fill:#fff;flex:none}
+.unit .abadge{position:absolute;top:-7px;left:-7px;width:16px;height:16px;border-radius:50%;background:#f0d27a;border:1px solid #1a1208;display:flex;align-items:center;justify-content:center;color:#2a1f14;font-size:11px;z-index:2}
+.tile.river .ic,.tile.ford .ic{color:#123a55}
+.tile.town.tyou{box-shadow:inset 0 -5px 0 var(--blue)}.tile.town.tai{box-shadow:inset 0 -5px 0 var(--red)}
+.unit{width:80%;height:66%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid #1a1208;color:#fff;font-weight:bold;box-shadow:2px 2px 0 rgba(0,0,0,.35);position:relative}
+.unit.you{background:var(--blue)}.unit.ai{background:var(--red)}
+.unit .ab{font-size:10px;letter-spacing:.5px}
+.unit .st{font-size:16px;line-height:1;text-shadow:0 1px 1px rgba(0,0,0,.6)}
+.unit .fm{position:absolute;top:-7px;right:-7px;background:var(--gold);color:#fff;font-size:10px;width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid #1a1208}
+.unit .co{position:absolute;bottom:-7px;left:-6px;background:#f2e7cc;color:var(--ink);font-size:9px;padding:0 3px;border:1px solid #1a1208}
+.unit.gen{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold),2px 2px 0 rgba(0,0,0,.35)}
+.unit.ally{border-color:#e0c060}
+.unit.done{opacity:.5}
+.tile.cur{outline:3px solid var(--ink);outline-offset:-3px}
+.tile.sel{border-color:var(--gold);box-shadow:inset 0 0 0 3px var(--gold)}
+.tile.mate{border:2px dotted var(--gold)}
+.tile.mv::after{content:"";position:absolute;width:22%;height:22%;border-radius:50%;background:var(--grn);opacity:.8}
+.tile.mv{border:2px dashed var(--grn)}
+.tile.atk{border:3px solid var(--red);box-shadow:inset 0 0 12px rgba(161,32,27,.6)}
+.tile.no{border:2px dashed #7d7466}
+.tile.dep{border:2px dashed var(--blue)}
+.tile.flash{animation:flash .7s}
+.tile.boom{animation:boom .8s}.tile.shake{animation:shake .5s}
+@keyframes boom{0%{box-shadow:inset 0 0 0 40px rgba(255,215,90,.9)}100%{box-shadow:inset 0 0 0 0 rgba(255,215,90,0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+#fb.bad{animation:shake .45s}#fb.ok{animation:pop .35s}
+@keyframes pop{0%{transform:scale(.96)}100%{transform:scale(1)}}
+#over h2,#gcOver h2{color:#fff!important;padding:10px 16px;text-align:center;animation:drop .6s ease-out;clip-path:polygon(0 0,100% 0,96% 50%,100% 100%,0 100%,4% 50%)}
+#over h2.win,#gcOver h2.win{background:var(--blue)}#over h2.lose,#gcOver h2.lose{background:var(--red)}
+@keyframes drop{0%{transform:translateY(-40px) scale(1.2);opacity:0}100%{transform:none;opacity:1}}
+.tut li{margin:4px 0}
+#camp .panel{max-width:900px}
+.cmap{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(220px,1fr);gap:14px}
+@media (max-width:760px){.cmap{grid-template-columns:1fr}}
+.cmap svg{width:100%;background:#9fbccc;border:2px solid var(--line)}
+.cmap polygon{stroke:#4a3a22;stroke-width:2;cursor:pointer;transition:filter .15s}
+.cmap polygon:hover,.cmap polygon.pick{filter:brightness(1.15);stroke:var(--gold);stroke-width:4}
+.cmap polygon.held{fill:#6f86c4}.cmap polygon.foe{fill:#d9b38c}.cmap polygon.home{fill:#8fa3d8}
+.cmap text{font:bold 12px Georgia,serif;fill:#2a1f14;pointer-events:none}
+#campInfo{font-size:15px;line-height:1.55}
+#campInfo h3{margin:0 0 4px;font-variant:small-caps;color:var(--red)}
+.prog{display:grid;grid-template-columns:150px 1fr 70px;gap:4px 8px;align-items:center;font-size:13px}
+.prog .pb{height:9px;background:#d6c49c;border:1px solid var(--line);position:relative}
+.prog .pb i{position:absolute;left:0;top:0;bottom:0}
+.prog .weak{color:var(--red);font-weight:bold}
+@keyframes flash{0%{filter:brightness(1.8)}100%{filter:none}}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:14px;margin-top:8px}
+.legend b{font-size:16px}
+#log{font-size:13px;color:var(--mut);max-height:120px;overflow:auto;margin-top:8px;border-top:1px solid var(--line);padding-top:6px;font-style:italic}
+#log div{margin:2px 0}#log .g{color:var(--grn)}#log .r{color:var(--red)}#log .c{color:var(--blue)}
+#cmd{border:1px solid var(--line);padding:8px 12px;margin-bottom:10px;font-size:15px;line-height:1.5;background:rgba(255,255,255,.3)}
+#cmd .ph{font-variant:small-caps;letter-spacing:2px;color:var(--red);font-weight:bold}
+.qmeta{display:flex;justify-content:space-between;gap:8px;font-size:12px;letter-spacing:1px;color:var(--mut);margin-bottom:6px;font-variant:small-caps}
+.qmeta .topic{color:var(--blue);font-weight:bold}
+#qtext{font-size:19px;line-height:1.5;margin:4px 0 12px}
+.choices{display:grid;gap:8px}
+.choice{all:unset;box-sizing:border-box;display:flex;gap:12px;align-items:center;padding:9px 12px;border:1px solid var(--line);background:#f8f0dc;cursor:pointer;font-size:16px;line-height:1.4}
+.choice:hover,.choice:focus-visible{border-color:var(--blue);box-shadow:0 0 0 2px rgba(29,58,138,.3)}
+.choice .k{display:inline-block;min-width:26px;text-align:center;border:1px solid var(--ink);font-size:12px;padding:2px 0}
+.choice.right{border-color:var(--grn);background:#dcebd0}.choice.wrong{border-color:var(--red);background:#f1d2cc}
+.choice[disabled]{cursor:default}
+input#num{width:100%;padding:10px;background:#f8f0dc;color:var(--ink);border:1px solid var(--blue);font:inherit;font-size:18px}
+.btn{all:unset;cursor:pointer;display:inline-block;padding:6px 12px;border:2px solid var(--ink);background:#f8f0dc;font-variant:small-caps;letter-spacing:1px;font-size:14px;margin:6px 6px 0 0}
+.btn:hover,.btn:focus-visible{background:var(--ink);color:var(--paper)}
+.btn.on{background:var(--gold);color:#fff;border-color:var(--gold)}
+.btn[disabled]{opacity:.45;cursor:not-allowed;background:#f8f0dc;color:var(--ink)}
+#fb{margin-top:10px;padding:10px 12px;border-left:4px solid var(--mut);display:none;font-size:15px;line-height:1.55}
+#fb.ok{display:block;border-color:var(--grn);background:rgba(47,107,47,.1)}
+#fb.bad{display:block;border-color:var(--red);background:rgba(161,32,27,.1)}
+#fb h3{margin:0 0 4px;font-size:15px;font-variant:small-caps;letter-spacing:1px}
+#fb.ok h3{color:var(--grn)}#fb.bad h3{color:var(--red)}
+.how{font-size:14px;line-height:1.55;margin:0;padding-left:20px}
+kbd{border:1px solid var(--ink);padding:0 5px;font-size:12px;font-family:inherit;background:#f8f0dc}
+.keys{font-size:12px;color:var(--mut);margin-top:8px;line-height:1.9}
+.ov{position:fixed;inset:0;background:rgba(40,28,12,.7);display:none;align-items:center;justify-content:center;z-index:9;padding:20px}
+#armory{z-index:10}#tut{z-index:11}#skills{z-index:12}#gcOver{z-index:13}
+.ov .panel{max-width:760px;width:100%;max-height:92vh;overflow:auto}
+.ov h2{font-size:30px;letter-spacing:2px;margin:4px 0 8px;font-variant:small-caps}
+.idle{font-size:15px;line-height:1.7}
+.miss{border:1px solid var(--line);padding:8px 10px;margin:8px 0;font-size:14px;line-height:1.5;background:rgba(255,255,255,.3)}
+.item{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;border:1px solid var(--line);padding:8px 10px;margin:6px 0;background:rgba(255,255,255,.3)}
+.item .nm{font-weight:bold}.item .ds{font-size:13px;color:var(--mut)}
+.item.locked{opacity:.85}.item .st2{font-size:12px;font-variant:small-caps}
+.turn{font-size:14px;letter-spacing:1px;padding:4px 10px;border:2px solid;font-variant:small-caps}
+.turn.you{color:var(--blue)}.turn.ai{color:var(--red)}
+#gc{padding:10px}
+#gc .panel{max-width:1890px;width:100%;max-height:98vh;padding:10px 12px}
+.gcwrap{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:12px}
+@media (max-width:1000px){.gcwrap{grid-template-columns:1fr}}
+#gcGrid{display:grid;grid-template-columns:repeat(30,minmax(26px,1fr));gap:1px;background:#5d7f94;border:2px solid var(--line);user-select:none;min-width:820px;position:relative}
+.gt{aspect-ratio:1;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px}
+.gt.sea{background:#8fb3c9}.gt.plain{background:#e6d6ad}.gt.forest{background:#a3b77f}.gt.mtn{background:#b59a6a}.gt.pass{background:#d0b884}
+.gt.river{background:repeating-linear-gradient(170deg,#6f9bb6 0 4px,#93b8cc 4px 8px)}.gt.bridge{background:repeating-linear-gradient(90deg,#8a6236 0 4px,#a47a48 4px 8px)}
+.gt .gi{position:absolute;top:1px;left:2px;font-size:15px;color:#3d2e18;line-height:1}
+.gt.mtn .gi,.gt.pass .gi{color:#4a3018}.gt.forest .gi{color:#2f5a22}.gt.river .gi{color:#1d4f73;left:50%;top:50%;transform:translate(-50%,-50%);font-size:18px;opacity:.7}
+.gt.mtn>.gi,.gt.forest>.gi{left:50%;top:50%;transform:translate(-50%,-55%);font-size:22px;opacity:.75}
+.gt.bridge .gi{color:#f2e7cc}
+.gt .gn{position:absolute;bottom:0;left:-3px;right:-3px;text-align:center;font-size:9.5px;line-height:1.05;color:#2a1f14;background:rgba(242,231,204,.85);overflow:hidden;white-space:nowrap;z-index:2;pointer-events:none}
+.gt .gn.cap{font-weight:bold}
+.gt.ow-you{box-shadow:inset 0 0 0 3px var(--blue)}.gt.ow-ai{box-shadow:inset 0 0 0 3px var(--red)}
+.gt .gs{width:92%;height:52%;border-radius:40%;display:flex;align-items:center;justify-content:center;gap:1px;color:#fff;font-weight:bold;font-size:13px;border:2px solid #1a1208;z-index:1;margin-bottom:6px;position:relative}
+.gt .gs .ico{font-size:15px;fill:#fff}
+.gt .gs.you{background:var(--blue)}.gt .gs.ai{background:var(--red)}.gt .gs.garrison{border-radius:2px}
+.gt .gs.fleet{border-radius:3px 3px 45% 45%;margin-bottom:0}
+.gt .gs.big{box-shadow:0 0 0 2px var(--gold)}
+.gt .cg{position:absolute;right:-6px;top:-8px;background:#f2e7cc;color:var(--blue);border:1px solid #1a1208;font-size:9.5px;padding:0 2px;line-height:1.2}
+.gt .cg .ico{font-size:9px;fill:var(--blue)}
+.gt .df{position:absolute;top:0;right:1px;font-size:14px;line-height:1;z-index:2;display:flex;align-items:center}
+.gt .df .ico{font-size:15px}.gt .df b{position:absolute;left:0;right:0;text-align:center;top:2px;font-size:9px;color:#fff}
+.gt .df.you{color:var(--blue)}.gt .df.ai{color:var(--red)}
+.gt.blk::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(20,20,20,.28) 0 3px,transparent 3px 8px);pointer-events:none;z-index:1}
+.gt.rch::after{content:"";position:absolute;width:30%;height:30%;border-radius:50%;background:var(--grn);opacity:.75}
+.gt.emb{outline:3px dashed var(--gold);outline-offset:-3px}
+.gt.emb::after{content:"";position:absolute;width:30%;height:30%;border-radius:50%;background:var(--gold);opacity:.85}
+.gt.tgt{outline:3px solid var(--red);outline-offset:-3px}.gt.cur{outline:3px solid var(--ink);outline-offset:-3px}.gt.gsel{outline:3px solid var(--gold);outline-offset:-3px}
+.sealbl{position:absolute;pointer-events:none;font:italic 13px Georgia,serif;color:#1c4866;opacity:.85;transform:translate(-50%,-50%);white-space:nowrap;letter-spacing:2px;text-shadow:0 0 3px #b9d2e0}
+#gcInfo{font-size:14px;line-height:1.5}#gcLog{font-size:12px;color:var(--mut);font-style:italic;max-height:130px;overflow:auto;border-top:1px solid var(--line);margin-top:6px;padding-top:4px}
+#gcLog .g,.rep .g{color:var(--grn)}#gcLog .r,.rep .r{color:var(--red)}#gcLog .c,.rep .c{color:var(--blue)}
+.rep{border:1px solid var(--line);background:rgba(255,255,255,.35);padding:4px 8px;font-size:12.5px;margin:6px 0;line-height:1.4}
+.rep b{font-variant:small-caps;letter-spacing:1px}
+#gcBtns .btn{padding:4px 8px;font-size:13px;margin:4px 4px 0 0}
+#gcQ #qtext{font-size:17px}
+#gcQ .qmeta{flex-direction:column;gap:2px;margin-top:8px;border-top:2px solid var(--red);padding-top:6px}
+#gcQ .qmeta span:last-child{color:var(--red);font-weight:bold}
+#gcRules{font-size:12.5px;margin-top:6px;line-height:1.45}
+#gcRules summary{cursor:pointer;font-variant:small-caps;letter-spacing:1px;color:var(--mut)}
+#skills .panel{max-width:1060px}
+.skwrap{overflow:auto}
+#skSvg{width:100%;min-width:720px;background:rgba(255,255,255,.22);border:2px solid var(--line);display:block}
+#skSvg .nd{cursor:pointer}
+#skSvg text{font-family:Georgia,serif;fill:#2a1f14}
+#skInfo{font-size:15px;line-height:1.5;min-height:48px;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Poly<span>//</span>Breach</h1><div class="sub">A Napoleonic Pre-Calc Campaign · Honors Pre-Calc Unit 2: Polynomials, Quadratics, Rational Functions</div></div>
+  <div class="hdr"><span class="glory">✦ Glory <span id="gl">0</span></span><span class="glory sp" title="Skill points: 1 per 5 correct answers, 1 per victory or capital">✪ Skill <span id="spv">0</span></span><button class="btn" id="bArm">Armory [A]</button><button class="btn" id="bSk">Skills [K]</button><button class="btn" id="bCamp">Campaign [M]</button><button class="btn" id="bHelp" title="Show the tutorial">? Help [H]</button><span id="turn" class="turn you">Your turn</span></div>
+</header>
+<main>
+  <section class="panel">
+    <p class="ptitle">The Field of Battle <span id="bName"></span> <span id="turnNo"></span></p>
+    <div class="stats">
+      <div class="stat you"><small>Grande Armée · field strength</small><b id="sYou"></b><div class="bar"><i id="bYou" style="background:var(--blue)"></i><em title="breaking point"></em></div></div>
+      <div class="stat ai"><small>The Coalition · field strength</small><b id="sAi"></b><div class="bar"><i id="bAi" style="background:var(--red)"></i><em title="breaking point"></em></div></div>
+    </div>
+    <div id="mapwrap"><div id="grid" role="grid" aria-label="Battlefield"></div></div>
+    <div class="legend" id="tLegend"></div>
+    <div class="legend" style="font-size:13px;color:var(--mut)"><span>Badges: corps (I, II, III, R) bottom-left · formation (L line, S square, C column, K skirmish) top-right · big number = strength</span></div>
+    <div id="log"></div>
+  </section>
+  <section class="panel">
+    <p class="ptitle">Orders</p>
+    <div id="cmd"></div>
+    <div id="qarea"></div>
+    <p class="ptitle" style="margin-top:12px">How to Play</p>
+    <ol class="how">
+      <li><b>Reinforce:</b> 3 troops/turn +1 per town you hold. Click your units (+1) or an empty square by your HQ or a town you hold (new Infantry, costs 2).</li>
+      <li><b>Maneuver:</b> click a unit, then <b style="color:var(--grn)">green</b> to march or <b style="color:var(--red)">red</b> to attack. Each unit acts once per turn.</li>
+      <li><b>Corps [G]:</b> with Corps orders on, the whole corps (I, II, III, Reserve) marches together, and corps-mates touching the target add half their strength to an attack.</li>
+      <li><b>Every attack is a question.</b> You can attack only if attack beats defense. Right = victory (★★★ = biggest bonus + Glory). Wrong = lose troops, see the solution, turn ends.</li>
+      <li><b>Flanking:</b> 2+ of your units touching the enemy = +2 (cavalry +4). Infantry +1 def; cavalry moves 2; artillery fires from 2 squares, weak in melee. <b>Redoubts</b> (earthworks) give +3 defense.</li>
+      <li><b>Win:</b> take the enemy General's HQ or break their army (under 25%). Nightfall at turn 30: the stronger army wins.</li>
+      <li><b>Armory [A]:</b> spend Glory on formations (switch with <kbd>F</kbd>) and elite allies (equip up to 3). <b>Skills [K]:</b> spend ✪ skill points on three skill trees. <b>Campaign [M]:</b> conquer a wide map of Europe with armies, fleets and forts.</li>
+    </ol>
+    <div class="keys"><kbd>←↑→↓</kbd> cursor · <kbd>Enter</kbd>/<kbd>Space</kbd> select / act · <kbd>Esc</kbd> deselect · <kbd>D</kbd> deploy all · <kbd>F</kbd> formation · <kbd>G</kbd> corps orders · <kbd>E</kbd> end turn · <kbd>A</kbd> armory · <kbd>K</kbd> skills · <kbd>W</kbd> drill · <kbd>M</kbd> campaign · <kbd>H</kbd> help · <kbd>1-4</kbd>/<kbd>A-D</kbd> answer · <kbd>N</kbd> new battle<br>
+    Questions in bank: <span id="qcount"></span> · Answered: <span id="acount">0</span> · Accuracy: <span id="accu">—</span> · Streak: <span id="streak">0</span></div>
+    <p class="ptitle" style="margin-top:12px">Progress by Topic <small>(all games, saved)</small></p>
+    <div id="prog" class="prog"></div>
+    <button class="btn" id="bDrill">Drill weak topic: off [W]</button>
+  </section>
+</main>
+<div id="over" class="ov"><div class="panel"><h2 id="oTitle"></h2><p id="oText" class="idle"></p><div id="oMiss"></div><button class="btn" id="again">New Battle [N]</button><button class="btn" id="oArm">Armory [A]</button><button class="btn" id="oCamp">Campaign Map [M]</button></div></div>
+<div id="camp" class="ov"><div class="panel"><h2>Campaign Map of Europe</h2><p class="idle" id="campTop"></p>
+<div class="cmap"><svg viewBox="0 0 500 340" id="campSvg" role="img" aria-label="Map of Europe"></svg><div id="campInfo"></div></div>
+<button class="btn" id="campGo">March! [Enter]</button><button class="btn" id="campQuick">Quick battle (open field) [Q]</button><button class="btn" id="campClose">Close [Esc]</button>
+<p class="keys">Click a region or press <kbd>1</kbd>–<kbd>8</kbd>. Conquering a region unlocks its regional ally in the Armory.</p></div></div>
+<div id="gc" class="ov"><div class="panel"><h2 style="margin:0 0 4px;font-size:26px">The Grand Campaign · Europe</h2>
+<div class="gcwrap"><div style="overflow:auto"><div id="gcGrid" role="grid" aria-label="Map of Europe"></div>
+<div class="legend" style="font-size:13px;margin-top:4px" id="gLegend"></div></div>
+<div><div id="gcInfo"></div><div id="gcBtns"></div><div id="gcQ"></div>
+<details id="gcRules" open><summary>Rules of the campaign</summary><ol class="how" style="font-size:12.5px;margin-top:4px">
+<li><b>March:</b> select an army, click green squares (forest 2, mountains 3, rivers only at bridges). Step on cities, ports, passes and bridges to take them.</li>
+<li><b>Fight:</b> red = attack. Choose a tactical battle [T] or a one-question quick battle [Q]. Forts and defended points need a siege: 1 correct answer per level.</li>
+<li><b>Reserve troops:</b> [R] reinforce an army on your point · [P] raise an army at Paris · [B] build a defense on the cursor point (Redoubt → Fort → Fortress, +3 defense per level; enemies must stop next to it; port defenses fire on enemy fleets).</li>
+<li><b>Navy:</b> [S] ships of the line or [F] frigates at your port. Fleets sail on sea squares; red = naval battle (a question). A fleet next to an enemy port <b>blockades</b> it: no troops from it, and the Coalition levy shrinks. Click your fleet beside an army to board; select the fleet and click a gold square to land.</li>
+<li>Take <b>5 capitals</b> to win. Lose if Paris falls. Beware Britain's Royal Navy.</li></ol></details>
+<div id="gcLog"></div><button class="btn" id="gcClose">Close map [Esc]</button></div></div></div></div>
+<div id="armory" class="ov"><div class="panel"><h2>The Armory</h2><p class="idle" id="armTop"></p><div id="armList"></div><button class="btn" id="armClose">Close [Esc]</button><button class="btn" id="armNew">New Battle with this army [N]</button></div></div>
+<div id="tut" class="ov"><div class="panel"><h2>Orders from the Emperor</h2><ol class="how tut">
+<li><b>Reinforce:</b> click your blue units to add troops (or press <kbd>D</kbd> to put them all on the cursor's unit).</li>
+<li><b>March:</b> click a unit, then a <b style="color:var(--grn)">green</b> square. Cross the river only at bridges ═ and fords ≋. Redoubts (earthworks) give +3 defense.</li>
+<li><b>Attack:</b> click a <b style="color:var(--red)">red-bordered</b> enemy. Every attack is a Pre-Calc question; a wrong answer ends your turn.</li>
+<li><b>Team up:</b> press <kbd>G</kbd> for Corps orders, so neighbors add strength. Two units touching an enemy = flank bonus.</li>
+<li><b>Study smart:</b> check "Progress by Topic" and turn on <b>Drill weak topic</b> (<kbd>W</kbd>) to practice what you miss most. Spend Glory in the Armory (<kbd>A</kbd>).</li>
+<li><b>Skills (<kbd>K</kbd>):</b> every 5 correct answers, each victory and each capital earns a ✪ skill point. Spend them on Infantry, Cavalry &amp; Artillery, or Navy &amp; Logistics.</li>
+<li><b>Campaign (<kbd>M</kbd>):</b> armies march across Europe; fleets sail, carry armies, blockade ports and fight naval battles (every naval attack is a question too). Build defenses with <kbd>B</kbd>. Take 5 capitals.</li>
+<li>Take the enemy General (★ HQ, far right), break their army, or be stronger at nightfall. Press <kbd>H</kbd> to see this again.</li>
+</ol><button class="btn" id="tutOk">Got it, don't show again [Enter]</button></div></div>
+<div id="skills" class="ov"><div class="panel"><h2>Skill Trees</h2><p class="idle" id="skTop" style="margin:0 0 6px"></p>
+<div class="skwrap"><svg id="skSvg" viewBox="0 0 960 560" role="img" aria-label="Skill trees"></svg></div>
+<div id="skInfo"></div><button class="btn" id="skBuy">Learn [Enter]</button><button class="btn" id="skTrade">Trade 20 Glory for 1 ✪</button><button class="btn" id="skClose">Close [Esc]</button>
+<p class="keys">Click a node or use <kbd>←↑→↓</kbd>. Each tree is learned top to bottom. Skills are saved on this computer and apply to battles and the campaign.</p></div></div>
+<div id="gcOver" class="ov"><div class="panel"><h2 id="gcoTitle"></h2><p id="gcoText" class="idle"></p><button class="btn" id="gcoNew">New campaign [N]</button><button class="btn" id="gcoMap">Look at the map [Esc]</button></div></div>
+
+<script>
+"use strict";
+// ---------- QUESTION BANK ----------
+// c[0] is always the correct choice; choices get shuffled at display time.
+// n = numeric answer (typed). d = difficulty tier 1..3
+const Q = [
+// ===== END BEHAVIOR / DEGREE =====
+{t:"End Behavior",d:1,q:"End behavior of f(x) = 2x⁴ − 3x + 1?",c:["Up on both ends: x→±∞, f(x)→+∞","Down on both ends","Down on left, up on right","Up on left, down on right"],e:"Leading term 2x⁴: even degree → both ends go the same way; positive leading coefficient → both go UP."},
+{t:"End Behavior",d:1,q:"End behavior of f(x) = −x³ + 5x² − 2?",c:["Up on left, down on right","Down on left, up on right","Up on both ends","Down on both ends"],e:"Leading term −x³: odd degree → ends go opposite ways. Negative coefficient flips the usual x³ shape, so as x→−∞, f→+∞ and as x→+∞, f→−∞."},
+{t:"End Behavior",d:2,q:"End behavior of f(x) = −2x⁴ + x³ + 7?",c:["Down on both ends","Up on both ends","Up on left, down on right","Down on left, up on right"],e:"Only the leading term −2x⁴ matters: even degree (same direction both sides), negative coefficient → both ends DOWN."},
+{t:"End Behavior",d:1,q:"Degree of f(x) = (x − 1)²(x + 3)³?",c:["5","6","3","2"],e:"Add the exponents of the factors: 2 + 3 = 5."},
+{t:"End Behavior",d:1,q:"Leading coefficient and degree of (2x − 1)(3x² + 4)?",c:["LC 6, degree 3","LC 5, degree 3","LC 6, degree 2","LC 2, degree 3"],e:"Multiply the leading terms: (2x)(3x²) = 6x³ → leading coefficient 6, degree 3."},
+{t:"End Behavior",d:3,q:"A polynomial rises to the LEFT and falls to the RIGHT. What must be true?",c:["Odd degree, negative leading coefficient","Odd degree, positive leading coefficient","Even degree, negative leading coefficient","Even degree, positive leading coefficient"],e:"Ends go opposite directions → odd degree. A positive odd polynomial goes down-left/up-right; this one is flipped, so the leading coefficient is negative."},
+// ===== ZEROS / MULTIPLICITY / TURNING POINTS =====
+{t:"Zeros & Multiplicity",d:1,q:"Maximum number of turning points of a degree-5 polynomial?",n:4,e:"A degree-n polynomial has at most n − 1 turning points: 5 − 1 = 4."},
+{t:"Zeros & Multiplicity",d:1,q:"For f(x) = (x − 2)²(x + 1), what happens at x = 2?",c:["Graph touches the x-axis and turns around","Graph crosses the x-axis","Graph has a vertical asymptote","x = 2 is not a zero"],e:"(x − 2) has multiplicity 2 (even) → the graph touches/bounces at x = 2. Odd multiplicity → crosses."},
+{t:"Zeros & Multiplicity",d:1,q:"Zeros of f(x) = x(x − 4)(x + 7)?",c:["0, 4, −7","0, −4, 7","4, −7 only","1, 4, 7"],e:"Set each factor = 0: x = 0, x − 4 = 0 → x = 4, x + 7 = 0 → x = −7."},
+{t:"Zeros & Multiplicity",d:1,q:"y-intercept of f(x) = (x + 2)(x − 3)(x − 1)?",n:6,e:"Plug in x = 0: (2)(−3)(−1) = 6. So the y-intercept is (0, 6)."},
+{t:"Zeros & Multiplicity",d:2,q:"f(x) = x³(x + 2)²(x − 5). Behavior at x = 0?",c:["Crosses, flattening out (S-shape)","Touches and bounces","Crosses straight through like a line","Not a zero"],e:"x³ → multiplicity 3 (odd, > 1): the graph crosses but flattens out like y = x³ near the origin."},
+{t:"Zeros & Multiplicity",d:2,q:"A polynomial graph has 3 turning points. Minimum possible degree?",n:4,e:"Turning points ≤ degree − 1, so degree ≥ 3 + 1 = 4."},
+{t:"Zeros & Multiplicity",d:2,q:"f(x) = (x − 1)(x + 2)². Sign of f(x) for −2 < x < 1?",c:["Negative","Positive","Zero","Changes sign at x = 0"],e:"Test x = 0: (0 − 1)(0 + 2)² = (−1)(4) = −4 → negative. No zeros between −2 and 1, so it stays negative."},
+{t:"Zeros & Multiplicity",d:2,q:"Which polynomial (leading coefficient 1) has zeros 1, −2, and 3?",c:["(x − 1)(x + 2)(x − 3)","(x + 1)(x − 2)(x + 3)","(x − 1)(x − 2)(x − 3)","(x + 1)(x + 2)(x − 3)"],e:"Zero r ↔ factor (x − r). r = −2 gives (x − (−2)) = (x + 2)."},
+{t:"Zeros & Multiplicity",d:3,q:"Degree 3, leading coefficient 1, TOUCHES the x-axis at x = −1 and CROSSES at x = 4. Which f(x)?",c:["(x + 1)²(x − 4)","(x − 1)²(x + 4)","(x + 1)(x − 4)²","(x + 1)(x − 4)"],e:"Touch → even multiplicity → (x + 1)². Cross → odd → (x − 4). Degree 2 + 1 = 3 ✓."},
+{t:"Zeros & Multiplicity",d:3,q:"Zeros of x³ + x² − x − 1 with multiplicity?",c:["−1 (mult. 2), 1 (mult. 1)","1 (mult. 2), −1 (mult. 1)","−1, 1, 0","±1 and ±i"],e:"Group: x²(x + 1) − 1(x + 1) = (x + 1)(x² − 1) = (x + 1)(x + 1)(x − 1) = (x + 1)²(x − 1)."},
+// ===== LONG DIVISION =====
+{t:"Long Division",d:2,q:"(x² + 5x + 7) ÷ (x + 2) = ?",c:["x + 3, remainder 1","x + 3, remainder 0","x + 7, remainder −7","x + 2, remainder 3"],e:"x² ÷ x = x; x(x + 2) = x² + 2x; subtract → 3x + 7. 3x ÷ x = 3; 3(x + 2) = 3x + 6; subtract → 1. Check: (x + 2)(x + 3) + 1 = x² + 5x + 7 ✓"},
+{t:"Long Division",d:2,q:"(6x² + x − 2) ÷ (2x − 1) = ?",c:["3x + 2","3x − 2","3x + 2, remainder 1","2x + 3"],e:"6x² ÷ 2x = 3x; 3x(2x − 1) = 6x² − 3x; subtract → 4x − 2. 4x ÷ 2x = 2; 2(2x − 1) = 4x − 2; remainder 0. Check: (2x − 1)(3x + 2) = 6x² + x − 2 ✓"},
+{t:"Long Division",d:2,q:"(x³ − 1) ÷ (x − 1) = ?",c:["x² + x + 1","x² − x + 1","x² + 1","x² + x − 1"],e:"Write x³ + 0x² + 0x − 1. Divide: x², then x, then 1, remainder 0. Check: (x − 1)(x² + x + 1) = x³ − 1 ✓ (difference of cubes)."},
+{t:"Long Division",d:3,q:"(2x³ + 3x² − x + 5) ÷ (x² + 1) = ?",c:["2x + 3, remainder −3x + 2","2x + 3, remainder 2","2x + 3, remainder −x + 5","2x − 3, remainder x + 8"],e:"2x³ ÷ x² = 2x; 2x(x² + 1) = 2x³ + 2x; subtract → 3x² − 3x + 5. 3x² ÷ x² = 3; 3(x² + 1) = 3x² + 3; subtract → −3x + 2. Degree of −3x + 2 < 2, so stop."},
+{t:"Long Division",d:3,q:"(x³ + 4x² − 3x + 5) ÷ (x² − 1) = ?",c:["x + 4, remainder −2x + 9","x + 4, remainder 9","x + 4, remainder −3x + 5","x + 3, remainder x + 8"],e:"x³ ÷ x² = x; x(x² − 1) = x³ − x; subtract → 4x² − 2x + 5. 4x² ÷ x² = 4; 4(x² − 1) = 4x² − 4; subtract → −2x + 9."},
+{t:"Long Division",d:1,q:"When dividing x³ + 2x − 5 by a binomial, what must you do first?",c:["Insert a 0x² placeholder: x³ + 0x² + 2x − 5","Nothing, just start dividing","Factor out an x","Drop the −5"],e:"Every power must be present (in descending order) or the columns line up wrong. Missing x² term → write 0x²."},
+// ===== SYNTHETIC DIVISION =====
+{t:"Synthetic Division",d:1,q:"To divide by (x + 4) using synthetic division, what number goes in the box?",c:["−4","4","1/4","x"],e:"Divisor x − k → use k. x + 4 = x − (−4), so k = −4."},
+{t:"Synthetic Division",d:2,q:"(x³ + 2x² − 5x − 6) ÷ (x − 2) using synthetic division:",c:["x² + 4x + 3, remainder 0","x² + 4x + 3, remainder 2","x² + 4x − 13, remainder 20","x² − 3, remainder 0"],e:"k = 2, coefficients 1 | 2 | −5 | −6. Bring down 1 → 1·2 = 2, 2 + 2 = 4 → 4·2 = 8, −5 + 8 = 3 → 3·2 = 6, −6 + 6 = 0. Quotient x² + 4x + 3, R 0."},
+{t:"Synthetic Division",d:2,q:"(2x³ − 3x² + 4) ÷ (x + 1) using synthetic division:",c:["2x² − 5x + 5, remainder −1","2x² − x − 1, remainder 3","2x² − 5x − 5, remainder 9","2x² + 5x + 5, remainder 9"],e:"k = −1, coefficients 2 | −3 | 0 | 4 (don't forget the 0x!). Bring 2 → −2, −3 − 2 = −5 → 5, 0 + 5 = 5 → −5, 4 − 5 = −1. Check f(−1) = −2 − 3 + 4 = −1 ✓"},
+{t:"Synthetic Division",d:3,q:"(x⁴ − 81) ÷ (x − 3) = ?",c:["x³ + 3x² + 9x + 27","x³ − 3x² + 9x − 27","x³ + 27","x³ + 3x² + 9x + 27, remainder 1"],e:"Coefficients 1 | 0 | 0 | 0 | −81 with k = 3: 1 → 3 → 9 → 27 → −81 + 81 = 0. Quotient x³ + 3x² + 9x + 27, remainder 0."},
+{t:"Synthetic Division",d:2,q:"Synthetic division bottom row reads: 1  −4  3 | 0. Divisor was degree 1. What is the quotient?",c:["x² − 4x + 3 (remainder 0)","x³ − 4x² + 3x","x² − 4x + 3, remainder 3","x − 4, remainder 3"],e:"The last number is the remainder (0). The others are quotient coefficients, one degree LOWER than the original: x² − 4x + 3."},
+// ===== REMAINDER & FACTOR THEOREMS =====
+{t:"Remainder & Factor Thm",d:1,q:"Remainder when f(x) = x³ − 2x + 5 is divided by (x − 1)?",n:4,e:"Remainder Theorem: remainder = f(1) = 1 − 2 + 5 = 4."},
+{t:"Remainder & Factor Thm",d:1,q:"Is (x − 3) a factor of x² − 5x + 6?",c:["Yes, because f(3) = 0","No, because f(3) = 6","Yes, because f(−3) = 0","No, because f(−3) = 30"],e:"Factor Theorem: (x − k) is a factor ⇔ f(k) = 0. f(3) = 9 − 15 + 6 = 0 ✓ (indeed x² − 5x + 6 = (x − 2)(x − 3))."},
+{t:"Remainder & Factor Thm",d:2,q:"Remainder when x⁴ − 3x² + 2x − 1 is divided by (x + 2)?",n:-1,e:"f(−2) = (−2)⁴ − 3(−2)² + 2(−2) − 1 = 16 − 12 − 4 − 1 = −1."},
+{t:"Remainder & Factor Thm",d:2,q:"Find k so that (x − 2) is a factor of x³ + kx − 6.",n:-1,e:"Need f(2) = 0: 8 + 2k − 6 = 0 → 2k = −2 → k = −1."},
+{t:"Remainder & Factor Thm",d:3,q:"Find k so that x³ + kx² − 4 divided by (x + 2) has remainder 0.",n:3,e:"f(−2) = −8 + 4k − 4 = 0 → 4k = 12 → k = 3."},
+{t:"Remainder & Factor Thm",d:3,q:"f(x) = 2x³ − x² + 4x − 2. Is (x − 1/2) a factor?",c:["Yes, f(1/2) = 0","No, f(1/2) = 1","No, f(1/2) = −2","Yes, f(−1/2) = 0"],e:"f(1/2) = 2(1/8) − 1/4 + 2 − 2 = 1/4 − 1/4 + 0 = 0 ✓. So it's a factor: f(x) = (2x − 1)(x² + 2)."},
+{t:"Remainder & Factor Thm",d:2,q:"f(5) = 0 for a polynomial f. Which statement MUST be true?",c:["(x − 5) is a factor of f(x)","(x + 5) is a factor of f(x)","f(−5) = 0 too","The remainder of f(x) ÷ (x − 5) is 5"],e:"Factor Theorem: f(k) = 0 ⇔ (x − k) is a factor. Here k = 5 → (x − 5)."},
+// ===== RATIONAL ROOT THEOREM =====
+{t:"Rational Root Thm",d:1,q:"Which is NOT a possible rational root of 2x³ + x − 3?",c:["2","3/2","1/2","−3"],e:"p/q: p | 3 → ±1, ±3; q | 2 → ±1, ±2. Candidates: ±1, ±3, ±1/2, ±3/2. 2 is not on the list."},
+{t:"Rational Root Thm",d:2,q:"Possible rational roots of x³ − 2x² − 5x + 6?",c:["±1, ±2, ±3, ±6","±1, ±2, ±3","±1, ±6","±1, ±1/2, ±3, ±3/2"],e:"Leading coefficient 1 → candidates are just factors of 6: ±1, ±2, ±3, ±6. (Actual roots: 1, 3, −2.)"},
+{t:"Rational Root Thm",d:3,q:"How many DISTINCT possible rational roots does 2x³ − 5x + 3 have?",n:8,e:"p | 3: 1, 3. q | 2: 1, 2. p/q: 1, 3, 1/2, 3/2 → with ± that's 8."},
+{t:"Rational Root Thm",d:2,q:"Rational Root Theorem: possible roots are…",c:["± (factors of constant) / (factors of leading coefficient)","± (factors of leading coefficient) / (factors of constant)","Only factors of the leading coefficient","Any fraction between −1 and 1"],e:"p/q where p divides the constant term and q divides the leading coefficient. (Mr. Fleshman: \"factors of the constant over the leading coefficient\")."},
+{t:"Rational Root Thm",d:2,q:"Which IS an actual root of x³ − 2x² − 5x + 6?",c:["−2","2","−1","6"],e:"Test candidates: f(−2) = −8 − 8 + 10 + 6 = 0 ✓. (f(2) = −4, f(−1) = 8, f(6) = 120.) The roots are 1, 3, −2."},
+// ===== FINDING ALL ROOTS =====
+{t:"Finding All Roots",d:1,q:"Real coefficients, and 2 + 3i is a zero. Which must also be a zero?",c:["2 − 3i","−2 + 3i","−2 − 3i","3 + 2i"],e:"Complex Conjugate Theorem: non-real zeros of real-coefficient polynomials come in pairs a ± bi."},
+{t:"Finding All Roots",d:1,q:"How many complex zeros (counting multiplicity) does a degree-6 polynomial have?",n:6,e:"Fundamental Theorem of Algebra: degree n → exactly n complex zeros, counting multiplicity."},
+{t:"Finding All Roots",d:2,q:"Zeros of x² − 4x + 13?",c:["2 ± 3i","−2 ± 3i","2 ± 6i","4 ± 3i"],e:"x = [4 ± √(16 − 52)]/2 = [4 ± √(−36)]/2 = (4 ± 6i)/2 = 2 ± 3i."},
+{t:"Finding All Roots",d:2,q:"f(x) = x³ − 7x + 6 has zero x = 1. Find the other zeros.",c:["2 and −3","−2 and 3","1 and 6","3 and −1"],e:"Synthetic with 1: 1 | 0 | −7 | 6 → 1, 1, −6, R 0 → x² + x − 6 = (x + 3)(x − 2). Zeros 2 and −3."},
+{t:"Finding All Roots",d:2,q:"Degree 3, real coefficients, zeros include 3 and 1 − i. Third zero?",c:["1 + i","−1 + i","−3","−1 − i"],e:"Conjugate of 1 − i is 1 + i, and it must be a zero too. 3 zeros total for degree 3."},
+{t:"Finding All Roots",d:2,q:"A degree-5 polynomial with real coefficients must have at least how many REAL zeros?",n:1,e:"Non-real zeros come in conjugate pairs (even count). 5 is odd, so at least one zero is real."},
+{t:"Finding All Roots",d:3,q:"All zeros of x³ − 3x² + 4x − 12?",c:["3, 2i, −2i","3, 2, −2","−3, 2i, −2i","3, 4i, −4i"],e:"Group: x²(x − 3) + 4(x − 3) = (x − 3)(x² + 4). x² = −4 → x = ±2i. Zeros: 3, ±2i."},
+{t:"Finding All Roots",d:3,q:"All zeros of 2x³ − 3x² − 11x + 6?",c:["3, 1/2, −2","−3, 1/2, 2","3, −1/2, 2","1, 3, −2"],e:"Test 3: 54 − 27 − 33 + 6 = 0 ✓. Synthetic with 3: 2 | −3 | −11 | 6 → 2, 3, −2, R 0 → 2x² + 3x − 2 = (2x − 1)(x + 2). Zeros 3, 1/2, −2."},
+{t:"Finding All Roots",d:3,q:"All zeros of x⁴ − 5x² − 36?",c:["±3, ±2i","±3, ±2","±6, ±i","±2, ±3i"],e:"Quadratic in x²: (x² − 9)(x² + 4) = 0. x² = 9 → ±3. x² = −4 → ±2i."},
+{t:"Finding All Roots",d:3,q:"Lowest-degree polynomial, real coefficients, LC 1, zeros 2 and 3i:",c:["x³ − 2x² + 9x − 18","x³ − 2x² − 9x + 18","x² − (2 + 3i)x + 6i","x³ + 2x² + 9x + 18"],e:"Need 3i AND −3i: (x − 3i)(x + 3i) = x² + 9. Then (x − 2)(x² + 9) = x³ − 2x² + 9x − 18."},
+{t:"Finding All Roots",d:3,q:"Given 1 + 2i is a zero of x³ − x² + 3x + 5, find all zeros.",c:["1 + 2i, 1 − 2i, −1","1 + 2i, 1 − 2i, 1","1 + 2i, −1 − 2i, 5","1 ± 2i, 5"],e:"Conjugates → factor (x − (1 + 2i))(x − (1 − 2i)) = x² − 2x + 5. Divide: (x³ − x² + 3x + 5) ÷ (x² − 2x + 5) = x + 1 → zero −1."},
+{t:"Finding All Roots",d:3,q:"Given x = 2 is a zero, factor x³ − 6x² + 11x − 6 completely.",c:["(x − 1)(x − 2)(x − 3)","(x + 1)(x − 2)(x + 3)","(x − 2)(x² − 4x − 3)","(x − 2)²(x − 3)"],e:"Synthetic with 2: 1 | −6 | 11 | −6 → 1, −4, 3, R 0 → x² − 4x + 3 = (x − 1)(x − 3)."},
+{t:"Finding All Roots",d:3,q:"All zeros of 2x³ − x² + 4x − 2?",c:["1/2, i√2, −i√2","1/2, √2, −√2","−1/2, ±i√2","2, ±i√2"],e:"Group: x²(2x − 1) + 2(2x − 1) = (2x − 1)(x² + 2). 2x − 1 = 0 → 1/2. x² = −2 → x = ±i√2."},
+{t:"Finding All Roots",d:1,q:"After synthetic division, you're left with a quadratic that won't factor. Next step?",c:["Use the quadratic formula","Stop — there are no more zeros","Divide by x again","Use the Rational Root Theorem on the remainder"],e:"Exactly the teacher's process: Rational Root Theorem → synthetic division down to a quadratic → quadratic formula (which also finds complex zeros)."},
+// ===== QUADRATICS =====
+{t:"Quadratics",d:1,q:"Vertex of f(x) = (x − 3)² + 2?",c:["(3, 2)","(−3, 2)","(3, −2)","(2, 3)"],e:"Vertex form a(x − h)² + k has vertex (h, k). Here x − 3 → h = 3 (sign flips!), k = 2 → (3, 2)."},
+{t:"Quadratics",d:1,q:"Axis of symmetry of f(x) = 2(x + 4)² − 1?",c:["x = −4","x = 4","x = −1","y = −1"],e:"Vertex form: (x + 4) = (x − (−4)) → h = −4. The axis of symmetry is the vertical line through the vertex: x = −4."},
+{t:"Quadratics",d:1,q:"y-intercept of f(x) = x² − 6x + 8? (type the y-value)",n:8,e:"Set x = 0: f(0) = 0 − 0 + 8 = 8. For ax² + bx + c the y-intercept is always c → (0, 8)."},
+{t:"Quadratics",d:1,q:"End behavior of f(x) = −3x² + x (arrow notation)?",c:["As x → −∞, f(x) → −∞; as x → +∞, f(x) → −∞","As x → −∞, f(x) → +∞; as x → +∞, f(x) → +∞","As x → −∞, f(x) → +∞; as x → +∞, f(x) → −∞","As x → −∞, f(x) → −∞; as x → +∞, f(x) → +∞"],e:"Degree 2 (even) → both ends match. Leading coefficient −3 < 0 → parabola opens down → both ends → −∞."},
+{t:"Quadratics",d:2,q:"Complete the square: x² + 6x + 1 = ?",c:["(x + 3)² − 8","(x + 3)² + 1","(x + 6)² − 35","(x + 3)² − 10"],e:"Half of 6 is 3, 3² = 9. x² + 6x + 9 − 9 + 1 = (x + 3)² − 8."},
+{t:"Quadratics",d:2,q:"Vertex of f(x) = x² − 8x + 10?",c:["(4, −6)","(−4, −6)","(4, 10)","(8, 10)"],e:"Complete the square: half of −8 is −4, (−4)² = 16. x² − 8x + 16 − 16 + 10 = (x − 4)² − 6 → vertex (4, −6)."},
+{t:"Quadratics",d:2,q:"x-intercepts of f(x) = x² − 2x − 8?",c:["x = 4 and x = −2","x = −4 and x = 2","x = 8 and x = −1","x = 2 and x = −8"],e:"Factor: two numbers multiplying to −8 and adding to −2 → −4 and 2. (x − 4)(x + 2) = 0 → x = 4, x = −2."},
+{t:"Quadratics",d:2,q:"Vertex of f(x) = x² + 10x + 21?",c:["(−5, −4)","(5, −4)","(−5, 21)","(−10, 21)"],e:"Half of 10 is 5, 5² = 25. x² + 10x + 25 − 25 + 21 = (x + 5)² − 4 → vertex (−5, −4)."},
+{t:"Quadratics",d:2,q:"Axis of symmetry of f(x) = 2x² − 12x + 7?  x = ?",n:3,e:"x = −b/(2a) = −(−12)/(2·2) = 12/4 = 3. (Or complete the square: 2(x − 3)² − 11.)"},
+{t:"Quadratics",d:2,q:"How many x-intercepts does f(x) = (x − 1)² + 3 have?",n:0,e:"Vertex (1, 3) is ABOVE the x-axis and a = 1 > 0 means it opens UP, so it never reaches the x-axis. (x − 1)² = −3 has no real solutions → 0 x-intercepts (roots 1 ± i√3 are complex)."},
+{t:"Quadratics",d:3,q:"Vertex form of f(x) = 2x² + 8x − 3?",c:["2(x + 2)² − 11","2(x + 2)² − 7","2(x + 4)² − 3","(x + 2)² − 7"],e:"Factor 2 out of the x-terms: 2(x² + 4x) − 3. Half of 4 is 2, 2² = 4: 2(x² + 4x + 4) − 2·4 − 3 = 2(x + 2)² − 11. (You added 2·4 = 8 inside, so subtract 8.)"},
+{t:"Quadratics",d:3,q:"f(x) = −x² + 6x − 5. Vertex form and vertex?",c:["−(x − 3)² + 4, vertex (3, 4)","−(x − 3)² − 14, vertex (3, −14)","−(x + 3)² + 4, vertex (−3, 4)","(x − 3)² − 4, vertex (3, −4)"],e:"Factor −1: −(x² − 6x) − 5. Add 9 inside: −(x² − 6x + 9) + 9 − 5 = −(x − 3)² + 4. Vertex (3, 4), opens down. (Roots: x = 1, 5.)"},
+{t:"Quadratics",d:3,q:"Roots of x² + 4x + 7 = 0?",c:["−2 ± i√3","−2 ± √3","2 ± i√3","−4 ± i√3"],e:"Complete the square: (x + 2)² + 3 = 0 → (x + 2)² = −3 → x + 2 = ±i√3 → x = −2 ± i√3. (Quadratic formula: [−4 ± √(16 − 28)]/2 = [−4 ± 2i√3]/2.)"},
+{t:"Quadratics",d:3,q:"Solve x² − 6x + 4 = 0 by completing the square.",c:["x = 3 ± √5","x = −3 ± √5","x = 3 ± √13","x = 3 ± i√5"],e:"x² − 6x = −4. Add 9 to both sides: (x − 3)² = 5 → x − 3 = ±√5 → x = 3 ± √5."},
+// ===== RATIONAL FUNCTIONS =====
+{t:"Rational Functions",d:1,q:"Vertical asymptote of f(x) = (x + 2)/(x − 4)?",c:["x = 4","x = −2","y = 1","x = −4"],e:"Set the denominator = 0: x − 4 = 0 → x = 4 (and the numerator isn't 0 there), so x = 4 is a vertical asymptote."},
+{t:"Rational Functions",d:1,q:"Horizontal asymptote of f(x) = (3x + 1)/(x − 2)?",c:["y = 3","y = 0","y = −1/2","None"],e:"Degrees equal (1 and 1) → HA is y = (leading coeff top)/(leading coeff bottom) = 3/1 = 3."},
+{t:"Rational Functions",d:1,q:"Horizontal asymptote of f(x) = 5/(x² + 1)?",c:["y = 0","y = 5","y = 1","None"],e:"Degree of top (0) < degree of bottom (2) → HA is y = 0."},
+{t:"Rational Functions",d:1,q:"Why does f(x) = 1/(x − 5) have a vertical asymptote at x = 5?",c:["The denominator is 0 there and the numerator isn't","The numerator is 0 there","The degrees of top and bottom are equal","f(5) = 1/5"],e:"Vertical asymptotes come from x-values that make the denominator 0 (after canceling common factors). At x = 5: denominator 0, numerator 1 ≠ 0."},
+{t:"Rational Functions",d:2,q:"x-intercept of f(x) = (2x − 6)/(x + 1)?  x = ?",n:3,e:"x-intercepts: set the NUMERATOR = 0 → 2x − 6 = 0 → x = 3 (denominator is 4 ≠ 0 there) → (3, 0)."},
+{t:"Rational Functions",d:2,q:"y-intercept of f(x) = (x − 6)/(x + 3)?  y = ?",n:-2,e:"Plug in x = 0: (0 − 6)/(0 + 3) = −6/3 = −2 → (0, −2)."},
+{t:"Rational Functions",d:2,q:"Vertical asymptote(s) of f(x) = 3/(x² − 9)?",c:["x = 3 and x = −3","x = 9 only","x = 3 only","y = 0"],e:"x² − 9 = (x − 3)(x + 3) = 0 → x = ±3. The numerator 3 is never 0, so both are vertical asymptotes. (HA is y = 0, but that's horizontal.)"},
+{t:"Rational Functions",d:2,q:"Horizontal asymptote of f(x) = (4x² − 1)/(2x² + x)?",c:["y = 2","y = 4","y = 0","y = −1"],e:"Degrees equal (2 and 2) → y = 4/2 = 2."},
+{t:"Rational Functions",d:3,q:"Horizontal asymptote of f(x) = (x² + 1)/(x − 2)?",c:["None — top degree is bigger","y = 1","y = 0","y = −1/2"],e:"Degree top (2) > degree bottom (1) → NO horizontal asymptote. (When it's exactly 1 bigger there's a slant asymptote; here it's y = x + 2.)"},
+{t:"Rational Functions",d:3,q:"Vertical asymptote(s) of f(x) = (x − 3)/(x² − x − 6)?",c:["x = −2 only (hole at x = 3)","x = 3 and x = −2","x = 3 only","x = 2 and x = −3"],e:"Factor: x² − x − 6 = (x − 3)(x + 2). The (x − 3) cancels with the numerator, so x = 3 is a HOLE, not an asymptote. f(x) = 1/(x + 2) for x ≠ 3 → VA x = −2."},
+{t:"Rational Functions",d:3,q:"f(x) = (x² − 16)/(x² + 2x − 3). Which set is all correct?",c:["VA x = −3, x = 1; HA y = 1; x-int ±4; y-int 16/3","VA x = 3, x = −1; HA y = 1; x-int ±4; y-int 16/3","VA x = −3, x = 1; HA y = 0; x-int ±4; y-int −16/3","VA x = ±4; HA y = 1; x-int −3, 1; y-int 3/16"],e:"Bottom: (x + 3)(x − 1) → VA x = −3, 1. Top: (x − 4)(x + 4) → x-ints ±4 (no common factors). Degrees equal → HA y = 1/1 = 1. f(0) = −16/−3 = 16/3."},
+{t:"Rational Functions",d:3,q:"y-intercept of f(x) = 12/(x² − 2x − 8)?  y = ? (decimal or fraction)",n:-1.5,e:"f(0) = 12/(0 − 0 − 8) = 12/(−8) = −3/2 = −1.5 → (0, −1.5). (No x-intercepts: the numerator 12 is never 0.)"}
+];
+
+// ---------- INLINE SVG ICONS (drawn in code, no files) ----------
+const SVGP={
+  inf:'<rect x="9.2" y="1" width="4.6" height="3.6" rx=".6"/><circle cx="11.5" cy="6.6" r="2.1"/><path d="M8.3 9.5h6.4l1.2 6.6h-2.2l-.6 6.4h-1.7l-.4-5.2-.4 5.2H8.9l-.6-6.4H6.1z"/><path d="M17.6 2.2v19" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M16.9 2.4l.7-2 .7 2z"/>',
+  cav:'<path d="M3.5 13.2c0-2.3 2.2-3.7 5.2-3.7h6.2l3-3.2 2.4 1-1.6 2.6v4c0 1.2-1 2.2-2.2 2.2H6.9c-2 0-3.4-1.2-3.4-2.9z"/><path d="M6 15.5v6M9 16v5.5M15 16v5.5M18 15v6.5" stroke="currentColor" stroke-width="1.7" fill="none"/><circle cx="10.6" cy="2.8" r="1.8"/><path d="M8.9 5h3.4l.6 4.6H8.4z"/><path d="M12.6 5.2l6.4-4.2" stroke="currentColor" stroke-width="1.3" fill="none"/>',
+  art:'<path d="M2.6 13.6l14.2-6.4 1.7 3.6-14.2 6.4z"/><circle cx="9" cy="17" r="4.2" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="9" cy="17" r="1.1"/><path d="M12 20h9.5" stroke="currentColor" stroke-width="1.9"/>',
+  gen:'<path d="M1.5 15.5C4.5 9.3 8.4 7 12 7s7.5 2.3 10.5 8.5c-3.2-1.6-6.8-2.2-10.5-2.2s-7.3.6-10.5 2.2z"/><circle cx="12" cy="10.3" r="1.9" fill="#d9b44a"/><path d="M5 18.8h14" stroke="currentColor" stroke-width="1.6"/>',
+  castle:'<path d="M2.5 22V8.5h3.3v2.2h2V8.5h3.4v2.2h1.6V8.5h3.4v2.2h2V8.5h3.3V22h-7.4v-5.2a2.1 2.1 0 0 0-4.2 0V22z"/>',
+  crown:'<path d="M3 18L1.8 6.8l5.3 4.3L12 3.5l4.9 7.6 5.3-4.3L21 18z"/><rect x="3" y="19.2" width="18" height="2.6"/>',
+  anchor:'<g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="4.3" r="2.1"/><path d="M12 6.4V21.5M7 10.2h10M3.8 13.5c0 4.5 3.8 8 8.2 8s8.2-3.5 8.2-8"/></g>',
+  pass:'<path d="M.8 21.5L7.2 4.5l4 9.5h1.6l4-9.5 6.4 17z"/>',
+  bridge:'<path d="M1 8.8h22v2.8H1z"/><path d="M2.6 11.6v7.6h3a6.4 6.4 0 0 1 12.8 0h3v-7.6z"/>',
+  town:'<path d="M1.5 21.5V12l5-5 5 5v9.5z"/><path d="M12.5 21.5v-7l4.8-4.8 4.8 4.8v7z"/><rect x="5" y="15" width="3" height="3" fill="#f2e7cc"/><rect x="15.8" y="16.2" width="2.8" height="2.8" fill="#f2e7cc"/>',
+  trees:'<path d="M7 1.5l5 8H9.2l3.8 6H1l3.8-6H2z"/><rect x="6" y="15.5" width="2" height="6"/><path d="M17.5 6l4.3 7h-2.5l3 5h-9.6l3-5h-2.5z"/><rect x="16.7" y="18" width="1.6" height="3.8"/>',
+  peaks:'<path d="M.8 21.5L8.2 6.5l4.3 6.5 3-4.2 7.7 12.7z"/><path d="M8.2 6.5l-2.4 4.8 1.6-.6.8 1.3 1-1.6 1.2.9z" fill="#f4efe2"/>',
+  ridge:'<path d="M.8 20.5c3.8-8 7.6-10.5 11.2-10.5s7.4 2.5 11.2 10.5z"/><path d="M6 15.5c2-2.6 4-3.6 6-3.6" stroke="#f4efe2" stroke-width="1.2" fill="none"/>',
+  waves:'<path d="M1 8.5c2.8-2 5.2 2 8 0s5.2-2 8 0 4 1.2 6 0M1 15c2.8-2 5.2 2 8 0s5.2-2 8 0 4 1.2 6 0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+  star:'<path d="M12 1.5l3.1 6.6 7.2.9-5.3 5 1.4 7.1L12 17.6l-6.4 3.5L7 14 1.7 9l7.2-.9z"/>',
+  flag:'<path d="M5 1.5v21" stroke="currentColor" stroke-width="2.2"/><path d="M6.1 2.5h13.4l-3.2 4.3 3.2 4.3H6.1z"/>',
+  wings:'<path d="M12 21C6.5 19 2.5 13.5 1.5 3.5c3 4.3 6.3 6.6 10.5 7.6-3 1.1-4.2 4.4-4.2 4.4 2-1.2 4.2-1.2 4.2 0zM12 21c5.5-2 9.5-7.5 10.5-17.5-3 4.3-6.3 6.6-10.5 7.6 3 1.1 4.2 4.4 4.2 4.4-2-1.2-4.2-1.2-4.2 0z"/>',
+  bearskin:'<path d="M6.5 22.5V8.5c0-4.4 2.4-7 5.5-7s5.5 2.6 5.5 7v14z"/>',
+  pennant:'<path d="M3 22.5L20.5 2" stroke="currentColor" stroke-width="2.2"/><path d="M16.8 5.3l6 1-4.3 4.3z"/>',
+  sabers:'<path d="M3 3l18 18M21 3L3 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>',
+  bolt:'<path d="M13.5 1L3.5 14h6.4l-2 9.5L20.5 9.5h-6.6z"/>',
+  shield:'<path d="M3.5 2.5h17v8.5c0 6.2-4.2 9.3-8.5 11.5-4.3-2.2-8.5-5.3-8.5-11.5z"/>',
+  horseshoe:'<path d="M4.5 2.5v9.5a7.5 7.5 0 0 0 15 0V2.5h-3.8V12a3.7 3.7 0 0 1-7.4 0V2.5z"/>',
+  lozenge:'<path d="M12 1l10.5 11L12 23 1.5 12z"/>',
+  cockade:'<circle cx="12" cy="12" r="10.5" fill="#1d3a8a"/><circle cx="12" cy="12" r="6.6" fill="#fff"/><circle cx="12" cy="12" r="3.3" fill="#b22222"/>',
+  helmet:'<path d="M3.5 21c0-7.4 3.4-12.4 8.5-12.4S20.5 13.6 20.5 21z"/><path d="M4.5 9.5C7.6 3.3 14 1.2 20.5 4.4c-4.2-.2-8.3 2-10.6 6.2z"/>',
+  dagger:'<path d="M12 .8l2.2 13.2H9.8zM6.5 14h11v2.3h-11zM10.8 16.3h2.4v6.5h-2.4z"/>',
+  // new: ships, earthworks, new ally badges
+  ship:'<path d="M1 15.4h22l-3.3 6.1H4.3z"/><path d="M5.8 1.8v13.6M12 .6v14.8M18.2 1.8v13.6" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M2.6 3.2c2.2-.6 4.6-.6 6.6 0-.8 3.4-.8 7 0 10.4-2.2.5-4.4.5-6.6 0 .8-3.4.8-7 0-10.4zM8.8 2c2.2-.6 4.6-.6 6.6 0-.8 3.8-.8 7.8 0 11.6-2.2.5-4.4.5-6.6 0 .8-3.8.8-7.8 0-11.6zM15 3.2c2.2-.6 4.6-.6 6.6 0-.8 3.4-.8 7 0 10.4-2.2.5-4.4.5-6.6 0 .8-3.4.8-7 0-10.4z"/><path d="M12 .6l3.6 1-3.6 1z"/>',
+  frig:'<path d="M1.5 15.8h21l-3 5.7H4.5z"/><path d="M9 1v14.8M16 2.6v13.2" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M5.4 2.6c2.2-.6 4.8-.6 7.2 0-.9 3.7-.9 7.4 0 11.2-2.4.5-4.8.5-7.2 0 .9-3.8.9-7.5 0-11.2zM13.2 4.2c2-.5 4.2-.5 6 0-.7 3.2-.7 6.4 0 9.6-2 .4-4 .4-6 0 .7-3.2.7-6.4 0-9.6z"/><path d="M1.5 14.6L8 3.2v11.4z"/>',
+  redoubt:'<path d="M1 21.5l3.6-8h14.8l3.6 8z"/><path d="M5 13.5V7M8.5 13.5V5.2M12 13.5V7M15.5 13.5V5.2M19 13.5V7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"/>',
+  shamrock:'<circle cx="12" cy="6.4" r="4.2"/><circle cx="6.6" cy="12.2" r="4.2"/><circle cx="17.4" cy="12.2" r="4.2"/><path d="M12 12.5l1.2 10" stroke="currentColor" stroke-width="2.2" fill="none"/>',
+  horn:'<path d="M2 8.5h9l10-6.5v20l-10-6.5H2z"/><path d="M5 15v5" stroke="currentColor" stroke-width="2.4"/>',
+  crescent:'<path d="M14.5 2.2A10 10 0 1 0 22 18.2 8.2 8.2 0 1 1 14.5 2.2z"/><path d="M18.8 7.2l.8 2.3 2.4.1-1.9 1.5.7 2.3-2-1.4-2 1.4.7-2.3-1.9-1.5 2.4-.1z"/>'
+};
+const svgI=(k,cls="ico")=>`<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${SVGP[k]}</svg>`;
+const UNIT_ICON={inf:"inf",cav:"cav",art:"art",gen:"gen"};
+const ALLY_BADGE={gren:"bearskin",bav:"lozenge",guard:"star",hus:"bolt",cuir:"shield",lanc:"pennant",hart:"horseshoe",natg:"cockade",carab:"helmet",guer:"dagger",venm:"anchor",grenz:"trees",saxc:"crown",wingh:"wings",coss:"sabers",irish:"shamrock",swed:"horn",mamel:"crescent"};
+const TER_ICON={ridge:"ridge",forest:"trees",river:"waves",bridge:"bridge",ford:"waves",town:"town",hq:"flag",redoubt:"redoubt"};
+const GPT_ICON={capital:"crown",port:"anchor",fort:"castle",pass:"pass",bridge:"bridge",city:"town"};
+const GTER_ICON={mtn:"peaks",forest:"trees",river:"waves"};
+function unitSVG(type){const c=UT[type].cls;let h=svgI(UNIT_ICON[c]||"inf","uico");if(ALLY_BADGE[type])h+=`<span class="abadge" title="${UT[type].n}">${svgI(ALLY_BADGE[type])}</span>`;return h;}
+
+// ---------- RULES ----------
+const R=10, C=16, MAXT=30, BREAK=0.25, AI_DELAY=700, AI_ATTACKS=6, MAX_ALLIES=3;
+const TER={plain:{n:"Open field",ic:"",def:0},ridge:{n:"Ridge",ic:"▲",def:2},forest:{n:"Forest",ic:"♣",def:1},river:{n:"River",ic:"≈",def:0},
+  bridge:{n:"Bridge",ic:"═",def:0},ford:{n:"Ford",ic:"≋",def:-1},town:{n:"Town",ic:"⌂",def:1},hq:{n:"Headquarters",ic:"★",def:2},redoubt:{n:"Redoubt (earthworks)",ic:"",def:3}};
+// cls = inf | cav | art | gen. atk/def are flat bonuses.
+const UT={
+  inf:{n:"Infantry",ab:"INF",cls:"inf",mv:1,str:4,atk:0,def:1},
+  cav:{n:"Cavalry",ab:"CAV",cls:"cav",mv:2,str:4,atk:0,def:0},
+  art:{n:"Artillery",ab:"ART",cls:"art",mv:1,str:3,atk:0,def:0},
+  gen:{n:"General",ab:"GEN",cls:"gen",mv:0,str:6,atk:0,def:0},
+  gren:{n:"Grenadiers",ab:"GRN",cls:"inf",mv:1,str:5,atk:1,def:1},
+  bav:{n:"Bavarian Infantry",ab:"BAV",cls:"inf",mv:1,str:5,atk:0,def:1,townDef:2},
+  guard:{n:"Imperial Guard",ab:"GRD",cls:"inf",mv:1,str:6,atk:1,def:2,noRout:true},
+  hus:{n:"Hussars",ab:"HUS",cls:"cav",mv:3,str:4,atk:0,def:0},
+  cuir:{n:"Cuirassiers",ab:"CUI",cls:"cav",mv:2,str:5,atk:2,def:0},
+  lanc:{n:"Polish Lancers",ab:"LAN",cls:"cav",mv:2,str:4,atk:1,def:0,pierce:true},
+  hart:{n:"Horse Artillery",ab:"HRA",cls:"art",mv:2,str:3,atk:0,def:0},
+  natg:{n:"Garde Nationale",ab:"GNT",cls:"inf",mv:1,str:5,atk:0,def:2},
+  carab:{n:"Dutch-Belgian Carabiniers",ab:"CAR",cls:"cav",mv:2,str:5,atk:1,def:0},
+  guer:{n:"Spanish Guerrillas",ab:"GUE",cls:"inf",mv:2,str:4,atk:1,def:0},
+  venm:{n:"Venetian Marines",ab:"VEN",cls:"inf",mv:1,str:5,atk:0,def:1,crossAtk:2},
+  grenz:{n:"Croatian Grenzers",ab:"GRZ",cls:"inf",mv:1,str:4,atk:0,def:1,forestDef:2},
+  saxc:{n:"Saxon Cuirassiers",ab:"SAX",cls:"cav",mv:2,str:6,atk:1,def:0},
+  wingh:{n:"Polish Winged Hussars",ab:"WHU",cls:"cav",mv:3,str:5,atk:2,def:0},
+  coss:{n:"Cossacks",ab:"COS",cls:"cav",mv:3,str:3,atk:1,def:0,pierce:true},
+  irish:{n:"Irish Legion",ab:"IRL",cls:"inf",mv:1,str:5,atk:1,def:1},
+  swed:{n:"Swedish Jägers",ab:"JÄG",cls:"inf",mv:2,str:4,atk:0,def:1,forestDef:1},
+  mamel:{n:"Mamelukes",ab:"MAM",cls:"cav",mv:2,str:5,atk:2,def:0}
+};
+const FORMS={line:{n:"Line",ab:"L"},square:{n:"Square",ab:"S"},column:{n:"Column",ab:"C"},skirm:{n:"Skirmish",ab:"K"}};
+const ITEMS=[
+  {id:"line",kind:"form",cost:5,ds:"Infantry formation: +2 attack."},
+  {id:"column",kind:"form",cost:5,ds:"Infantry formation: +1 movement, −1 defense."},
+  {id:"square",kind:"form",cost:8,ds:"Infantry formation: +3 defense vs cavalry, but cannot move."},
+  {id:"skirm",kind:"form",cost:8,ds:"Infantry formation: +2 attack and +2 defense in or into forest."},
+  {id:"bav",kind:"ally",cost:6,ds:"Allied contingent. Infantry, strength 5, +2 more defense in towns."},
+  {id:"hus",kind:"ally",cost:8,ds:"Light cavalry. Moves 3 squares."},
+  {id:"gren",kind:"ally",cost:10,ds:"Elite infantry. Strength 5, +1 attack."},
+  {id:"hart",kind:"ally",cost:10,ds:"Artillery that moves 2 squares (still fires from 2 away)."},
+  {id:"cuir",kind:"ally",cost:12,ds:"Heavy cavalry. Strength 5, +2 attack."},
+  {id:"lanc",kind:"ally",cost:12,ds:"Allied cavalry. +1 attack and ignores enemy Squares."},
+  {id:"guard",kind:"ally",cost:20,ds:"The Old Guard. Strength 6, +1 attack, +2 defense, never routs."},
+  {id:"natg",kind:"ally",region:"france",ds:"Infantry, strength 5, +2 defense."},
+  {id:"carab",kind:"ally",region:"low",ds:"Cavalry, strength 5, +1 attack."},
+  {id:"guer",kind:"ally",region:"spain",ds:"Infantry that moves 2, +1 attack."},
+  {id:"venm",kind:"ally",region:"italy",ds:"Infantry, strength 5, +2 attack at bridges and fords."},
+  {id:"grenz",kind:"ally",region:"austria",ds:"Infantry, +2 more defense in forest."},
+  {id:"saxc",kind:"ally",region:"prussia",ds:"Heavy cavalry, strength 6, +1 attack."},
+  {id:"wingh",kind:"ally",region:"poland",ds:"Cavalry that moves 3, strength 5, +2 attack."},
+  {id:"coss",kind:"ally",region:"russia",ds:"Cavalry that moves 3, +1 attack, ignores Squares."},
+  {id:"irish",kind:"ally",region:"britain",ds:"Infantry, strength 5, +1 attack, +1 defense."},
+  {id:"swed",kind:"ally",region:"sweden",ds:"Light infantry that moves 2, +1 more defense in forest."},
+  {id:"mamel",kind:"ally",region:"ottoman",ds:"Cavalry, strength 5, +2 attack."}
+];
+// ---------- SKILL TREES ----------
+const SKILLS=[
+  {id:"inf",n:"Infantry & Engineers",ic:"inf",col:"#1d3a8a",nodes:[
+    ["drill","Drill Sergeants","Infantry start +1 strength",1],
+    ["ranks","Steady Ranks","Infantry +1 defense",2],
+    ["bayo","Bayonet Charge","Infantry +1 attack",2],
+    ["sap","Sappers","HQ redoubts; defenses cost −1",3],
+    ["levee","Levée en Masse","+1 troops per turn (all modes)",3]]},
+  {id:"cav",n:"Cavalry & Artillery",ic:"cav",col:"#a1201b",nodes:[
+    ["remount","Remounts","Cavalry start +1 strength",1],
+    ["battery","Grand Battery","Bombardment hits +1 harder",2],
+    ["pursuit","Pursuit","Cavalry flank bonus +2",2],
+    ["teams","Horse Teams","Artillery moves 2 squares",3],
+    ["murat","Murat's Charge","Cavalry +2 attack",3]]},
+  {id:"nav",n:"Navy & Logistics",ic:"ship",col:"#2f6b2f",nodes:[
+    ["yards","Shipwrights","Fleets cost 2 fewer troops",1],
+    ["march","Forced March","Campaign armies +1 movement",2],
+    ["gunnery","Gunnery Drill","+3 strength in naval battles",2],
+    ["admiral","Admiralty","Fleets +2 movement, repair 2",3],
+    ["grande","La Grande Armée","Army size cap +15, +2 reserve",3]]}
+];
+const SKN={};SKILLS.forEach((t,ti)=>t.nodes.forEach(([id,n,ds,cost],i)=>SKN[id]={tree:t,ti,i,id,n,ds,cost}));
+// ---------- CAMPAIGN REGIONS (battle flavor) ----------
+// add: symmetric terrain added on plain squares (west half, mirrored; 12x8 coordinates, scaled to the field); swap: base terrain replaced; diff: enemy infantry bonus
+const REGIONS=[
+  {id:"france",name:"France",battle:"Defense of Champagne, 1814",note:"Outnumbered, Napoleon won four battles in five days (Champaubert, Montmirail, Château-Thierry, Vauchamps) with young conscripts.",add:[[1,4,"town"],[6,4,"forest"]],diff:0,pts:"110,130 175,120 205,160 200,215 150,250 120,215 95,185",lx:140,ly:180},
+  {id:"low",name:"Low Countries",battle:"Waterloo, 1815",note:"Wellington held the ridge of Mont-Saint-Jean and fortified farms like Hougoumont until the Prussians arrived.",add:[[2,4,"ridge"],[4,4,"ridge"],[0,1,"town"],[7,2,"town"]],swap:{forest:"plain"},diff:1,pts:"165,85 215,80 220,115 175,120",lx:172,ly:105},
+  {id:"spain",name:"Spain",battle:"Talavera, 1809",note:"In the Peninsular War, Spanish guerrillas (\"little war\") tied down French armies in rugged sierras.",add:[[1,3,"ridge"],[6,1,"ridge"],[3,1,"ridge"]],swap:{forest:"ridge"},diff:0,pts:"20,230 120,215 150,250 130,320 40,320 15,280",lx:55,ly:275},
+  {id:"italy",name:"Italy (Venice)",battle:"Arcole, 1796",note:"Young General Bonaparte led the charge across the bridge at Arcole through the marshes of the Adige.",add:[[2,3,"ford"],[6,4,"ford"],[0,2,"town"]],diff:0,pts:"215,215 265,200 290,240 330,300 315,315 285,280 250,250 220,240",lx:250,ly:240},
+  {id:"austria",name:"Austria",battle:"Austerlitz, 1805",note:"The \"Battle of the Three Emperors\": Napoleon baited the allies off the Pratzen Heights, then seized them.",add:[[2,4,"ridge"],[3,4,"ridge"],[4,4,"ridge"],[7,3,"forest"]],diff:1,pts:"220,160 300,150 330,185 290,215 265,200 215,215 205,180",lx:240,ly:185},
+  {id:"prussia",name:"Prussia",battle:"Jena-Auerstedt, 1806",note:"In one day the Prussian army, famous since Frederick the Great, was shattered in twin battles.",add:[[1,3,"forest"],[6,0,"forest"],[2,0,"town"]],diff:1,pts:"215,80 300,60 320,110 300,150 220,160 205,160 220,115",lx:245,ly:118},
+  {id:"poland",name:"Poland",battle:"Friedland, 1807",note:"The Polish lancers rode with Napoleon; Friedland ended the war with Russia and created the Duchy of Warsaw.",add:[[0,4,"forest"],[6,4,"town"],[1,0,"forest"]],swap:{ridge:"plain"},diff:1,pts:"300,60 370,70 380,140 330,185 300,150 320,110",lx:322,ly:118},
+  {id:"russia",name:"Russia",battle:"Borodino, 1812",note:"The bloodiest single day of the wars. Russian redoubts and endless forests; then came the winter retreat.",add:[[2,4,"redoubt"],[4,4,"ridge"],[0,1,"forest"],[7,2,"forest"],[3,0,"forest"]],diff:2,pts:"370,20 490,20 490,250 400,230 380,140 370,70",lx:410,ly:140},
+  {id:"britain",name:"Britain",battle:"The Invasion of England, 1805",note:"Napoleon massed the \"Army of England\" at Boulogne, but Nelson's victory at Trafalgar kept the Channel British.",add:[[2,4,"ridge"],[1,1,"town"],[6,3,"forest"],[4,3,"redoubt"]],diff:2,pts:""},
+  {id:"sweden",name:"Sweden",battle:"Stralsund, 1807",note:"The French besieged Swedish Pomerania. Later, French Marshal Bernadotte was chosen as King of Sweden.",add:[[0,4,"forest"],[3,2,"forest"],[6,4,"forest"],[5,1,"town"]],diff:1,pts:""},
+  {id:"ottoman",name:"Ottoman Empire",battle:"The Pyramids, 1798",note:"In Egypt, Bonaparte's infantry squares beat the Mameluke cavalry; Mamelukes later rode in his Imperial Guard.",add:[[1,3,"town"],[6,2,"town"],[3,4,"ridge"]],swap:{forest:"plain"},diff:1,pts:""}
+];
+let curRegion=null,campPick=null;
+const region=id=>REGIONS.find(r=>r.id===id);
+const conquered=id=>save.campaign.conquered.includes(id);
+const allyOf=rid=>ITEMS.find(i=>i.region===rid);
+const itemName=it=>it.kind==="form"?FORMS[it.id].n+" formation":UT[it.id].n;
+const SAVE_KEY="polybreach.napoleon.v1";
+let save={glory:0,unlocked:[],equipped:[],stats:{},drill:false,tutDone:false,campaign:{conquered:[]},sp:0,spProg:0,skills:[]};
+function loadSave(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY)||"null");if(s&&typeof s.glory==="number"){save={glory:s.glory,unlocked:Array.isArray(s.unlocked)?s.unlocked:[],equipped:Array.isArray(s.equipped)?s.equipped:[],stats:(s.stats&&typeof s.stats==="object")?s.stats:{},drill:!!s.drill,tutDone:!!s.tutDone,campaign:{conquered:(s.campaign&&Array.isArray(s.campaign.conquered))?s.campaign.conquered:[]},gc:(s.gc&&Array.isArray(s.gc.stacks))?s.gc:null,
+    sp:typeof s.sp==="number"?s.sp:0,spProg:typeof s.spProg==="number"?s.spProg:0,skills:Array.isArray(s.skills)?s.skills.filter(id=>SKN[id]):[]};
+    // migration from the first version: starting skill points for questions already answered correctly (max 6)
+    if(typeof s.sp!=="number"){const tc=Object.values(save.stats).reduce((a,x)=>a+((x&&x.c)||0),0);save.sp=Math.min(6,Math.floor(tc/5));}}}catch(e){}}
+function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){}$("gl").textContent=save.glory;$("spv").textContent=save.sp;}
+const has=id=>save.unlocked.includes(id);
+const sk=id=>save.skills.includes(id);
+function spNote(m){if(gcOpen()&&gc)gLog(m,"g");else log(m,"g");}
+function gainCorrect(){save.spProg=(save.spProg||0)+1;if(save.spProg>=5){save.spProg=0;save.sp++;spNote("✪ Skill point earned (5 correct answers)! Press K to spend it.");}}
+function gainSP(n,why){save.sp+=n;spNote(`✪ +${n} skill point${n>1?"s":""} (${why}). Press K.`);}
+
+let overAt=0, cells, cur, sel, deck, answered, correct, streak, missed, active, phase, pool, turnNo, aiToken=0, result, startField={}, corpsMode=false, gloryGame=0, uid=0;
+const $=id=>document.getElementById(id);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const cell=(r,c)=>cells[r*C+c];
+const inB=(r,c)=>r>=0&&c>=0&&r<R&&c<C;
+const adj=x=>[[1,0],[-1,0],[0,1],[0,-1]].filter(([a,b])=>inB(x.r+a,x.c+b)).map(([a,b])=>cell(x.r+a,x.c+b));
+const dist=(a,b)=>Math.abs(a.r-b.r)+Math.abs(a.c-b.c);
+const cls=u=>UT[u.type].cls;
+const units=w=>cells.filter(x=>x.u&&x.u.side===w);
+const field=w=>units(w).filter(x=>cls(x.u)!=="gen").reduce((s,x)=>s+x.u.str,0);
+const total=w=>units(w).reduce((s,x)=>s+x.u.str,0);
+const hq=w=>cells.find(x=>x.hq===w);
+const stars=v=>"★".repeat(v);
+const uname=x=>`${x.u.side==="you"?"your":"enemy"} ${UT[x.u.type].n}`;
+const claim=x=>{if(x.ter==="town"&&x.u)x.town=x.u.side;};
+function newDeck(){deck={1:[],2:[],3:[]};for(const t of [1,2,3])deck[t]=shuffle(Q.filter(q=>q.d===t));}
+const GROUPS={"Polynomials":["End Behavior","Zeros & Multiplicity","Rational Root Thm","Finding All Roots"],"Division":["Long Division","Synthetic Division","Remainder & Factor Thm"],"Quadratics":["Quadratics"],"Rational Functions":["Rational Functions"]};
+const grp=q=>Object.keys(GROUPS).find(g=>GROUPS[g].includes(q.t))||"Polynomials";
+const acc=g=>{const s=save.stats[g]||{a:0,c:0};return (s.c+1)/(s.a+2);};  // smoothed, so untried topics count as 50%
+const weakest=()=>Object.keys(GROUPS).reduce((a,b)=>acc(b)<acc(a)?b:a);
+let recent=[];
+function draw(t){
+  let q=null;
+  if(save.drill&&Math.random()<0.75){const g=weakest();let pool=Q.filter(x=>grp(x)===g&&x.d===t&&!recent.includes(x));if(!pool.length)pool=Q.filter(x=>grp(x)===g&&!recent.includes(x));if(pool.length)q=pool[Math.floor(Math.random()*pool.length)];}
+  if(!q){if(!deck[t].length)deck[t]=shuffle(Q.filter(x=>x.d===t));q=deck[t].pop();}
+  recent.push(q);if(recent.length>10)recent.shift();
+  return q;
+}
+function renderProg(){
+  const w=weakest();
+  $("prog").innerHTML=Object.keys(GROUPS).map(g=>{const s=save.stats[g]||{a:0,c:0},pc=s.a?Math.round(s.c/s.a*100):null;
+    return `<span class="${g===w&&s.a?"weak":""}">${g}${g===w&&s.a?" ⚠":""}</span><span class="pb"><i style="width:${pc||0}%;background:${pc==null?"#bbb":pc>=80?"var(--grn)":pc>=60?"var(--gold)":"var(--red)"}"></i></span><span>${pc==null?"—":pc+"%"} (${s.c}/${s.a})</span>`;}).join("");
+  const b=$("bDrill");b.textContent=`Drill weak topic: ${save.drill?"ON ("+w+")":"off"} [W]`;b.classList.toggle("on",save.drill);
+}
+function toggleDrill(){save.drill=!save.drill;persist();renderProg();log(save.drill?`Drill ON: most questions now come from ${weakest()}.`:"Drill off: questions from all topics.","c");}
+const tutOpen=()=>$("tut").style.display==="flex";
+function openTut(){$("tut").style.display="flex";$("tutOk").focus();}
+function closeTut(){$("tut").style.display="none";if(!save.tutDone){save.tutDone=true;persist();}}
+
+// ---------- MAP (point-symmetric so both sides are fair; 16 x 10) ----------
+// [type,row,col,corps]; corps III only joins big campaign battles
+const ARMY=[["gen",5,0,""],["inf",2,3,"I"],["inf",3,3,"I"],["inf",1,4,"I"],["art",2,2,"I"],["cav",1,2,"I"],
+            ["inf",6,3,"II"],["inf",7,3,"II"],["inf",8,4,"II"],["art",7,2,"II"],["cav",8,2,"II"],["inf",4,2,"R"],["inf",5,2,"R"],["cav",5,3,"R"]];
+const ARMY3=[["inf",3,5,"III"],["inf",6,5,"III"],["cav",0,3,"III"],["art",9,3,"III"]];
+const extraFor=s=>s>=26?4:s>=18?2:0;
+function buildMap(){
+  cells=[];for(let r=0;r<R;r++)for(let c=0;c<C;c++)cells.push({r,c,ter:"plain",u:null,hq:null,town:null});
+  const sym=(r,c,ter)=>{cell(r,c).ter=ter;cell(R-1-r,C-1-c).ter=ter;};
+  for(let r=0;r<5;r++)sym(r,7,"river");
+  sym(1,7,"bridge");sym(3,7,"ford");
+  for(const [r,c] of [[4,4],[6,6],[9,1]])sym(r,c,"ridge");
+  for(const [r,c] of [[0,5],[7,5],[5,4],[2,0]])sym(r,c,"forest");
+  for(const [r,c] of [[1,5],[8,6]])sym(r,c,"town");
+  sym(3,6,"redoubt");
+  const rg=curRegion&&region(curRegion);
+  if(rg){if(rg.swap)for(const x of cells)if(rg.swap[x.ter])x.ter=rg.swap[x.ter];
+    for(const [r0,c0,t] of rg.add){const r=Math.round(r0*9/7),c=Math.round(c0*1.5);if(cell(r,c).ter==="plain"&&cell(R-1-r,C-1-c).ter==="plain")sym(r,c,t);}}
+  Object.assign(cell(5,0),{ter:"hq",hq:"you"});Object.assign(cell(R-1-5,C-1-0),{ter:"hq",hq:"ai"});
+  if(sk("sap"))for(const [r,c] of [[4,1],[6,1]])if(cell(r,c).ter==="plain")cell(r,c).ter="redoubt";
+  const P=gcPending,xy=P?extraFor(P.ys):0,xa=P?extraFor(P.es):0;
+  const mine=[...ARMY,...ARMY3.slice(0,xy)].map(([type,r,c,corps])=>({type,r,c,corps}));
+  // equipped allies replace the first basic unit of the same class
+  for(const id of save.equipped){if(!has(id)||!UT[id])continue;const base=mine.find(m=>m.type===UT[id].cls);if(base)base.type=id;}
+  for(const m of mine){cell(m.r,m.c).u=mk("you",m.type,m.corps);const u=cell(m.r,m.c).u;if(cls(u)==="inf"&&sk("drill"))u.str++;if(cls(u)==="cav"&&sk("remount"))u.str++;}
+  for(const [type,r,c,corps] of [...ARMY,...ARMY3.slice(0,xa)]){cell(R-1-r,C-1-c).u=mk("ai",type,corps);}
+  // enemy defenses on the campaign square become redoubts in front of their HQ
+  if(P&&P.edef){const spots=[[5,2],[4,2],[3,3],[6,3],[5,3],[4,3]].slice(0,2*P.edef);for(const [r,c] of spots){const x=cell(R-1-r,C-1-c);if(x.ter==="plain"||x.ter==="forest")x.ter="redoubt";}}
+  for(const x of cells){if(x.ter==="town")x.town=x.c<C/2?"you":"ai";}
+  const dd=(rg?rg.diff:0)+(P?P.diff:0);
+  if(dd)for(const x of cells)if(x.u&&x.u.side==="ai"&&cls(x.u)==="inf")x.u.str+=dd;
+}
+function mk(side,type,corps){return {id:++uid,side,type,str:UT[type].str,done:false,form:"",corps:corps||"R"};}
+
+// ---------- MOVEMENT & COMBAT ----------
+const isMine=u=>u.side==="you";
+function range(u){if(cls(u)==="gen"||u.form==="square")return 0;let m=UT[u.type].mv+(u.form==="column"?1:0);if(isMine(u)&&cls(u)==="art"&&sk("teams"))m=Math.max(m,2);return m;}
+function moves(x){
+  const u=x.u;if(!u||u.done)return [];
+  const rng=range(u);if(!rng)return [];
+  const seen=new Map([[x,0]]),q=[x],out=[];
+  while(q.length){const a=q.shift(),d=seen.get(a);if(d>=rng||(a!==x&&(a.ter==="forest"||a.ter==="ford")))continue;
+    for(const b of adj(a)){if(seen.has(b)||b.ter==="river"||b.ter==="hq"||b.u)continue;seen.set(b,d+1);out.push(b);q.push(b);}}
+  return out;
+}
+function baseAtk(x,t,kind){
+  const u=x.u,k=cls(u);let p=(k==="art"&&kind==="melee")?Math.floor(u.str/2):u.str;
+  p+=UT[u.type].atk;
+  if(UT[u.type].crossAtk&&(/bridge|ford/.test(x.ter)||/bridge|ford/.test(t.ter)))p+=UT[u.type].crossAtk;
+  if(k==="inf"&&u.form==="line")p+=2;
+  if(k==="inf"&&u.form==="skirm"&&(x.ter==="forest"||t.ter==="forest"))p+=2;
+  if(isMine(u)&&k==="inf"&&sk("bayo"))p+=1;
+  if(isMine(u)&&k==="cav"&&sk("murat"))p+=2;
+  return p;
+}
+function supporters(x,t){
+  if(!corpsMode||x.u.side!=="you")return [];
+  return units("you").filter(s=>s!==x&&s.u.corps===x.u.corps&&!s.u.done&&cls(s.u)!=="gen"&&(cls(s.u)==="art"?dist(s,t)<=2:dist(s,t)===1));
+}
+function attackInfo(x,t,kind){
+  let p=baseAtk(x,t,kind),fl=0,sup=[],sp=0;
+  if(kind==="melee"){
+    if(adj(t).filter(a=>a.u&&a.u.side===x.u.side).length>=2){fl=2;if(cls(x.u)==="cav")fl+=2+(isMine(x.u)&&sk("pursuit")?2:0);}
+    sup=supporters(x,t);sp=sup.reduce((s,y)=>s+Math.floor(y.u.str/2),0);
+  }
+  return {p:p+fl+sp,fl,sup,sp};
+}
+function defPow(t,x){
+  const u=t.u;let d=u.str+TER[t.ter].def+UT[u.type].def;
+  if(u.form==="square"&&x&&cls(x.u)==="cav"&&!UT[x.u.type].pierce)d+=3;
+  if(u.form==="column")d-=1;
+  if(u.form==="skirm"&&t.ter==="forest")d+=2;
+  if(t.ter==="forest"&&UT[u.type].forestDef)d+=UT[u.type].forestDef;
+  if(t.ter==="town"&&UT[u.type].townDef)d+=UT[u.type].townDef;
+  if(isMine(u)&&cls(u)==="inf"&&sk("ranks"))d+=1;
+  return Math.max(1,d);
+}
+function tierOf(t){if(cls(t.u)==="gen")return 3;return Math.min(3,1+(TER[t.ter].def>=1?1:0)+(t.u.str>=6||t.u.type==="guard"?1:0));}
+function targets(x){
+  const u=x.u;if(!u||cls(u)==="gen"||u.done)return [];
+  const out=[];
+  for(const t of adj(x))if(t.u&&t.u.side!==u.side){const a=attackInfo(x,t,"melee");out.push({t,kind:"melee",ok:a.p>defPow(t,x)});}
+  if(cls(u)==="art")for(const t of cells)if(t.u&&t.u.side!==u.side&&dist(x,t)===2)out.push({t,kind:"bombard",ok:true});
+  return out;
+}
+const income=w=>3+cells.filter(x=>x.ter==="town"&&x.town===w).length+(w==="you"&&sk("levee")?1:0);
+const canSpawn=(x,w)=>!x.u&&x.ter!=="river"&&x.ter!=="hq"&&(adj(x).some(a=>a.hq===w)||(x.ter==="town"&&x.town===w));
+
+// ---------- GAME FLOW ----------
+function newGame(){
+  closeArmory();closeCamp();closeGC();closeSkills();buildMap();startField={you:field("you"),ai:field("ai")};
+  cur={r:5,c:2};sel=null;answered=0;correct=0;streak=0;missed=[];active=null;turnNo=0;result=null;aiToken++;gloryGame=0;
+  newDeck();$("log").innerHTML="";$("over").style.display="none";$("qarea").innerHTML="";
+  const al=units("you").filter(x=>UT[x.u.type].cls!==x.u.type&&x.u.type!=="gen").map(x=>UT[x.u.type].n);
+  const rg=curRegion&&region(curRegion);$("bName").textContent=rg?"· "+rg.battle:"· Open field";
+  if(rg)log(`${rg.battle}: ${rg.note}`,"c");
+  log(`The armies deploy along the river: ${units("you").length} units against ${units("ai").length}. Vive l'Empereur!`+(al.length?" Allies present: "+al.join(", ")+".":""),"c");
+  startTurn();
+}
+function startTurn(){
+  turnNo++;
+  if(turnNo>MAXT){result="night";check();return;}
+  for(const x of units("you"))x.u.done=false;
+  phase="deploy";pool=income("you");sel=null;
+  log(`Turn ${turnNo}: ${pool} reinforcements arrive.`,"c");render();
+}
+function log(m,cls=""){const d=document.createElement("div");d.className=cls;d.textContent="— "+m;$("log").prepend(d);}
+
+// ---------- RENDER ----------
+function render(){
+  const g=$("grid");g.innerHTML="";
+  const live=phase==="move"&&!active&&sel;
+  const mv=live?moves(sel):[],tg=live?targets(sel):[];
+  const mates=live&&corpsMode?units("you").filter(m=>m!==sel&&m.u.corps===sel.u.corps&&!m.u.done):[];
+  const frag=document.createDocumentFragment();
+  cells.forEach(x=>{
+    const d=document.createElement("div");let st="";
+    if(phase==="deploy"&&!active&&((x.u&&x.u.side==="you")||(pool>=2&&canSpawn(x,"you"))))st="dep";
+    if(mates.includes(x))st="mate";
+    if(mv.includes(x))st="mv";
+    const tt=tg.find(o=>o.t===x);if(tt)st=tt.ok?"atk":"no";
+    d.className=`tile ${x.ter} ${x.town?"t"+x.town:""} ${st} ${sel===x?"sel":""} ${cur.r===x.r&&cur.c===x.c?"cur":""}`;
+    let h=TER_ICON[x.ter]?`<span class="ic">${svgI(TER_ICON[x.ter])}</span>`:"";
+    if(x.u){const u=x.u,ally=UT[u.type].cls!==u.type&&u.type!=="gen";
+      h+=`<div class="unit ${u.side} ${u.type} ${ally?"ally":""} ${u.done&&u.side==="you"&&phase==="move"?"done":""}">${unitSVG(u.type)}<span class="st">${u.str}</span>${u.form?`<span class="fm">${FORMS[u.form].ab}</span>`:""}${u.type!=="gen"?`<span class="co">${u.corps}</span>`:""}</div>`;}
+    d.innerHTML=h;
+    d.title=`${TER[x.ter].n}${x.town?" ("+(x.town==="you"?"yours":"enemy")+")":""}`+(x.u?` · ${uname(x)} · strength ${x.u.str} · defense ${defPow(x)}${x.u.form?" · "+FORMS[x.u.form].n:""}${x.u.type!=="gen"?" · corps "+x.u.corps:""}`:"");
+    d.onclick=()=>{cur={r:x.r,c:x.c};act(x);};
+    if(x.flash){d.classList.add("flash");x.flash=false;}
+    if(x.fx){d.classList.add(x.fx);x.fx=null;}
+    frag.appendChild(d);
+  });
+  g.appendChild(frag);
+  const fy=field("you"),fa=field("ai");
+  $("sYou").textContent=`${fy} (${Math.round(fy/startField.you*100)}%) · ${units("you").length} units`;$("sAi").textContent=`${fa} (${Math.round(fa/startField.ai*100)}%) · ${units("ai").length} units`;
+  $("bYou").style.width=Math.min(100,fy/startField.you*100)+"%";$("bAi").style.width=Math.min(100,fa/startField.ai*100)+"%";
+  $("acount").textContent=answered;$("accu").textContent=answered?Math.round(correct/answered*100)+"%":"—";$("streak").textContent=streak;
+  $("turnNo").textContent=`· Turn ${turnNo} of ${MAXT}`;$("gl").textContent=save.glory;$("spv").textContent=save.sp;
+  const tr=$("turn");tr.className="turn "+(phase==="ai"?"ai":"you");tr.textContent=phase==="ai"?"Coalition moving…":phase==="over"?"Battle over":"Your turn";
+  renderCmd(tg);
+}
+function preview(x,t,kind){
+  if(kind==="bombard")return `Bombard ${uname(t)} (${t.u.str}) · ${stars(tierOf(t))} · hit = −${1+tierOf(t)+(sk("battery")?1:0)}`;
+  const a=attackInfo(x,t,"melee"),dp=defPow(t,x);
+  return `Attack <b>${a.p}</b>${a.fl?` (flank +${a.fl})`:""}${a.sp?` (corps +${a.sp})`:""} vs defense <b>${dp}</b> → ${a.p>dp?`<b style="color:var(--grn)">can attack</b> · ${stars(tierOf(t))}`:`<b style="color:var(--red)">too strong</b>`}`;
+}
+const formsOwned=()=>Object.keys(FORMS).filter(has);
+function renderCmd(tg){
+  const c=$("cmd"),ct=cell(cur.r,cur.c);
+  const endBtn=active?"":`<button class="btn" id="bEnd">End Turn [E]</button>`;
+  const fu=fTarget();
+  const formBtn=(!active&&fu&&formsOwned().length)?`<button class="btn" id="bForm">Formation: ${fu.u.form?FORMS[fu.u.form].n:"none"} [F]</button>`:"";
+  if(phase==="deploy"){
+    c.innerHTML=`<div class="ph">I · Reinforce</div><b>${pool}</b> troops to place. Click your <b style="color:var(--blue)">blue</b> units (+1)${pool>=2?", or a dashed empty square by your HQ / your towns for new Infantry (2)":""}.<br><button class="btn" id="bAll">Deploy all here [D]</button>${formBtn}${endBtn}<br><small>Ending the turn now sends leftovers to the General.</small>`;
+    $("bAll").onclick=deployAll;
+  }else if(phase==="move"){
+    let info="";
+    if(sel){info=`Selected: <b>${UT[sel.u.type].n}</b> · corps ${sel.u.corps} · strength ${sel.u.str} · moves ${range(sel.u)}${cls(sel.u)==="art"?" · range 2":""}${sel.u.form?" · "+FORMS[sel.u.form].n:""}.`;
+      const o=(tg||[]).find(o=>o.t===ct);if(o)info+=`<br>${preview(sel,ct,o.kind)}`;}
+    else info=`Select a unit to march or attack. Units ready: <b>${units("you").filter(x=>cls(x.u)!=="gen"&&!x.u.done).length}</b>.`;
+    c.innerHTML=`<div class="ph">II · Maneuver &amp; Attack</div>${info}<br>${active?"":`<button class="btn ${corpsMode?"on":""}" id="bCorps">Corps orders: ${corpsMode?"ON":"off"} [G]</button>`}${formBtn}${endBtn}`;
+    const b=$("bCorps");if(b)b.onclick=toggleCorps;
+  }else if(phase==="ai")c.innerHTML=`<div class="ph">The Coalition moves…</div>Hold the line.`;
+  else c.innerHTML=`<div class="ph">The battle is over</div><button class="btn" id="bNew">New Battle [N]</button>`;
+  const b=$("bEnd");if(b)b.onclick=endTurn;
+  const n=$("bNew");if(n)n.onclick=newGame;
+  const f=$("bForm");if(f)f.onclick=cycleForm;
+}
+
+// ---------- PLAYER ACTIONS ----------
+const myTurn=()=>(phase==="deploy"||phase==="move")&&!active&&!armoryOpen()&&!skillsOpen();
+function fTarget(){const x=sel||cell(cur.r,cur.c);return x&&x.u&&x.u.side==="you"&&cls(x.u)==="inf"?x:null;}
+function cycleForm(){
+  if(!myTurn())return;const x=fTarget(),own=formsOwned();
+  if(!x){log("Formations are for your infantry. Select one first.");render();return;}
+  if(!own.length){log("Unlock formations in the Armory [A].");render();return;}
+  const list=["",...own],i=list.indexOf(x.u.form);x.u.form=list[(i+1)%list.length];
+  log(`${UT[x.u.type].n} forms ${x.u.form?FORMS[x.u.form].n:"standard order"}.`);render();
+}
+function toggleCorps(){if(!myTurn())return;corpsMode=!corpsMode;log(`Corps orders ${corpsMode?"ON: corps march and attack together":"off"}.`);render();}
+function act(x){
+  if(!myTurn()){render();return;}
+  if(phase==="deploy"){
+    if(x.u&&x.u.side==="you")deploy(x,1);
+    else if(canSpawn(x,"you")&&pool>=2){x.u=mk("you","inf","R");x.u.str=2;pool-=2;x.flash=true;claim(x);log("New Infantry raised (Reserve corps).","c");afterDeploy();}
+    else{log("Place troops on your units, or new Infantry beside your HQ / in your towns.");render();}
+    return;
+  }
+  if(x.u&&x.u.side==="you"){
+    if(sel===x){sel=null;render();return;}
+    if(cls(x.u)==="gen"){log("The General holds the HQ and does not move.");sel=null;render();return;}
+    if(x.u.done){log("That unit has already acted this turn.");render();return;}
+    sel=x;render();return;
+  }
+  if(!sel){log("Select one of your units first.");render();return;}
+  if(moves(sel).includes(x)){march(sel,x);sel=null;render();return;}
+  const o=targets(sel).find(o=>o.t===x);
+  if(o){if(!o.ok){log(`Too strong: attack ${attackInfo(sel,x,"melee").p} vs defense ${defPow(x,sel)}. Reinforce, flank, or use corps orders.`);render();return;}battle(sel,x,o.kind);return;}
+  sel=null;render();
+}
+function march(x,d){
+  const dr=d.r-x.r,dc=d.c-x.c,lead=x.u;
+  const mates=corpsMode?units("you").filter(m=>m!==x&&m.u.corps===lead.corps&&!m.u.done&&cls(m.u)!=="gen"):[];
+  d.u=lead;x.u=null;lead.done=true;claim(d);d.flash=true;let n=1;
+  mates.sort((a,b)=>(b.r*dr+b.c*dc)-(a.r*dr+a.c*dc));
+  for(const m of mates){if(!m.u||!inB(m.r+dr,m.c+dc))continue;const t=cell(m.r+dr,m.c+dc);if(moves(m).includes(t)){t.u=m.u;m.u=null;t.u.done=true;claim(t);t.flash=true;n++;}}
+  log(n>1?`Corps ${lead.corps} marches (${n} units).`:`${UT[lead.type].n} marches.`);
+}
+function deploy(x,k){if(phase!=="deploy"||!x.u||x.u.side!=="you"||pool<=0)return;k=Math.min(k,pool);x.u.str+=k;pool-=k;x.flash=true;afterDeploy();}
+function afterDeploy(){if(pool<=0){phase="move";log("Reinforcements placed. Issue your orders.","c");}render();}
+function deployAll(){if(!myTurn()||phase!=="deploy")return;const x=cell(cur.r,cur.c);if(!x.u||x.u.side!=="you"){log("Move the cursor onto one of your units first.");render();return;}deploy(x,pool);}
+function endTurn(){
+  if(!myTurn())return;
+  if(phase==="deploy"&&pool>0){const h=hq("you");if(h.u){h.u.str+=pool;log(`${pool} leftover troops sent to the General.`);}pool=0;}
+  sel=null;log("You end your turn.");toAI();
+}
+function toAI(){phase="ai";sel=null;render();const tok=++aiToken;setTimeout(()=>{if(tok===aiToken&&phase==="ai")aiTurn();},AI_DELAY);}
+
+function battle(x,t,kind){
+  const tier=tierOf(t),q=draw(tier),info=kind==="melee"?attackInfo(x,t,kind):{sup:[]};
+  active={x,t,kind,tier,q,sup:info.sup,done:false,choices:q.c?shuffle(q.c.map((s,i)=>({s,ok:i===0}))):null};
+  const what=kind==="bombard"?`Bombardment of ${uname(t)}`:`${info.sup.length?"Corps "+x.u.corps+" assault":UT[x.u.type].n+" attacks"} ${uname(t)}`;
+  const heading=`<div class="qmeta"><span class="topic">${q.t}</span><span>${what} · ${stars(tier)} · +${tier} Glory</span></div><div id="qtext">${q.q}</div>`;
+  if(q.c){
+    $("qarea").innerHTML=heading+`<div class="choices">${active.choices.map((c,i)=>`<button class="choice" data-i="${i}"><span class="k">${"ABCD"[i]}</span><span>${c.s}</span></button>`).join("")}</div><div id="fb"></div>`;
+    document.querySelectorAll(".choice").forEach(b=>b.onclick=()=>answer(+b.dataset.i));
+  }else{
+    $("qarea").innerHTML=heading+`<input id="num" inputmode="decimal" placeholder="Type a number (fractions like -3/2 OK), then Enter" autocomplete="off"><button class="btn" id="sub">Submit [Enter]</button><div id="fb"></div>`;
+    $("sub").onclick=()=>answer(null);
+    setTimeout(()=>{const n=$("num");if(n)n.focus();},0);
+  }
+  render();
+}
+// shared resolution for both sides
+function resolve(x,t,kind,win,sup){
+  const att=x.u,side=att.side,tier=tierOf(t);sup=sup||[];
+  att.done=true;for(const s of sup)if(s.u)s.u.done=true;
+  if(win){
+    if(kind==="bombard"){
+      const dmg=1+tier+(side==="you"&&sk("battery")?1:0),wasGen=cls(t.u)==="gen";t.u.str-=dmg;t.flash=true;
+      if(t.u.str<=0){t.u=null;if(wasGen)result=side==="you"?"win-hq":"lose-hq";return `hit for −${dmg}: the unit is destroyed`;}
+      return `hit for −${dmg}`;
+    }
+    const def=t.u,bonus=tier-1,ns=Math.max(1,att.str-Math.floor(def.str/2))+bonus;
+    if(cls(def)==="gen")result=side==="you"?"win-hq":"lose-hq";
+    t.u=att;x.u=null;att.str=ns;att.form=att.form==="square"?"":att.form;t.flash=true;claim(t);
+    return `victory, ${ns} strength advance${bonus?` (+${bonus} bonus)`:""}`;
+  }
+  const hurt=(y,k)=>{y.u.str-=k;y.flash=true;if(y.u.str<=0){if(UT[y.u.type].noRout)y.u.str=1;else{y.u=null;return true;}}return false;};
+  const lost=Math.max(1,Math.ceil(att.str/3));const routed=hurt(x,lost);
+  for(const s of sup)if(s.u)hurt(s,1);
+  return `repulsed (−${lost}${sup.length?", supporters −1 each":""})${routed?": the unit routs":""}`;
+}
+function answer(i){
+  if(!active||active.done)return;
+  const {q,t,x,kind,sup,tier}=active;let ok,given;
+  if(q.c){if(i==null||!active.choices[i])return;ok=active.choices[i].ok;given=active.choices[i].s;
+    document.querySelectorAll(".choice").forEach((b,j)=>{b.disabled=true;if(active.choices[j].ok)b.classList.add("right");else if(j===i)b.classList.add("wrong");});
+  }else{const el=$("num");const raw=el?el.value.trim().replace(/−/g,"-"):"";if(raw==="")return;given=raw;const m=raw.replace(/\s/g,"").match(/^(-?\d*\.?\d+)\/(-?\d*\.?\d+)$/);const val=m?parseFloat(m[1])/parseFloat(m[2]):Number(raw);ok=Number.isFinite(val)&&Math.abs(val-q.n)<1e-9;el.disabled=true;}
+  active.done=true;active.ok=ok;answered++;
+  {const g=grp(q),st=save.stats[g]||(save.stats[g]={a:0,c:0});st.a++;if(ok)st.c++;persist();renderProg();}
+  const fb=$("fb"),desc=resolve(x,t,kind,ok,sup);(ok?t:x).fx=ok?"boom":"shake";
+  if(ok){correct++;streak++;save.glory+=tier;gloryGame+=tier;gainCorrect();persist();
+    fb.className="ok";fb.innerHTML=`<h3>Correct! ${desc} · +${tier} Glory${streak>=3?" · streak ×"+streak:""}</h3>${q.e}`;
+    log(`${kind==="bombard"?"Bombardment":"Attack"}: ${desc} (${q.t}).`,"g");
+  }else{streak=0;missed.push({q,given});
+    fb.className="bad";fb.innerHTML=`<h3>Wrong: ${desc} · your turn ends</h3>Answer: <b>${q.c?q.c[0]:q.n}</b><br>${q.e}`;
+    log(`Attack ${desc} (${q.t}).`,"r");
+  }
+  sel=null;
+  if(fb){fb.insertAdjacentHTML("beforeend",`<br><button class="btn" id="cont">Continue [Enter]</button>`);$("cont").onclick=cont;setTimeout(()=>{const c=$("cont");if(c)c.focus();},0);}
+  render();
+}
+function cont(){
+  if(!active||!active.done)return;
+  const ok=active.ok;active=null;$("qarea").innerHTML="";
+  if(check())return;
+  if(ok)render();else toAI();
+}
+
+// ---------- ENEMY AI (simple rules) ----------
+function distMap(goal){const m=new Map([[goal,0]]),q=[goal];while(q.length){const a=q.shift();for(const b of adj(a))if(!m.has(b)&&b.ter!=="river"){m.set(b,m.get(a)+1);q.push(b);}}return m;}
+function aiTurn(){
+  if(phase!=="ai")return;
+  for(const x of units("ai"))x.u.done=false;
+  let inc=income("ai");const H=hq("ai"),dm=distMap(hq("you")),D=x=>dm.get(x)??99;
+  // 1) reinforce: guard the General if threatened, raise one Infantry if thin, rest to the 3 front units
+  if(H.u&&cells.some(a=>a.u&&a.u.side==="you"&&dist(a,H)<=2)){const k=Math.min(2,inc);H.u.str+=k;inc-=k;}
+  if(inc>=2&&units("ai").filter(x=>cls(x.u)!=="gen").length<16){const sp=cells.filter(a=>canSpawn(a,"ai")).sort((a,b)=>D(a)-D(b))[0];if(sp){sp.u=mk("ai","inf","R");sp.u.str=2;sp.u.done=true;claim(sp);inc-=2;}}
+  const front=units("ai").filter(x=>cls(x.u)!=="gen").sort((a,b)=>D(a)-D(b)).slice(0,3);
+  for(let i=0;inc>0;i++,inc--){(front.length?front[i%front.length]:H).u.str++;}
+  // 2) formations: Square if your cavalry is near, otherwise Column to advance
+  const foeCav=units("you").filter(f=>cls(f.u)==="cav");
+  for(const x of units("ai"))if(cls(x.u)==="inf")x.u.form=foeCav.some(f=>dist(f,x)<=2)?"square":(adj(x).some(a=>a.u&&a.u.side==="you")?"":"column");
+  // 3) each unit, front first: attack if able (General first), else march toward your HQ
+  let attacks=0;
+  const order=units("ai").filter(x=>cls(x.u)!=="gen").sort((a,b)=>D(a)-D(b));
+  for(const x of order){
+    if(!x.u||x.u.side!=="ai"||x.u.done)continue;
+    const T=targets(x).filter(o=>o.ok);
+    if(T.length&&attacks<AI_ATTACKS){
+      const o=T.find(o=>cls(o.t.u)==="gen")||T.find(o=>o.kind==="bombard")||T.reduce((a,b)=>defPow(b.t,x)<defPow(a.t,x)?b:a);
+      attacks++;const name=uname(o.t);
+      const win=Math.random()<[0,.65,.5,.42][tierOf(o.t)];
+      const desc=resolve(x,o.t,o.kind,win,[]);(win?o.t:x).fx=win?"boom":"shake";
+      log(`Coalition ${o.kind==="bombard"?"guns fire on":"attacks"} ${name}: ${desc}.`,win?"r":"c");
+      if(check())return;continue;
+    }
+    const M=moves(x);if(!M.length)continue;
+    let best=null;
+    if(cls(x.u)==="art"){
+      const foes=units("you");const sc=s=>Math.min(...foes.map(f=>Math.abs(dist(s,f)-2)));
+      best=M.reduce((a,b)=>sc(b)<sc(a)?b:a);if(sc(best)>=sc(x))best=null;
+    }else{best=M.reduce((a,b)=>D(b)<D(a)?b:a);if(D(best)>=D(x))best=null;}
+    if(best){best.u=x.u;x.u=null;best.u.done=true;claim(best);if(best.u.form==="column")best.u.form="";}
+  }
+  if(check())return;
+  startTurn();
+}
+
+// ---------- END ----------
+function check(){
+  if(!result){
+    if(!hq("ai").u||hq("ai").u.side!=="ai")result="win-hq";else if(!hq("you").u||hq("you").u.side!=="you")result="lose-hq";
+    else if(field("ai")<BREAK*startField.ai)result="win-break";else if(field("you")<BREAK*startField.you)result="lose-break";
+  }
+  if(result==="night")result=total("you")>=total("ai")?"win-night":"lose-night";
+  if(!result)return false;
+  phase="over";active=null;sel=null;aiToken++;
+  const win=result.startsWith("win");
+  if(win){save.glory+=10;gloryGame+=10;save.sp++;persist();log("✪ +1 skill point for the victory. Press K.","g");}
+  let conq="";const wasGC=!!gcPending;
+  if(wasGC)conq=gApplyTactical(win);
+  if(win&&!wasGC&&curRegion&&!conquered(curRegion)){const rg=region(curRegion),al=allyOf(curRegion);save.campaign.conquered.push(curRegion);if(al&&!has(al.id))save.unlocked.push(al.id);persist();
+    conq=`<br><b style="color:var(--blue)">${rg.name} is conquered!</b> New ally in the Armory: <b>${UT[al.id].n}</b>.`;}
+  render();
+  const titles={"win-hq":"The Enemy General Is Taken!","win-break":"The Coalition Breaks!","win-night":"Victory at Nightfall","lose-hq":"Your HQ Has Fallen","lose-break":"The Grande Armée Breaks","lose-night":"Defeat at Nightfall"};
+  $("oTitle").textContent=(win?"⚑ Victory · ":"✖ Defeat · ")+titles[result];$("oTitle").className=win?"win":"lose";overAt=Date.now();
+  $("oText").innerHTML=`Turn ${turnNo}. Field strength: Grande Armée <b>${field("you")}</b> vs Coalition <b>${field("ai")}</b>. Accuracy: <b>${answered?Math.round(correct/answered*100):0}%</b> on ${answered} questions. Glory earned: <b>+${gloryGame}</b>${win?" (incl. +10 victory) · <b style='color:var(--blue)'>+1 ✪ skill point</b>":""} · total ${save.glory}.${conq}`+(missed.length?"<br><br><b>Review what you missed:</b>":"<br><br>No misses. You're ready for tomorrow.");
+  $("oMiss").innerHTML=missed.map(m=>`<div class="miss"><b>[${m.q.t}]</b> ${m.q.q}<br>You said: ${m.given} · Correct: <b>${m.q.c?m.q.c[0]:m.q.n}</b><br>${m.q.e}</div>`).join("");
+  $("over").style.display="flex";$("again").focus();
+  return true;
+}
+
+// ---------- OLD REGION PICKER (kept; the Campaign key now opens the Grand Campaign) ----------
+const campOpen=()=>$("camp").style.display==="flex";
+function openCamp(){openGC();}
+function openRegionPick(){if(active)return;closeArmory();campPick=campPick||REGIONS.find(r=>r.pts&&!conquered(r.id))?.id||"france";renderCamp();$("camp").style.display="flex";$("campGo").focus();}
+function closeCamp(){$("camp").style.display="none";}
+function renderCamp(){
+  const RG=REGIONS.filter(r=>r.pts);
+  $("campTop").innerHTML=`Regions conquered: <b>${save.campaign.conquered.length}/${REGIONS.length}</b> (blue = yours). Each battle has its own terrain and history.`;
+  $("campSvg").innerHTML=RG.map(r=>`<polygon points="${r.pts}" data-r="${r.id}" class="${conquered(r.id)?"held":"foe"} ${campPick===r.id?"pick":""}"><title>${r.name}</title></polygon>`).join("")+RG.map((r,i)=>`<text x="${r.lx}" y="${r.ly}" paint-order="stroke" stroke="#f2e7cc" stroke-width="3">${i+1}. ${r.id==="low"?"Low Ctrs.":r.name}${conquered(r.id)?" ✓":""}</text>`).join("");
+  document.querySelectorAll("#campSvg polygon").forEach(p=>p.onclick=()=>{campPick=p.dataset.r;renderCamp();});
+  const r=region(campPick),al=allyOf(r.id);
+  $("campInfo").innerHTML=`<h3>${r.name}</h3><b>${r.battle}</b><br>${r.note}<br><br>Terrain: ${[...new Set(r.add.map(a=>TER[a[2]].n))].join(", ")}${r.swap?" · "+Object.entries(r.swap).map(([a,b])=>TER[a].n+" → "+TER[b].n).join(", "):""}<br>Enemy: ${["normal","veteran infantry (+1)","elite infantry (+2)"][r.diff]}<br>Reward: <b>${UT[al.id].n}</b> ${conquered(r.id)?"(already won ✓)":""}`;
+}
+function campStart(id){curRegion=id;closeCamp();newGame();}
+// ---------- GRAND CAMPAIGN (Europe map, 30 x 16) ----------
+const GW=30,GH=16,GC_WIN=5,GC_MAXT=80,GC_V=2;
+// land intervals per row; everything else is sea
+const GLAND=[[[9,29]],[[9,17],[24,29]],[[4,4],[10,10],[14,16],[21,29]],[[3,5],[12,12],[15,15],[20,29]],[[1,2],[4,5],[12,13],[18,29]],[[1,2],[4,6],[12,13],[17,29]],[[1,2],[4,5],[9,29]],[[7,29]],[[3,29]],[[5,29]],[[6,13],[15,22]],[[1,13],[16,22]],[[1,7],[13,14],[17,22]],[[1,6],[14,15],[17,20],[22,29]],[[1,6],[17,19],[24,29]],[[14,15],[24,29]]];
+const GSPEC={mtn:[[11,6],[11,7],[10,9],[11,10],[9,11],[9,12],[9,14],[8,19],[8,20],[9,21],[11,17],[12,19],[12,3],[13,5],[0,11],[1,10],[2,4],[11,12],[14,26]],
+  river:[[6,10],[8,10],[6,12],[8,12],[10,16],[10,17],[10,19],[10,20],[5,21],[7,21],[4,23],[6,23]],
+  forest:[[0,14],[0,20],[0,22],[0,26],[1,14],[1,26],[2,22],[2,25],[3,23],[3,27],[4,20],[5,19],[5,26],[6,25],[7,14],[7,22],[8,9],[8,23],[8,26],[9,24],[11,2],[14,27],[10,21],[13,26],[4,4]]};
+const GPTS=[["Paris","capital",8,7,"france"],["Brussels","capital",7,9,"low"],["Madrid","capital",13,4,"spain"],["Venice","capital",10,13,"italy"],["Vienna","capital",8,16,"austria"],["Berlin","capital",6,14,"prussia"],["Warsaw","capital",6,19,"poland"],["Moscow","capital",4,28,"russia"],["London","capital",5,6,"britain"],["Stockholm","capital",1,17,"sweden"],["Constantinople","capital",13,23,"ottoman"],
+  ["Brest","port",8,3],["Bordeaux","port",10,6],["Toulon","port",11,9],["Amsterdam","port",6,9],["Hamburg","port",5,12],["Copenhagen","port",4,13],["Oslo","port",1,12],["Riga","port",3,20],["St Petersburg","port",1,24],["Lisbon","port",14,1],["Barcelona","port",12,7],["Naples","port",13,14],["Dublin","port",5,2],["Edinburgh","port",3,5],["Plymouth","port",6,4],
+  ["Mantua","fort",10,12,null,3],["Gibraltar","fort",14,3,null,3],["Danzig","fort",5,17,null,2],["Magdeburg","fort",6,13,null,2],["Smolensk","fort",4,25,null,2],
+  ["Roncesvalles Pass","pass",11,5],["St Bernard Pass","pass",10,10],["Brenner Pass","pass",9,13],
+  ["Cologne Bridge","bridge",7,10],["Kehl Bridge","bridge",9,10],["Elbe Bridge","bridge",7,12],["Belgrade Bridge","bridge",10,18],["Niemen Bridge","bridge",6,21],["Berezina Bridge","bridge",5,23],
+  ["Lyon","city",9,8],["Milan","city",10,11],["Munich","city",8,13],["Prague","city",7,15],["Budapest","city",9,17],["Rome","city",12,13],["Kiev","city",7,24],["Bucharest","city",11,21]
+  ].map(([name,type,r,c,region,need])=>({name,type,r,c,region,need}));
+const GSHORT={"Constantinople":"Constantin.","St Petersburg":"St Petersb.","Roncesvalles Pass":"Roncesv.","St Bernard Pass":"St Bernard","Brenner Pass":"Brenner","Cologne Bridge":"Cologne","Kehl Bridge":"Kehl","Elbe Bridge":"Elbe","Belgrade Bridge":"Belgrade","Niemen Bridge":"Niemen","Berezina Bridge":"Berezina","Copenhagen":"Copenhag.","Amsterdam":"Amsterd.","Barcelona":"Barcelona","Edinburgh":"Edinburgh","Magdeburg":"Magdeb."};
+const SEAS=[["Norwegian Sea",0.7,4.5],["North Sea",3.4,8.6],["Atlantic Ocean",3.5,0.6,1],["Bay of Biscay",9.6,2.4],["English Channel",7.1,2.2],["Irish Sea",4.6,3.1,1],["Baltic Sea",3.2,17.6],["Mediterranean Sea",14.6,8.6],["Adriatic",11.6,14.6,1],["Ionian & Aegean",15.1,19.5],["Black Sea",11.2,26.2]];
+const GTER={sea:{n:"Sea",cost:99},plain:{n:"Plains",cost:1},forest:{n:"Forest",cost:2},mtn:{n:"Mountains",cost:3},pass:{n:"Mountain pass",cost:1},river:{n:"River",cost:99},bridge:{n:"Bridge",cost:1}};
+const GBONUS={capital:"+2 troops/turn, +5 Glory, +1 ✪, unlocks the region's ally",port:"+1 troop/turn, +2 Glory, builds fleets",fort:"+1 troop/turn, +5 Glory (siege: answer questions)",pass:"+1 movement for all your armies, +2 Glory",bridge:"+3 Glory, a river crossing",city:"+1 troop/turn, +3 Glory"};
+const DEFN=["no defenses","Redoubt","Fort","Fortress"],DEFCOST=[0,3,5,8];
+const GAR_CAP=15,AI_GAR_CAP=18,AI_ARMY_CAP=24,FLEET_CAP=14,AI_MAX_ARMIES=6;
+const SHIPS={line:{n:"Ships of the line",cost:8,str:5,mv:4,ic:"ship"},frig:{n:"Frigates",cost:4,str:3,mv:6,ic:"frig"}};
+const D4=[[1,0],[-1,0],[0,1],[0,-1]];
+let gmap=null,gc=null,gsel=null,gcur={r:8,c:7},gcQ=null,gcFight=null,gcPending=null,gcAIq=null;
+const gk=(r,c)=>r+","+c;
+const gIn=(r,c)=>r>=0&&c>=0&&r<GH&&c<GW;
+const gt=(r,c)=>gmap[r*GW+c];
+const gNb=(r,c)=>D4.map(([a,b])=>[r+a,c+b]).filter(([a,b])=>gIn(a,b));
+function gBuild(){gmap=[];for(let r=0;r<GH;r++)for(let c=0;c<GW;c++)gmap.push({r,c,ter:GLAND[r].some(([a,b])=>c>=a&&c<=b)?"plain":"sea",pt:null});
+  for(const t in GSPEC)for(const [r,c] of GSPEC[t])gt(r,c).ter=t;for(const p of GPTS){gt(p.r,p.c).pt=p;if(p.type==="pass"||p.type==="bridge")gt(p.r,p.c).ter=p.type;}
+  for(const t of gmap)if(t.ter==="sea")t.zone=SEAS.reduce((a,b)=>Math.hypot(b[1]-t.r,b[2]-t.c)<Math.hypot(a[1]-t.r,a[2]-t.c)?b:a)[0];}
+const gStack=(r,c)=>gc.stacks.find(s=>s.r===r&&s.c===c);
+const gById=id=>gc.stacks.find(s=>s.id===id);
+const isFleet=s=>s.kind==="fleet";
+const gOwned=(w,type)=>GPTS.filter(p=>gc.owner[gk(p.r,p.c)]===w&&(!type||p.type===type));
+const gDef=(r,c)=>gc.def[gk(r,c)]||0;
+const gNeed=(r,c)=>{const p=gt(r,c).pt;return p?(p.type==="fort"?p.need:0)+gDef(r,c):0;};
+const gHarbor=p=>(p.type==="port"||p.type==="capital")&&gNb(p.r,p.c).some(([a,b])=>gt(a,b).ter==="sea");
+function gBlockaded(p){if(!gHarbor(p))return false;const w=gc.owner[gk(p.r,p.c)];return gNb(p.r,p.c).some(([a,b])=>{const s=gStack(a,b);return s&&isFleet(s)&&s.side!==w;});}
+// a square next to an enemy defended point: armies must stop there
+const gZoc=(r,c,side)=>gNb(r,c).some(([a,b])=>{const t=gt(a,b);return t.pt&&gc.owner[gk(a,b)]!==side&&gDef(a,b)>0;});
+const gNearHarbor=s=>gNb(s.r,s.c).some(([a,b])=>{const p=gt(a,b).pt;return p&&gHarbor(p)&&gc.owner[gk(a,b)]===s.side;});
+function gIncome(){let n=2;for(const p of gOwned("you")){if(gBlockaded(p))continue;n+=p.type==="capital"?2:(p.type==="port"||p.type==="fort"||p.type==="city")?1:0;}return n+(sk("levee")?1:0)+(sk("grande")?2:0);}
+const gMPmax=()=>4+(gOwned("you","pass").length?1:0)+(sk("march")?1:0);
+const fleetMP=s=>SHIPS[s.ship||"line"].mv+(s.side==="you"&&sk("admiral")?2:0);
+const armyCap=()=>40+(sk("grande")?15:0);
+const gCaps=()=>gOwned("you","capital").filter(p=>p.name!=="Paris").length;
+const gYear=()=>1805+Math.floor((gc.turn-1)/4);
+// effective strength: defenses add +3 per level to the stack holding them; Gunnery Drill adds +3 to your fleets
+function gEff(s){if(isFleet(s))return s.str+(s.side==="you"&&sk("gunnery")?3:0);const k=gk(s.r,s.c);return s.str+(gt(s.r,s.c).pt&&gc.owner[k]===s.side?3*gDef(s.r,s.c):0);}
+function gAdd(side,name,r,c,str,kind,ship){const s={id:gc.nid++,side,name,r,c,str,mp:0,kind};if(ship)s.ship=ship;gc.stacks.push(s);return s;}
+function gLog(m,cl=""){gc.log.unshift([m,cl]);gc.log.length=Math.min(gc.log.length,60);if(gc.phase==="ai"&&gc.report)gc.report.push([m,cl]);}
+function gRemove(s){gc.stacks=gc.stacks.filter(x=>x!==s);if(gsel===s.id)gsel=null;if(isFleet(s)&&s.cargo)gLog(`${s.cargo.name} (${s.cargo.str}) goes down with ${s.name}!`,"r");}
+function gNew(){
+  if(!gmap)gBuild();
+  gc={v:GC_V,turn:1,pool:0,owner:{},siege:{},def:{},stacks:[],nid:1,done:null,phase:"you",log:[],levy:0,report:[],qa:0,qc:0,endShown:false};
+  for(const p of GPTS)gc.owner[gk(p.r,p.c)]=["Paris","Brest","Bordeaux","Toulon","Lyon"].includes(p.name)?"you":"ai";
+  for(const [n,l] of [["London",2],["Copenhagen",1],["Constantinople",1],["Moscow",2],["Plymouth",1],["Paris",1],["Brussels",1],["Madrid",1],["Venice",1],["Vienna",1],["Berlin",1],["Warsaw",1],["Stockholm",1]]){const p=GPTS.find(x=>x.name===n);gc.def[gk(p.r,p.c)]=l;}
+  gAdd("you","Paris Garrison",8,7,8,"garrison");gAdd("you","Grande Armée",8,8,16,"army");gAdd("you","Armée du Nord",7,8,10,"army");gAdd("you","Armée d'Italie",9,8,8,"army");
+  gAdd("you","Brest Squadron",8,2,6,"fleet","line");gAdd("you","Toulon Frigates",12,9,4,"fleet","frig");
+  for(const [n,s] of [["Brussels",10],["Madrid",11],["Venice",10],["Vienna",13],["Berlin",12],["Warsaw",10],["Moscow",14],["London",14],["Stockholm",10],["Constantinople",12]]){const p=GPTS.find(x=>x.name===n);gAdd("ai",n+" Garrison",p.r,p.c,s,"garrison");}
+  gAdd("ai","Austrian Army",9,16,14,"army");gAdd("ai","Prussian Army",6,15,12,"army");gAdd("ai","Russian Army",5,24,15,"army");gAdd("ai","Anglo-Spanish Army",12,4,11,"army");
+  gAdd("ai","Royal Navy · Channel Fleet",7,4,10,"fleet","line");gAdd("ai","Royal Navy · North Sea",4,8,6,"fleet","line");gAdd("ai","Royal Navy · Mediterranean",15,4,8,"fleet","line");gAdd("ai","Russian Baltic Fleet",2,19,5,"fleet","frig");
+  if(!has("natg")){save.unlocked.push("natg");}if(!save.campaign.conquered.includes("france"))save.campaign.conquered.push("france");
+  gLog("1805. The Emperor's armies gather at Paris. Take "+GC_WIN+" enemy capitals to win. Britain's Royal Navy rules the seas.","c");
+  gStartTurn();
+}
+function gSave(){save.gc=gc;persist();}
+function gStartTurn(){
+  // coastal batteries: defended harbors fire on enemy fleets next to them
+  for(const p of GPTS){const L=gDef(p.r,p.c);if(!L||!gHarbor(p))continue;const w=gc.owner[gk(p.r,p.c)];
+    for(const [a,b] of gNb(p.r,p.c)){const s=gStack(a,b);if(s&&isFleet(s)&&s.side!==w){s.str-=L;gLog(`Coastal batteries at ${p.name} hit ${s.name} (−${L}).`,s.side==="you"?"r":"g");if(s.str<=0){gLog(`${s.name} is sunk by the batteries!`,s.side==="you"?"r":"g");gRemove(s);}}}}
+  gc.phase="you";gc.pool+=gIncome();
+  for(const s of gc.stacks)if(s.side==="you"){
+    if(s.kind==="garrison"){s.mp=0;const p=gt(s.r,s.c).pt;if(!(p&&gBlockaded(p)))s.str=Math.min(GAR_CAP,s.str+1);}
+    else if(isFleet(s)){s.mp=fleetMP(s);if(gNearHarbor(s)&&s.str<FLEET_CAP)s.str=Math.min(FLEET_CAP,s.str+(sk("admiral")?2:1));}
+    else s.mp=gMPmax();}
+  gsel=null;gLog(`Turn ${gc.turn} (${gYear()}): +${gIncome()} troops in reserve.`,"c");gSave();
+}
+// cheapest reachable squares within MP. Armies: land only, cannot pass stacks, enemy points stop you, defended enemy points need a siege,
+// and enemy defenses halt you next to them. Fleets: sea squares only, 1 per square.
+function gReach(s){
+  const best=new Map([[gk(s.r,s.c),0]]);
+  if(isFleet(s)){const q=[[s.r,s.c]];while(q.length){const [r,c]=q.shift(),d=best.get(gk(r,c));if(d>=s.mp)continue;
+      for(const [nr,nc] of gNb(r,c)){const k=gk(nr,nc);if(best.has(k)||gt(nr,nc).ter!=="sea"||gStack(nr,nc))continue;best.set(k,d+1);q.push([nr,nc]);}}
+    best.delete(gk(s.r,s.c));return best;}
+  if(s.kind!=="army"){best.clear();return best;}
+  const q=[[s.r,s.c,0]];
+  while(q.length){q.sort((a,b)=>a[2]-b[2]);const [r,c,d]=q.shift();if(d>best.get(gk(r,c)))continue;
+    if(!(r===s.r&&c===s.c)){const p=gt(r,c).pt;if(p&&gc.owner[gk(r,c)]!==s.side)continue;if(gZoc(r,c,s.side))continue;}
+    for(const [nr,nc] of gNb(r,c)){const t=gt(nr,nc),cost=GTER[t.ter].cost;if(cost>=99||gStack(nr,nc))continue;
+      if(t.pt&&gc.owner[gk(nr,nc)]!==s.side&&gNeed(nr,nc)>0)continue;
+      const nd=d+cost;if(nd>s.mp)continue;const k=gk(nr,nc);if(best.has(k)&&best.get(k)<=nd)continue;best.set(k,nd);q.push([nr,nc,nd]);}}
+  best.delete(gk(s.r,s.c));return best;
+}
+function gTargets(s){const out=[];if(s.mp<1||s.kind==="garrison")return out;
+  for(const [r,c] of gNb(s.r,s.c)){const t=gt(r,c),e=gStack(r,c);
+    if(isFleet(s)){
+      if(e&&e.side!==s.side&&isFleet(e))out.push({r,c,kind:"naval",e});
+      else if(!e&&s.cargo&&GTER[t.ter].cost<99&&!(t.pt&&gc.owner[gk(r,c)]!==s.side&&gNeed(r,c)>0))out.push({r,c,kind:"land"});
+      continue;}
+    if(GTER[t.ter].cost>=99){if(e&&e.side===s.side&&isFleet(e)&&!e.cargo&&t.ter==="sea")out.push({r,c,kind:"embark",e});continue;}
+    if(e&&e.side!==s.side)out.push({r,c,kind:"battle",e});
+    else if(!e&&t.pt&&gc.owner[gk(r,c)]!==s.side&&gNeed(r,c)>0)out.push({r,c,kind:"siege"});}
+  return out;}
+function gEnter(s){
+  if(isFleet(s))return;
+  const k=gk(s.r,s.c),p=gt(s.r,s.c).pt;if(!p||gc.owner[k]===s.side)return;
+  gc.owner[k]=s.side;if(gDef(s.r,s.c)>0)gc.def[k]=gDef(s.r,s.c)-1;  // captured defenses are damaged
+  if(s.side==="you"){
+    const gl={capital:5,port:2,fort:5,pass:2,bridge:3,city:3}[p.type];save.glory+=gl;
+    let msg=`${s.name} takes ${p.name}! +${gl} Glory.`;
+    if(p.type==="capital"&&p.region){const al=allyOf(p.region);if(!save.campaign.conquered.includes(p.region))save.campaign.conquered.push(p.region);if(al&&!has(al.id)){save.unlocked.push(al.id);msg+=` New ally: ${UT[al.id].n} (Armory).`;}}
+    gLog(msg,"g");
+    if(p.type==="capital"&&p.name!=="Paris")gainSP(1,"capital taken");
+    if(gCaps()>=GC_WIN&&!gc.done){gc.done="win";save.glory+=25;save.sp+=2;gLog(`Europe bows to the Emperor! ${GC_WIN} capitals taken. +25 Glory, +2 ✪.`,"g");}
+  }else{
+    gLog(`The Coalition takes ${p.name}.`,"r");
+    if(p.name==="Paris"&&!gc.done){gc.done="lose";gLog("Paris has fallen. The campaign is lost.","r");}
+  }
+}
+function gMove(s,r,c){const d=gReach(s).get(gk(r,c));if(d==null)return false;s.r=r;s.c=c;s.mp-=d;gEnter(s);gSave();return true;}
+function gFlavor(r,c){const t=gt(r,c).ter;if(t==="mtn"||t==="pass")return "spain";if(t==="forest")return "russia";
+  const caps=GPTS.filter(p=>p.type==="capital");return caps.reduce((a,b)=>Math.abs(b.r-r)+Math.abs(b.c-c)<Math.abs(a.r-r)+Math.abs(a.c-c)?b:a).region;}
+const gTier=(e,p)=>e<p*0.5?1:e<p?2:3;
+
+// ---- question box inside the campaign (same bank, drill, stats, Glory)
+function gcAsk(tier,title,cb){
+  const q=draw(tier);gcQ={q,tier,cb,done:false,choices:q.c?shuffle(q.c.map((s,i)=>({s,ok:i===0}))):null};
+  const h=`<div class="qmeta"><span class="topic">${q.t}</span><span>${title} · ${stars(tier)}</span></div><div id="qtext">${q.q}</div>`;
+  $("gcQ").innerHTML=h+(q.c?`<div class="choices">${gcQ.choices.map((c,i)=>`<button class="choice gch" data-i="${i}"><span class="k">${"ABCD"[i]}</span><span>${c.s}</span></button>`).join("")}</div>`
+    :`<input id="gnum" inputmode="decimal" placeholder="Type a number (fractions OK), then Enter" autocomplete="off" style="width:100%;padding:8px;font:inherit;font-size:17px"><button class="btn" id="gsub">Submit [Enter]</button>`)+`<div id="gfb"></div>`;
+  document.querySelectorAll(".gch").forEach(b=>b.onclick=()=>gcAnswer(+b.dataset.i));
+  const sb=$("gsub");if(sb){sb.onclick=()=>gcAnswer(null);setTimeout(()=>{const n=$("gnum");if(n)n.focus();},0);}
+  gRender();
+}
+function gcAnswer(i){
+  if(!gcQ||gcQ.done)return;const q=gcQ.q;let ok,given;
+  if(q.c){if(i==null||!gcQ.choices[i])return;ok=gcQ.choices[i].ok;given=gcQ.choices[i].s;document.querySelectorAll(".gch").forEach((b,j)=>{b.disabled=true;if(gcQ.choices[j].ok)b.classList.add("right");else if(j===i)b.classList.add("wrong");});}
+  else{const el=$("gnum");const raw=el?el.value.trim().replace(/−/g,"-"):"";if(raw==="")return;given=raw;const m=raw.replace(/\s/g,"").match(/^(-?\d*\.?\d+)\/(-?\d*\.?\d+)$/);const val=m?parseFloat(m[1])/parseFloat(m[2]):Number(raw);ok=Number.isFinite(val)&&Math.abs(val-q.n)<1e-9;el.disabled=true;}
+  gcQ.done=true;gcQ.ok=ok;gc.qa=(gc.qa||0)+1;if(ok)gc.qc=(gc.qc||0)+1;
+  {const g=grp(q),st=save.stats[g]||(save.stats[g]={a:0,c:0});st.a++;if(ok){st.c++;save.glory+=gcQ.tier;gainCorrect();}persist();renderProg();}
+  const fb=$("gfb");fb.className=ok?"ok":"bad";fb.id="gfb";
+  fb.innerHTML=(ok?`<h3>Correct! +${gcQ.tier} Glory</h3>`:`<h3>Wrong. Answer: ${q.c?q.c[0]:q.n}</h3>`)+q.e+`<br><button class="btn" id="gcont">Continue [Enter]</button>`;
+  fb.style.display="block";fb.style.marginTop="8px";fb.style.padding="8px 10px";fb.style.borderLeft="4px solid "+(ok?"var(--grn)":"var(--red)");
+  $("gcont").onclick=gcCont;setTimeout(()=>{const c=$("gcont");if(c)c.focus();},0);
+}
+function gcCont(){if(!gcQ||!gcQ.done)return;const {cb,ok}=gcQ;gcQ=null;$("gcQ").innerHTML="";cb(ok);gSave();gRender();}
+
+// ---- player actions
+const gBusy=()=>!gc||gc.done||gc.phase!=="you"||gcQ||gcFight;
+function gAct(r,c){
+  if(gBusy())return;
+  const s=gStack(r,c),me=gsel&&gById(gsel);
+  if(me){const t=gTargets(me).find(o=>o.r===r&&o.c===c);
+    if(t&&t.kind==="embark"){gEmbark(me,t.e);return;}
+    if(t&&t.kind==="land"){gLand(me,r,c);return;}}
+  if(s&&s.side==="you"){gsel=gsel===s.id?null:s.id;gRender();return;}
+  if(!me){gRender();return;}
+  if(gReach(me).has(gk(r,c))){gMove(me,r,c);gRender();return;}
+  const t=gTargets(me).find(o=>o.r===r&&o.c===c);
+  if(t&&t.kind==="battle"){const ef=gEff(t.e);if(me.str*2<=ef){gLog(`${me.name} is too weak to attack (${me.str} vs ${ef}). Reinforce first.`,"r");gRender();return;}gcFight={sid:me.id,eid:t.e.id};gRender();return;}
+  if(t&&t.kind==="naval"){gNaval(me,t.e);return;}
+  if(t&&t.kind==="siege"){gSiege(me,r,c);return;}
+  gsel=null;gRender();
+}
+function gEmbark(a,f){
+  if(a.mp<1){gLog(`${a.name} has no movement left to board.`);gRender();return;}
+  gc.stacks=gc.stacks.filter(x=>x!==a);a.mp=0;f.cargo=a;gsel=f.id;
+  gLog(`${a.name} (${a.str}) boards ${f.name}. Sail, then click a gold square to land.`,"c");gSave();gRender();
+}
+function gLand(f,r,c){
+  const a=f.cargo;if(!a)return;f.cargo=null;a.r=r;a.c=c;a.mp=0;gc.stacks.push(a);gsel=null;
+  gLog(`${a.name} lands from ${f.name}!`,"c");gEnter(a);gSave();gRender();
+}
+function gSiege(s,r,c){
+  const p=gt(r,c).pt,k=gk(r,c),done=gc.siege[k]||0,need=gNeed(r,c);s.mp-=1;
+  gcAsk(need>=3?3:2,`Siege of ${p.name} (${done}/${need} breaches)`,ok=>{
+    if(ok){gc.siege[k]=done+1;gLog(`Breach at ${p.name}! (${done+1}/${need})`,"g");
+      if(gc.siege[k]>=need){delete gc.siege[k];if(!gStack(r,c)){s.r=r;s.c=c;}gLog(`${p.name} surrenders!`,"g");gEnter({...s,r,c});}}
+    else{s.str-=2;s.mp=0;gLog(`The assault on ${p.name} fails (−2).`,"r");if(s.str<=0)gRemove(s);}
+  });
+}
+function gQuick(){
+  const s=gById(gcFight.sid),e=gById(gcFight.eid);gcFight=null;if(!s||!e){gRender();return;}
+  const ef=gEff(e),L=ef-e.str,tier=gTier(ef,s.str);
+  gcAsk(tier,`${s.name} vs ${e.name} (${s.str} vs ${ef}${L?", defenses +"+L:""})`,ok=>{
+    if(ok){gRemove(e);s.str=Math.max(1,s.str-Math.floor(ef/3))+(tier-1);s.r=e.r;s.c=e.c;s.mp=0;gLog(`Victory! ${e.name} is destroyed.`,"g");gEnter(s);}
+    else{s.str-=Math.ceil(ef/2);e.str=Math.max(1,e.str-Math.floor(Math.max(0,s.str)/5));s.mp=0;gLog(`${s.name} is repulsed by ${e.name}.`,"r");if(s.str<=0){gRemove(s);gLog(`${s.name} is destroyed.`,"r");}}
+  });
+}
+function gNaval(s,e){
+  const ms=gEff(s),es=gEff(e);
+  if(ms*2<=es){gLog(`${s.name} is too weak to engage (${ms} vs ${es}).`,"r");gRender();return;}
+  const tier=gTier(es,ms);s.mp=0;
+  gcAsk(tier,`Naval battle! ${s.name} (${ms}) vs ${e.name} (${es})`,ok=>{
+    if(ok){const hit=Math.max(3,Math.ceil(e.str*0.6));e.str-=hit;s.str=Math.max(1,s.str-Math.floor(es/4));gLog(`Broadsides! ${e.name} loses ${hit} ships.`,"g");
+      if(e.str<=0){gLog(`${e.name} is sunk! +3 Glory.`,"g");save.glory+=3;gRemove(e);}}
+    else{s.str-=Math.ceil(es/3);e.str=Math.max(1,e.str-Math.floor(ms/4));gLog(`${s.name} is battered by ${e.name}.`,"r");if(s.str<=0){gLog(`${s.name} is sunk.`,"r");gRemove(s);}}
+  });
+}
+function gTactical(){
+  const s=gById(gcFight.sid),e=gById(gcFight.eid);gcFight=null;if(!s||!e){gRender();return;}
+  const ef=gEff(e);
+  gcPending={sid:s.id,eid:e.id,diff:ef>s.str?1:0,ys:s.str,es:e.str,edef:gt(e.r,e.c).pt&&gc.owner[gk(e.r,e.c)]==="ai"?gDef(e.r,e.c):0};curRegion=gFlavor(e.r,e.c);gSave();
+  closeGC();newGame();log(`Campaign battle: ${s.name} (${s.str}) attacks ${e.name} (${ef}). Win to take the square.`,"c");
+}
+function gApplyTactical(win){
+  const P=gcPending;gcPending=null;curRegion=null;
+  if(!gc){loadGC();}
+  const s=gById(P.sid),e=gById(P.eid);if(!s||!e)return "";
+  const fy=Math.min(1,field("you")/startField.you+0.2),fa=Math.min(1,field("ai")/startField.ai+0.2);
+  let msg;
+  if(win){gRemove(e);s.str=Math.max(1,Math.round(s.str*fy));s.r=e.r;s.c=e.c;s.mp=0;gLog(`Victory in battle! ${e.name} is destroyed.`,"g");gEnter(s);msg=`${e.name} destroyed; ${s.name} advances with ${s.str}.`;}
+  else{s.str=Math.max(1,Math.floor(s.str/2));e.str=Math.max(1,Math.round(e.str*fa));s.mp=0;gLog(`${s.name} is beaten back.`,"r");msg=`${s.name} falls back with ${s.str}.`;}
+  gSave();return `<br><b style="color:var(--blue)">Campaign:</b> ${msg} Press <kbd>M</kbd> to return to the map.`;
+}
+function gReinforce(){
+  const s=gsel&&gById(gsel);if(!s||gBusy())return;
+  if(isFleet(s)){gLog("Fleets repair themselves next to your harbors (+1 ship per turn).");gRender();return;}
+  const p=gt(s.r,s.c).pt;if(!p||gc.owner[gk(s.r,s.c)]!=="you"){gLog("Reinforcements only reach armies standing on a city, port, fort, pass or bridge you hold.");gRender();return;}
+  if(!gc.pool){gLog("No troops in reserve.");gRender();return;}
+  const cap=s.kind==="garrison"?GAR_CAP:armyCap(),k=Math.min(gc.pool,cap-s.str);
+  if(k<=0){gLog(`${s.name} is at full size (${cap}). Raise another army [P].`);gRender();return;}
+  s.str+=k;gc.pool-=k;gLog(`${s.name} receives ${k} troops (now ${s.str}).`,"c");gSave();gRender();
+}
+function gRaise(){
+  if(gBusy())return;const P=GPTS[0];
+  const spot=[[P.r,P.c],...D4.map(([a,b])=>[P.r+a,P.c+b])].find(([r,c])=>gIn(r,c)&&GTER[gt(r,c).ter].cost<99&&!gStack(r,c));
+  if(gc.owner[gk(P.r,P.c)]!=="you"||!spot||gc.pool<4){gLog("Raising an army needs 4+ reserve troops and a free square at or beside Paris.");gRender();return;}
+  const n=Math.min(gc.pool,armyCap());
+  const a=gAdd("you",["Armée d'Italie","Armée du Rhin","Armée d'Espagne","Corps d'Observation","Armée de Réserve","Armée de Pologne"][gc.nid%6],spot[0],spot[1],n+(sk("grande")?3:0),"army");a.mp=0;gc.pool-=n;gLog(`A new army of ${a.str} is raised at Paris.`,"c");gSave();gRender();
+}
+function gBuildDef(){
+  if(gBusy())return;const t=gt(gcur.r,gcur.c),k=gk(gcur.r,gcur.c);
+  if(!t.pt||gc.owner[k]!=="you"){gLog("Move the cursor onto a city, port, fort, pass or bridge you hold, then build [B].");gRender();return;}
+  const L=gDef(gcur.r,gcur.c);if(L>=3){gLog(`${t.pt.name} is already a Fortress.`);gRender();return;}
+  const cost=Math.max(1,DEFCOST[L+1]-(sk("sap")?1:0));
+  if(gc.pool<cost){gLog(`A ${DEFN[L+1]} at ${t.pt.name} costs ${cost} reserve troops (you have ${gc.pool}).`);gRender();return;}
+  gc.pool-=cost;gc.def[k]=L+1;gLog(`Engineers build a ${DEFN[L+1]}${gHarbor(t.pt)?" with coastal batteries":""} at ${t.pt.name} (−${cost} troops).`,"c");gSave();gRender();
+}
+function gBuildFleet(type){
+  if(gBusy())return;const t=gt(gcur.r,gcur.c),k=gk(gcur.r,gcur.c),S=SHIPS[type];
+  if(!t.pt||gc.owner[k]!=="you"||!gHarbor(t.pt)){gLog("Move the cursor onto a port (or coastal capital) you hold to build ships.");gRender();return;}
+  const sea=gNb(gcur.r,gcur.c).find(([a,b])=>gt(a,b).ter==="sea"&&!gStack(a,b));
+  const cost=Math.max(2,S.cost-(sk("yards")?2:0));
+  if(!sea){gLog(`No free sea square next to ${t.pt.name}.`);gRender();return;}
+  if(gc.pool<cost){gLog(`${S.n} cost ${cost} reserve troops (you have ${gc.pool}).`);gRender();return;}
+  gc.pool-=cost;const names=type==="line"?["Escadre de l'Océan","Escadre du Nord","Escadre de Rochefort","Escadre de Cadix"]:["Frigate Division","Flotilla of Boulogne","Corsairs of Saint-Malo","Light Squadron"];
+  gAdd("you",`${names[gc.nid%4]} (${t.pt.name})`,sea[0],sea[1],S.str,"fleet",type);gLog(`${S.n} launched at ${t.pt.name} (−${cost} troops).`,"c");gSave();gRender();
+}
+function gEndTurn(){if(gBusy())return;gsel=null;gc.phase="ai";gc.report=[];gSave();gAITurn();}
+
+// ---- coalition AI: garrisons grow and hold; field armies march on your nearest weak army or point; fleets hunt or blockade
+function gPaths(s){const dist=new Map([[gk(s.r,s.c),0]]),prev=new Map(),q=[[s.r,s.c,0]];
+  while(q.length){q.sort((a,b)=>a[2]-b[2]);const [r,c,d]=q.shift();if(d>dist.get(gk(r,c)))continue;if(!(r===s.r&&c===s.c)&&gStack(r,c))continue;
+    for(const [nr,nc] of gNb(r,c)){const cost=GTER[gt(nr,nc).ter].cost;if(cost>=99)continue;const o=gStack(nr,nc);if(o&&o.side==="ai")continue;
+      const nd=d+cost,k=gk(nr,nc);if(dist.has(k)&&dist.get(k)<=nd)continue;dist.set(k,nd);prev.set(k,gk(r,c));q.push([nr,nc,nd]);}}
+  return {dist,prev};}
+function gSeaPaths(s){const dist=new Map([[gk(s.r,s.c),0]]),prev=new Map(),q=[[s.r,s.c]];
+  while(q.length){const [r,c]=q.shift(),d=dist.get(gk(r,c));for(const [nr,nc] of gNb(r,c)){const k=gk(nr,nc);if(dist.has(k)||gt(nr,nc).ter!=="sea"||gStack(nr,nc))continue;dist.set(k,d+1);prev.set(k,gk(r,c));q.push([nr,nc]);}}
+  return {dist,prev};}
+function gPathTo(prev,from,to){const path=[];let k=to;while(k&&k!==from){path.unshift(k);k=prev.get(k);}return k===from?path:[];}
+function gAITurn(){
+  for(const s of gc.stacks)if(s.side==="ai"){
+    if(s.kind==="garrison"){const p=gt(s.r,s.c).pt;if(!(p&&gBlockaded(p)))s.str=Math.min(AI_GAR_CAP,s.str+2);}
+    else if(s.kind==="army")s.str=Math.min(AI_ARMY_CAP,s.str+1);
+    else if(isFleet(s)&&gNearHarbor(s))s.str=Math.min(FLEET_CAP,s.str+1);}
+  // levy: unblockaded Coalition harbors feed new armies
+  const hb=gOwned("ai").filter(gHarbor),open=hb.filter(p=>!gBlockaded(p)).length,blk=hb.length-open;
+  gc.levy=(gc.levy||0)+1+Math.floor(open/3)+Math.floor(gc.turn/12);
+  if(blk)gLog(`Your blockade of ${blk} Coalition harbor${blk>1?"s":""} slows their levy.`,"g");
+  const armies=gc.stacks.filter(s=>s.side==="ai"&&s.kind==="army"),mine=gc.stacks.filter(s=>s.side==="you"&&!isFleet(s));
+  if(gc.levy>=10&&armies.length<AI_MAX_ARMIES){
+    const caps=gOwned("ai","capital").filter(p=>p.region!=="britain").sort((a,b)=>Math.min(...mine.map(m=>Math.abs(m.r-a.r)+Math.abs(m.c-a.c)))-Math.min(...mine.map(m=>Math.abs(m.r-b.r)+Math.abs(m.c-b.c))));
+    for(const p of caps){const sp=gNb(p.r,p.c).find(([r,c])=>GTER[gt(r,c).ter].cost<99&&!gStack(r,c));
+      if(sp){gAdd("ai",`Coalition Army (${p.name})`,sp[0],sp[1],gc.levy,"army");gLog(`A new Coalition army of ${gc.levy} takes the field near ${p.name}.`,"r");gc.levy=0;break;}}}
+  const L=GPTS.find(p=>p.name==="London");
+  if(gc.turn%10===0&&gc.owner[gk(L.r,L.c)]==="ai"&&gc.stacks.filter(s=>s.side==="ai"&&isFleet(s)).length<5){
+    const sp=gNb(L.r,L.c).find(([r,c])=>gt(r,c).ter==="sea"&&!gStack(r,c));if(sp){gAdd("ai","Royal Navy · New Squadron",sp[0],sp[1],6,"fleet","line");gLog("The Royal Navy launches a new squadron from London.","r");}}
+  // every 4 turns the Coalition fortifies the point nearest to your armies
+  if(gc.turn%4===0&&mine.length){
+    const cand=gOwned("ai").filter(p=>gDef(p.r,p.c)<3).map(p=>({p,d:Math.min(...mine.map(m=>Math.abs(m.r-p.r)+Math.abs(m.c-p.c)))})).filter(x=>x.d<=5).sort((a,b)=>a.d-b.d)[0];
+    if(cand){const k=gk(cand.p.r,cand.p.c);gc.def[k]=gDef(cand.p.r,cand.p.c)+1;gLog(`The Coalition fortifies ${cand.p.name} (${DEFN[gc.def[k]]}).`,"r");}}
+  gcAIq=gc.stacks.filter(s=>s.side==="ai"&&(s.kind==="army"||isFleet(s))).sort((a,b)=>isFleet(b)-isFleet(a)).map(s=>s.id);
+  gAIStep();
+}
+function gAIFleet(s){
+  const mp=fleetMP(s),{dist,prev}=gSeaPaths(s),from=gk(s.r,s.c);
+  const near=(list)=>{let best=null;for(const [p,cond] of list)for(const [r,c] of gNb(p.r,p.c)){if(gt(r,c).ter!=="sea")continue;const k=gk(r,c),d=k===from?0:dist.get(k);if(d!=null&&cond(r,c)&&(!best||d<best.d))best={p,r,c,k,d};}return best;};
+  const sail=(b,steps)=>{const path=gPathTo(prev,from,b.k).slice(0,steps);if(path.length){const [r,c]=path[path.length-1].split(",").map(Number);s.r=r;s.c=c;}};
+  // damaged fleets go home to repair
+  if(s.str<4&&!gNearHarbor(s)){const h=near(gOwned("ai").filter(gHarbor).map(p=>[p,()=>true]));if(h)sail(h,mp);return false;}
+  // 1) attack a weaker French fleet within reach
+  const prey=near(gc.stacks.filter(f=>f.side==="you"&&isFleet(f)&&s.str>=gEff(f)*0.9).map(f=>[f,()=>true]));
+  if(prey&&prey.d<=mp){sail(prey,mp);gNavalDefend(prey.p,s);return true;}
+  if(prey&&prey.d<=mp*2){sail(prey,mp);return false;}
+  // 2) blockade your nearest harbor (strong fleets only stay out of battery range if weak)
+  const port=near(gOwned("you").filter(gHarbor).map(p=>[p,()=>true]));
+  if(port){if(port.d===0)gLog(`${s.name} blockades ${port.p.name}.`,"r");else{sail(port,mp);if(gk(s.r,s.c)===port.k)gLog(`${s.name} blockades ${port.p.name}.`,"r");}}
+  return false;
+}
+function gAIStep(){
+  if(!gcAIq)return;
+  while(gcAIq.length){
+    if(gc.done)break;
+    const s=gById(gcAIq.shift());if(!s)continue;
+    if(isFleet(s)){if(gAIFleet(s))return;continue;}
+    let mp=4;const {dist,prev}=gPaths(s);
+    const goals=[];
+    for(const p of gc.stacks)if(p.side==="you"&&!isFleet(p)&&s.str>=gEff(p)*0.7&&dist.has(gk(p.r,p.c)))goals.push([p.r,p.c,dist.get(gk(p.r,p.c))]);
+    for(const p of gOwned("you"))if(!gStack(p.r,p.c)&&dist.has(gk(p.r,p.c))&&s.str>gNeed(p.r,p.c)*2+2)goals.push([p.r,p.c,dist.get(gk(p.r,p.c))]);
+    const g=goals.filter(x=>x[2]<=12).sort((a,b)=>a[2]-b[2])[0];if(!g)continue;
+    const path=gPathTo(prev,gk(s.r,s.c),gk(g[0],g[1]));
+    for(const step of path){
+      const [r,c]=step.split(",").map(Number),cost=GTER[gt(r,c).ter].cost;if(cost>mp)break;
+      const foe=gStack(r,c);
+      if(foe&&foe.side==="you"){if(s.str<gEff(foe)*0.7)break;gDefend(foe,s);return;}
+      if(foe)break;
+      const pt=gt(r,c).pt,need=gNeed(r,c);
+      if(pt&&gc.owner[step]==="you"&&need>0){ // storm your defenses: costly, and the march ends there
+        s.str-=2*need;gLog(`${s.name} storms ${pt.name} (${gDef(r,c)?DEFN[gDef(r,c)]:"fortress"}) and loses ${2*need}.`,"r");
+        if(s.str<=0){gLog(`${s.name} is shattered against the walls of ${pt.name}!`,"g");gRemove(s);break;}
+        s.r=r;s.c=c;gEnter(s);break;}
+      s.r=r;s.c=c;mp-=cost;gEnter(s);
+      if(gc.done)break;
+      if(gZoc(r,c,"ai"))break; // slowed by your defenses
+    }
+  }
+  gcAIq=null;
+  if(!gc.done){gc.turn++;if(gc.turn>GC_MAXT){gc.done=gCaps()>=3?"win":"lose";gLog(`The campaign ends in ${gYear()}.`,"c");}}
+  if(!gc.done)gStartTurn();else{gc.phase="you";gSave();}
+  gRender();
+}
+function gDefend(p,e){
+  const pe=gEff(p),L=pe-p.str,tier=gTier(e.str,pe);
+  gLog(`${e.name} (${e.str}) attacks ${p.name} (${p.str}${L?" +"+L+" defenses":""})!`,"r");
+  gcAsk(tier,`Defend! ${p.name} vs ${e.name}`,ok=>{
+    const lv=L/3;
+    if(ok){const loss=Math.max(0,Math.floor(e.str/4)-lv);e.str-=Math.ceil(e.str*0.6)+lv;p.str=Math.max(1,p.str-loss);gLog(`${p.name} holds! The attack is repulsed.`,"g");if(e.str<=0){gLog(`${e.name} is destroyed.`,"g");gRemove(e);}}
+    else{p.str-=Math.max(1,Math.ceil(e.str/2)-2*lv);e.str=Math.max(1,e.str-Math.floor(Math.max(0,p.str)/4)-lv);gLog(`${p.name} is driven back.`,"r");
+      if(p.str<=0){gRemove(p);gLog(`${p.name} is destroyed.`,"r");e.r=p.r;e.c=p.c;gEnter(e);}}
+    setTimeout(gAIStep,0);
+  });
+}
+function gNavalDefend(p,e){
+  const pe=gEff(p),tier=gTier(e.str,pe);
+  gLog(`${e.name} (${e.str}) attacks ${p.name} (${pe}) at sea!`,"r");
+  gcAsk(tier,`Naval battle! Defend ${p.name} vs ${e.name}`,ok=>{
+    if(ok){const hit=Math.max(2,Math.ceil(e.str*0.5));e.str-=hit;p.str=Math.max(1,p.str-Math.floor(e.str/5));gLog(`${p.name} beats off ${e.name} (−${hit} ships).`,"g");if(e.str<=0){gLog(`${e.name} is sunk!`,"g");gRemove(e);}}
+    else{p.str-=Math.ceil(e.str/3);e.str=Math.max(1,e.str-Math.floor(pe/4));gLog(`${p.name} is mauled by ${e.name}.`,"r");if(p.str<=0){gLog(`${p.name} is sunk.`,"r");gRemove(p);}}
+    setTimeout(gAIStep,0);
+  });
+}
+
+// ---- rendering
+const gcOpen=()=>$("gc").style.display==="flex";
+function loadGC(){
+  if(!gmap)gBuild();
+  if(save.gc&&save.gc.v===GC_V&&Array.isArray(save.gc.stacks)){gc=save.gc;gc.def=gc.def||{};gc.report=gc.report||[];
+    if(gc.phase==="ai"&&!gcQ&&!gcAIq){gc.phase="you";for(const s of gc.stacks)if(s.side==="you")s.mp=isFleet(s)?fleetMP(s):s.kind==="army"?gMPmax():0;}}
+  else{const old=!!save.gc;gNew();if(old){gLog("Your old 20×14 campaign was retired for the new, wider map. Your Glory, allies, skills and stats are all kept.","c");gSave();}}
+}
+function openGC(){
+  if(active)return;
+  if(gcPending&&phase!=="over"){log("Finish this campaign battle first (End Turn until nightfall if you must).","r");render();return;}
+  closeArmory();$("over").style.display=phase==="over"?"none":$("over").style.display;
+  loadGC();$("gc").style.display="flex";gRender();
+}
+function closeGC(){$("gc").style.display="none";}
+function gStackHTML(s){
+  if(isFleet(s)){const S=SHIPS[s.ship||"line"];return `<span class="gs fleet ${s.side}">${svgI(S.ic)}${s.str}${s.cargo?`<span class="cg" title="carrying ${s.cargo.name}">${svgI("inf")}${s.cargo.str}</span>`:""}</span>`;}
+  return `<span class="gs ${s.side} ${s.kind} ${s.str>=20?"big":""}">${svgI(s.kind==="garrison"?"castle":"inf")}${s.str}</span>`;
+}
+function gRender(){
+  if(!gc||!gmap)return;
+  const live=gc.phase==="you"&&!gcQ&&!gcFight&&!gc.done;
+  const me=gsel&&gById(gsel),rch=me&&live?gReach(me):new Map(),tg=me&&live?gTargets(me):[];
+  const g=$("gcGrid");let h="";
+  for(const t of gmap){
+    const k=gk(t.r,t.c),s=gStack(t.r,t.c),ow=t.pt?gc.owner[k]:"",o=tg.find(o=>o.r===t.r&&o.c===t.c),L=gDef(t.r,t.c);
+    const cl=["gt",t.ter,ow?"ow-"+ow:"",rch.has(k)?"rch":"",o&&(o.kind==="embark"||o.kind==="land")?"emb":o?"tgt":"",t.pt&&gBlockaded(t.pt)?"blk":"",gcur.r===t.r&&gcur.c===t.c?"cur":"",me&&me.r===t.r&&me.c===t.c?"gsel":""].join(" ");
+    let inner=t.pt?`<span class="gi">${svgI(GPT_ICON[t.pt.type])}</span>`:GTER_ICON[t.ter]?`<span class="gi">${svgI(GTER_ICON[t.ter])}</span>`:"";
+    if(t.pt)inner+=`<span class="gn ${t.pt.type==="capital"?"cap":""}">${GSHORT[t.pt.name]||t.pt.name}</span>`;
+    if(L)inner+=`<span class="df ${ow}" title="${DEFN[L]}">${svgI("shield")}<b>${L}</b></span>`;
+    if(s)inner+=gStackHTML(s);
+    const tip=`${t.ter==="sea"?t.zone:GTER[t.ter].n}${t.pt?" · "+t.pt.name+" ("+t.pt.type+", "+(ow==="you"?"yours":"Coalition")+") · "+GBONUS[t.pt.type]:""}${L?" · "+DEFN[L]+" (+"+3*L+" defense)":""}${t.pt&&gBlockaded(t.pt)?" · BLOCKADED":""}${t.pt&&ow!=="you"&&gNeed(t.r,t.c)?" · siege: "+(gc.siege[k]||0)+"/"+gNeed(t.r,t.c)+" breaches":""}${s?" · "+s.name+" ("+s.str+(isFleet(s)?" ships":"")+")":""}`;
+    h+=`<div class="${cl}" data-k="${k}" title="${tip.replace(/"/g,"&quot;")}">${inner}</div>`;
+  }
+  h+=SEAS.map(([n,r,c,rot])=>`<span class="sealbl" style="left:${(c+0.5)/GW*100}%;top:${(r+0.5)/GH*100}%;${rot?"transform:translate(-50%,-50%) rotate(-90deg)":""}">${n}</span>`).join("");
+  g.innerHTML=h;
+  g.querySelectorAll(".gt").forEach(d=>d.onclick=()=>{const [r,c]=d.dataset.k.split(",").map(Number);gcur={r,c};gAct(r,c);});
+  const cur=gt(gcur.r,gcur.c),cs=gStack(gcur.r,gcur.c),ck=gk(gcur.r,gcur.c);
+  const hb=gOwned("ai").filter(gHarbor),blk=hb.filter(gBlockaded).length;
+  let info=`<b>Turn ${gc.turn}/${GC_MAXT} · ${gYear()}</b> · Capitals: <b>${gCaps()}/${GC_WIN}</b> · Reserve: <b>${gc.pool}</b> (+${gIncome()}/turn) · Army moves ${gMPmax()}<br><small>Coalition levy: ${gc.levy||0}/10 (+${1+Math.floor((hb.length-blk)/3)+Math.floor(gc.turn/12)}/turn${blk?`, ${blk} harbor${blk>1?"s":""} blockaded`:""}) · Armies: you ${gc.stacks.filter(s=>s.side==="you"&&s.kind==="army").length}, fleets ${gc.stacks.filter(s=>s.side==="you"&&isFleet(s)).length}</small>`;
+  if(gc.report&&gc.report.length&&gc.phase==="you"&&!gc.done)info+=`<div class="rep"><b>Last Coalition turn</b>${gc.report.slice(0,6).map(([m,c])=>`<div class="${c}">• ${m}</div>`).join("")}${gc.report.length>6?`<div>…and ${gc.report.length-6} more (log below)</div>`:""}</div>`;
+  if(gc.done)info+=`<br><b style="color:${gc.done==="win"?"var(--blue)":"var(--red)"};font-size:18px">${gc.done==="win"?"⚑ Campaign won! Europe is yours.":"✖ Campaign lost."}</b> Start a new campaign below.`;
+  else if(gc.phase==="ai")info+=`<br><b style="color:var(--red)">The Coalition is moving…</b>`;
+  else if(me&&isFleet(me))info+=`<br>Selected: <b>${me.name}</b> · ${me.str} ${SHIPS[me.ship||"line"].n.toLowerCase()} · sail ${me.mp}${me.cargo?` · carrying <b>${me.cargo.name} (${me.cargo.str})</b>`:""}. <b style="color:var(--grn)">Green</b> = sail, <b style="color:var(--red)">red</b> = naval battle${me.cargo?", <b style=\"color:var(--gold)\">gold</b> = land the army":""}.`;
+  else if(me)info+=`<br>Selected: <b>${me.name}</b> · strength ${me.str}${me.kind==="army"?"/"+armyCap():""} · moves left ${me.mp}. <b style="color:var(--grn)">Green</b> = march, <b style="color:var(--red)">red</b> = attack/siege${tg.some(o=>o.kind==="embark")?", <b style=\"color:var(--gold)\">gold</b> = board your fleet":""}.`;
+  else info+=`<br>Click one of your <b style="color:var(--blue)">blue</b> armies or fleets to command it.`;
+  let ci=`${cur.ter==="sea"?cur.zone:GTER[cur.ter].n}${cur.pt?` · <b>${cur.pt.name}</b> (${gc.owner[ck]==="you"?"yours":"Coalition"}; ${GBONUS[cur.pt.type]})`:""}${cs?" · "+cs.name+" "+cs.str:""}`;
+  if(cur.pt){const L=gDef(gcur.r,gcur.c);ci+=` · ${L?DEFN[L]+" +"+3*L:"no defenses"}${gBlockaded(cur.pt)?" · <b style='color:var(--red)'>blockaded</b>":""}`;
+    if(gc.owner[ck]==="you"&&!gc.done){if(L<3)ci+=` · <kbd>B</kbd> ${DEFN[L+1]}: ${Math.max(1,DEFCOST[L+1]-(sk("sap")?1:0))} troops`;if(gHarbor(cur.pt))ci+=` · <kbd>S</kbd> ships of the line: ${Math.max(2,8-(sk("yards")?2:0))} · <kbd>F</kbd> frigates: ${Math.max(2,4-(sk("yards")?2:0))}`;}}
+  info+=`<br><small>Cursor: ${ci}</small>`;
+  if(gcFight){const s=gById(gcFight.sid),e=gById(gcFight.eid);info+=`<div style="margin-top:6px;padding:6px;border:2px solid var(--red)"><b>${s.name} (${s.str}) vs ${e.name} (${gEff(e)})</b><br>Fight it how?<br><button class="btn" id="gT">Tactical battle [T]</button><button class="btn" id="gQ">Quick battle: 1 question [Q]</button><button class="btn" id="gX">Cancel [Esc]</button></div>`;}
+  $("gcInfo").innerHTML=info;
+  const b=(id,f)=>{const x=$(id);if(x)x.onclick=f;};
+  b("gT",gTactical);b("gQ",gQuick);b("gX",()=>{gcFight=null;gRender();});
+  const own=cur.pt&&gc.owner[ck]==="you";
+  $("gcBtns").innerHTML=gc.done?`<button class="btn" id="gNewC">New campaign [N]</button><button class="btn" id="gK">Skills [K]</button>`:
+    `<button class="btn" id="gR" ${me&&gc.pool&&!isFleet(me)?"":"disabled"}>Reinforce [R]</button><button class="btn" id="gP">Raise army [P]</button><button class="btn" id="gB" ${own?"":"disabled"}>Build defense [B]</button><button class="btn" id="gS" ${own&&gHarbor(cur.pt)?"":"disabled"}>Ships of the line [S]</button><button class="btn" id="gF" ${own&&gHarbor(cur.pt)?"":"disabled"}>Frigates [F]</button><button class="btn" id="gK">Skills [K]</button><button class="btn" id="gE">End Turn [E]</button>`;
+  b("gR",gReinforce);b("gP",gRaise);b("gB",gBuildDef);b("gS",()=>gBuildFleet("line"));b("gF",()=>gBuildFleet("frig"));b("gK",openSkills);b("gE",gEndTurn);b("gNewC",gNewCampaign);
+  $("gcLog").innerHTML=gc.log.slice(0,16).map(([m,c])=>`<div class="${c}">— ${m}</div>`).join("");
+  if(gc.done&&!gc.endShown&&gcOpen())showGCEnd();
+}
+function gNewCampaign(){$("gcOver").style.display="none";gNew();gRender();}
+function showGCEnd(){
+  gc.endShown=true;gSave();const win=gc.done==="win";
+  $("gcoTitle").textContent=win?"⚑ Victory · Europe Bows to the Emperor!":gOwned("you","capital").some(p=>p.name==="Paris")?"✖ Defeat · Time Runs Out":"✖ Defeat · Paris Has Fallen";$("gcoTitle").className=win?"win":"lose";
+  $("gcoText").innerHTML=`Year ${gYear()}, turn ${Math.min(gc.turn,GC_MAXT)}. Capitals taken: <b>${gCaps()}</b> of ${GC_WIN} needed. Points held: <b>${gOwned("you").length}</b> of ${GPTS.length}.<br>Campaign questions: <b>${gc.qc||0}/${gc.qa||0}</b> correct${gc.qa?` (${Math.round((gc.qc||0)/gc.qa*100)}%)`:""}.<br>${win?"+25 Glory and +2 ✪ skill points. ":""}Total Glory: <b>${save.glory}</b> · Skill points: <b>${save.sp}</b>.<br><br>${win?"Magnificent. Now rest up for the test!":"Study the topics in red (Progress by Topic), spend your skill points, and march again."}`;
+  $("gcOver").style.display="flex";$("gcoNew").focus();
+}
+function gcKey(e){
+  const k=e.key,K=k.length===1?k.toLowerCase():k;
+  if(gcQ){
+    if(!gcQ.done&&gcQ.choices){const i1="1234".indexOf(k),i2="abcd".indexOf(k.toLowerCase());const idx=k.length===1?(i1>=0?i1:i2):-1;if(idx>=0&&idx<gcQ.choices.length){e.preventDefault();gcAnswer(idx);}}
+    else if(!gcQ.done&&k==="Enter"){e.preventDefault();gcAnswer(null);}
+    else if(gcQ.done&&(k==="Enter"||k===" ")){e.preventDefault();gcCont();}
+    return;
+  }
+  if(gcFight){if(K==="t"){e.preventDefault();gTactical();}else if(K==="q"){e.preventDefault();gQuick();}else if(k==="Escape"){e.preventDefault();gcFight=null;gRender();}return;}
+  const mv={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]}[k];
+  if(mv){e.preventDefault();gcur={r:Math.min(GH-1,Math.max(0,gcur.r+mv[0])),c:Math.min(GW-1,Math.max(0,gcur.c+mv[1]))};gRender();}
+  else if(k==="Enter"||k===" "){e.preventDefault();gAct(gcur.r,gcur.c);}
+  else if(K==="e"){e.preventDefault();gEndTurn();}
+  else if(K==="r"){e.preventDefault();gReinforce();}
+  else if(K==="p"){e.preventDefault();gRaise();}
+  else if(K==="b"){e.preventDefault();gBuildDef();}
+  else if(K==="s"){e.preventDefault();gBuildFleet("line");}
+  else if(K==="f"){e.preventDefault();gBuildFleet("frig");}
+  else if(K==="k"){e.preventDefault();openSkills();}
+  else if(K==="h"){e.preventDefault();openTut();}
+  else if(K==="n"&&gc&&gc.done){e.preventDefault();gNewCampaign();}
+  else if(K==="a"){e.preventDefault();openArmory();}
+  else if(k==="Escape"||K==="m"){e.preventDefault();if(gsel){gsel=null;gRender();}else{closeGC();render();}}
+}
+
+// ---------- SKILL TREES SCREEN ----------
+const SKICON={drill:"inf",ranks:"shield",bayo:"dagger",sap:"redoubt",levee:"flag",remount:"horseshoe",battery:"art",pursuit:"cav",teams:"bolt",murat:"sabers",yards:"anchor",march:"pennant",gunnery:"ship",admiral:"frig",grande:"star"};
+const skillsOpen=()=>$("skills").style.display==="flex";
+let skPick="drill";
+function openSkills(){if(active&&!active.done)return;if(gcQ&&!gcQ.done)return;closeArmory();renderSkills();$("skills").style.display="flex";$("skClose").focus();}
+function closeSkills(){$("skills").style.display="none";}
+function skState(id){const n=SKN[id];if(sk(id))return "own";const prev=n.i?n.tree.nodes[n.i-1][0]:null;if(prev&&!sk(prev))return "locked";return save.sp>=n.cost?"ready":"poor";}
+function learnSkill(id){const n=SKN[id];if(!n||skState(id)!=="ready")return false;save.sp-=n.cost;save.skills.push(id);persist();renderSkills();if(gcOpen())gRender();else if(cells)render();return true;}
+function tradeGlory(){if(save.glory<20)return;save.glory-=20;save.sp++;persist();renderSkills();}
+function renderSkills(){
+  $("skTop").innerHTML=`Skill points: <b style="color:var(--blue);font-size:18px">✪ ${save.sp}</b> · next ✪ in ${5-(save.spProg||0)} correct answer${5-(save.spProg||0)>1?"s":""} · Glory ✦ ${save.glory}. You also earn ✪ for every victory and every capital.`;
+  let h="";
+  SKILLS.forEach((t,ti)=>{const X=ti*320,cx=X+54;
+    h+=`<svg x="${X+18}" y="14" width="28" height="28" viewBox="0 0 24 24" fill="${t.col}">${SVGP[t.ic]}</svg><text x="${X+52}" y="36" font-size="20" font-weight="bold" fill="${t.col}" letter-spacing="1">${t.n}</text>`;
+    t.nodes.forEach(([id,n,ds,cost],i)=>{const y=96+i*96,st=skState(id),pick=skPick===id;
+      if(i)h+=`<line x1="${cx}" y1="${y-66}" x2="${cx}" y2="${y-31}" stroke="${st==="own"?t.col:"#8a6d45"}" stroke-width="${st==="own"?5:2.5}" ${st==="own"?"":'stroke-dasharray="6 5"'}/>`;
+      const fill=st==="own"?t.col:st==="ready"?"#fbf3dd":st==="poor"?"#efe3c4":"#ddd0b2",stroke=st==="ready"?"#a8790f":st==="own"?"#1a1208":"#8a6d45",ico=st==="own"?"#fff":st==="locked"?"#9a8a6c":"#2a1f14";
+      h+=`<g class="nd" data-id="${id}" opacity="${st==="locked"?.6:1}">${pick?`<circle cx="${cx}" cy="${y}" r="37" fill="none" stroke="#2a1f14" stroke-width="2" stroke-dasharray="4 3"/>`:""}<circle cx="${cx}" cy="${y}" r="30" fill="${fill}" stroke="${stroke}" stroke-width="${st==="ready"?4:2.5}"/>`+
+        `<svg x="${cx-17}" y="${y-17}" width="34" height="34" viewBox="0 0 24 24" fill="${ico}" color="${ico}">${SVGP[SKICON[id]]}</svg>`+
+        `<rect x="${cx+40}" y="${y-30}" width="222" height="62" fill="transparent"/><text x="${cx+42}" y="${y-8}" font-size="16" font-weight="bold">${n}</text><text x="${cx+42}" y="${y+11}" font-size="12.5" font-style="italic" fill="#5a4a33">${ds}</text>`+
+        `<text x="${cx+42}" y="${y+28}" font-size="12.5" fill="${st==="own"?"#2f6b2f":st==="ready"?"#a8790f":"#6b5a43"}" font-weight="bold">${st==="own"?"✓ learned":st==="locked"?"🔒 learn the skill above first":"✪ "+cost+(st==="ready"?" · ready":" · need "+(cost-save.sp)+" more")}</text></g>`;});});
+  $("skSvg").innerHTML=h;
+  document.querySelectorAll("#skSvg .nd").forEach(g=>g.onclick=()=>{const id=g.dataset.id;if(skPick===id&&skState(id)==="ready")learnSkill(id);else{skPick=id;renderSkills();}});
+  const n=SKN[skPick],st=skState(skPick);
+  $("skInfo").innerHTML=`<b>${n.n}</b> <span style="color:var(--mut)">(${n.tree.n}, tier ${n.i+1})</span>: ${n.ds}. ${st==="own"?'<b style="color:var(--grn)">Learned.</b>':st==="locked"?"Learn the skill above it first.":st==="ready"?`Costs <b>✪ ${n.cost}</b>. Press Enter or click it again to learn.`:`Costs ✪ ${n.cost}; you have ${save.sp}.`}`;
+  $("skBuy").disabled=st!=="ready";$("skTrade").disabled=save.glory<20;
+}
+function skKey(e){
+  const k=e.key,n=SKN[skPick];
+  const mv={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[k];
+  if(mv){e.preventDefault();const ti=(n.ti+mv[0]+3)%3,i=Math.min(4,Math.max(0,n.i+mv[1]));skPick=SKILLS[ti].nodes[i][0];renderSkills();}
+  else if(k==="Enter"){e.preventDefault();learnSkill(skPick);}
+  else if(k==="Escape"||k==="k"||k==="K"){e.preventDefault();closeSkills();if(gcOpen())gRender();else render();}
+}
+
+// ---------- ARMORY ----------
+const armoryOpen=()=>$("armory").style.display==="flex";
+function openArmory(){if(active)return;renderArmory();$("armory").style.display="flex";$("armClose").focus();}
+function closeArmory(){$("armory").style.display="none";}
+function renderArmory(){
+  const eq=save.equipped.filter(has);
+  $("armTop").innerHTML=`Glory: <b style="color:var(--gold)">✦ ${save.glory}</b> (★ = 1, ★★ = 2, ★★★ = 3 per correct answer, +10 per victory). Saved on this computer. Allies equipped: <b>${eq.length}/${MAX_ALLIES}</b>. Each replaces a basic unit of the same type at the start of your <b>next</b> battle.`;
+  $("armList").innerHTML=ITEMS.map(it=>{
+    const own=has(it.id),eqd=save.equipped.includes(it.id);
+    let btn;
+    if(!own&&it.region)btn=`<span class="st2" style="color:var(--red)">Take ${region(it.region).name}'s capital</span>`;
+    else if(!own)btn=`<button class="btn" data-buy="${it.id}" ${save.glory<it.cost?"disabled":""}>Unlock · ✦${it.cost}</button>`;
+    else if(it.kind==="form")btn=`<span class="st2" style="color:var(--grn)">Unlocked ✓ (press F)</span>`;
+    else btn=`<button class="btn ${eqd?"on":""}" data-eq="${it.id}" ${!eqd&&eq.length>=MAX_ALLIES?"disabled":""}>${eqd?"Equipped ✓":"Equip"}</button>`;
+    return `<div class="item ${own?"":"locked"}"><div><div class="nm">${own?"":"🔒 "}${it.kind==="ally"?svgI(ALLY_BADGE[it.id]||"star")+" ":""}${itemName(it)} <span class="st2" style="color:var(--mut)">${it.kind==="form"?"formation":"ally · "+UT[UT[it.id].cls].n}</span></div><div class="ds">${it.ds}${it.region?" (regional ally: "+region(it.region).name+")":""}</div></div><div>${btn}</div></div>`;
+  }).join("");
+  document.querySelectorAll("[data-buy]").forEach(b=>b.onclick=()=>buy(b.dataset.buy));
+  document.querySelectorAll("[data-eq]").forEach(b=>b.onclick=()=>equip(b.dataset.eq));
+}
+function buy(id){const it=ITEMS.find(i=>i.id===id);if(!it||it.region||has(id)||save.glory<it.cost)return;save.glory-=it.cost;save.unlocked.push(id);persist();renderArmory();render();}
+function equip(id){if(!has(id))return;const i=save.equipped.indexOf(id);if(i>=0)save.equipped.splice(i,1);else if(save.equipped.filter(has).length<MAX_ALLIES)save.equipped.push(id);persist();renderArmory();}
+
+// ---------- INPUT ----------
+document.addEventListener("keydown",e=>{
+  const k=e.key;
+  if($("gcOver").style.display==="flex"){if(k==="n"||k==="N"||k==="Enter"){e.preventDefault();gNewCampaign();}else if(k==="Escape"||k==="m"||k==="M"){e.preventDefault();$("gcOver").style.display="none";}return;}
+  if(skillsOpen()){skKey(e);return;}
+  if(tutOpen()){if(k==="Enter"||k==="Escape"||k==="h"||k==="H"||k===" "){e.preventDefault();closeTut();}return;}
+  if(campOpen()){const RG=REGIONS.filter(r=>r.pts),n="12345678".indexOf(k);
+    if(k.length===1&&n>=0&&RG[n]){e.preventDefault();campPick=RG[n].id;renderCamp();}
+    else if(k==="Enter"){e.preventDefault();campStart(campPick);}
+    else if(k==="q"||k==="Q"){e.preventDefault();campStart(null);}
+    else if(k==="Escape"||k==="m"||k==="M"){e.preventDefault();closeCamp();render();}
+    return;}
+  if(!armoryOpen()&&gcOpen()){gcKey(e);return;}
+  if(armoryOpen()){if(k==="Escape"||k==="a"||k==="A"){e.preventDefault();closeArmory();if(gcOpen())gRender();else render();}else if((k==="n"||k==="N")&&!gcOpen()){e.preventDefault();newGame();}return;}
+  if(phase==="over"){if(k==="n"||k==="N"||(k==="Enter"&&Date.now()-overAt>900)){e.preventDefault();newGame();}else if(k==="a"||k==="A"){e.preventDefault();openArmory();}else if(k==="m"||k==="M"){e.preventDefault();openCamp();}else if(k==="k"||k==="K"){e.preventDefault();openSkills();}return;}
+  if(active){
+    if(!active.done&&active.choices){const i1="1234".indexOf(k),i2="abcd".indexOf(k.toLowerCase());const idx=k.length===1?(i1>=0?i1:i2):-1;if(idx>=0&&idx<active.choices.length){e.preventDefault();answer(idx);}}
+    else if(!active.done&&k==="Enter"){e.preventDefault();answer(null);}
+    else if(active.done&&(k==="Enter"||k===" ")){e.preventDefault();cont();}
+    return;
+  }
+  if(k==="a"||k==="A"){e.preventDefault();openArmory();return;}
+  if(k==="k"||k==="K"){e.preventDefault();openSkills();return;}
+  if(k==="h"||k==="H"){e.preventDefault();openTut();return;}
+  if(k==="m"||k==="M"){e.preventDefault();openCamp();return;}
+  if(k==="w"||k==="W"){e.preventDefault();toggleDrill();return;}
+  if(phase==="ai")return;
+  const mv={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]}[k];
+  if(mv){e.preventDefault();cur={r:Math.min(R-1,Math.max(0,cur.r+mv[0])),c:Math.min(C-1,Math.max(0,cur.c+mv[1]))};render();const t=$("grid").children[cur.r*C+cur.c];if(t&&t.scrollIntoView)t.scrollIntoView({block:"nearest",inline:"nearest"});}
+  else if(k==="Enter"||k===" "){e.preventDefault();act(cell(cur.r,cur.c));}
+  else if(k==="Escape"){sel=null;render();}
+  else if(k==="d"||k==="D")deployAll();
+  else if(k==="f"||k==="F")cycleForm();
+  else if(k==="g"||k==="G")toggleCorps();
+  else if(k==="e"||k==="E")endTurn();
+  else if(k==="n"||k==="N")newGame();
+});
+$("again").onclick=newGame;$("oArm").onclick=openArmory;$("bArm").onclick=()=>{if(!active&&!tutOpen())openArmory();};
+$("armClose").onclick=()=>{closeArmory();if(gcOpen())gRender();else render();};$("armNew").onclick=newGame;
+$("bSk").onclick=openSkills;$("skClose").onclick=()=>{closeSkills();if(gcOpen())gRender();else render();};$("skBuy").onclick=()=>learnSkill(skPick);$("skTrade").onclick=tradeGlory;
+$("gcoNew").onclick=gNewCampaign;$("gcoMap").onclick=()=>{$("gcOver").style.display="none";};
+$("qcount").textContent=Q.length;
+$("tLegend").innerHTML=[["ridge","Ridge +2 def"],["trees","Forest +1 def"],["town","Town +1 def, +1 troops/turn"],["redoubt","Redoubt +3 def"],["bridge","Bridge"],["waves","Ford −1 def / River"],["flag","HQ +2 def"],["inf","Infantry"],["cav","Cavalry"],["art","Artillery"],["gen","General"]].map(([k,t])=>`<span>${svgI(k)} ${t}</span>`).join("")+`<span>Gold badge = elite/allied unit (e.g. ${svgI("wings")} Winged Hussars, ${svgI("sabers")} Cossacks, ${svgI("star")} Guard)</span>`;
+$("gLegend").innerHTML=[["crown","capital"],["anchor","port"],["town","city"],["castle","fortress (siege)"],["pass","pass"],["bridge","bridge"],["peaks","mountains (3)"],["trees","forest (2)"],["waves","river"],["ship","ships of the line"],["frig","frigates"],["shield","defenses (+3 each)"]].map(([k,t])=>`<span>${svgI(k)} ${t}</span>`).join("")+"<span>striped = blockaded · blue/red border = owner · round = army, square = garrison · gold ring = 20+ troops</span>";
+$("bHelp").onclick=openTut;$("bCamp").onclick=()=>{if(!active&&!tutOpen())openCamp();};$("oCamp").onclick=openCamp;
+$("campGo").onclick=()=>campStart(campPick);$("campQuick").onclick=()=>campStart(null);$("campClose").onclick=()=>{closeCamp();render();};$("tutOk").onclick=closeTut;$("gcClose").onclick=()=>{closeGC();render();};$("bDrill").onclick=toggleDrill;
+loadSave();persist();renderProg();
+newGame();
+if(!save.tutDone)openTut();
+</script>
+<div id="demo-pad"><button type="button" data-k="ArrowLeft">←</button><button type="button" data-k="ArrowUp">↑</button><button type="button" data-k="ArrowDown">↓</button><button type="button" data-k="ArrowRight">→</button><button type="button" data-k="w">W</button><button type="button" data-k="a">A</button><button type="button" data-k="s">S</button><button type="button" data-k="d">D</button><button type="button" data-k=" ">Space</button></div>
+<script>
+(function(){
+  var pad=document.getElementById('demo-pad');
+  if(!pad)return;
+  function fire(type,key,shift){
+    document.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
+    window.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
+  }
+  var held=null;
+  function down(ev){
+    var b=ev.target.closest('button[data-k]'); if(!b)return;
+    ev.preventDefault();
+    held=b; fire('keydown', b.getAttribute('data-k'), b.hasAttribute('data-shift'));
+  }
+  function up(){
+    if(!held)return;
+    fire('keyup', held.getAttribute('data-k'), held.hasAttribute('data-shift'));
+    held=null;
+  }
+  pad.addEventListener('pointerdown',down);
+  addEventListener('pointerup',up);
+  addEventListener('pointercancel',up);
+})();
+</script>
+</body>
+</html>

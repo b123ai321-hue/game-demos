@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- viewport-fit=cover + no user zoom so taps never zoom the page on iPhone -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0612">
+<title>Gravelight</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { --orange:#ff9a3c; --bone:#e9e2d0; --purple:#2a1640; --night:#0b0612; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; height:100%; background:#000; overflow:hidden;
+    font-family: ui-monospace, "Courier New", monospace; color:var(--bone);
+    -webkit-user-select:none; user-select:none; touch-action:manipulation; }
+  /* The game area: full height, never wider than 480px, centered on desktop */
+  #game { position:relative; width:100%; max-width:480px; height:100%; margin:0 auto;
+    background:var(--night); overflow:hidden; }
+  canvas { display:block; width:100%; height:100%; touch-action:none; }
+
+  /* HUD along the top (respects the iPhone notch with safe-area padding) */
+  #hud { position:absolute; top:0; left:0; right:0; display:flex; align-items:center; gap:10px;
+    padding: calc(env(safe-area-inset-top) + 8px) 10px 8px; pointer-events:none; }
+  #wave { font-size:16px; min-width:74px; }
+  #fuelWrap { flex:1; height:14px; border:2px solid var(--bone); background:#140a1f; }
+  #fuel { height:100%; width:100%; background:var(--orange); transition:width .1s; }
+  button { font:inherit; color:var(--bone); background:var(--purple); border:2px solid var(--orange);
+    border-radius:8px; cursor:pointer; }
+  #pauseBtn { pointer-events:auto; width:44px; height:44px; font-size:18px; }
+
+  /* Flare + Ward buttons: round, bottom center, 64px (bigger than the 56px minimum) */
+  #actions { position:absolute; left:0; right:0; bottom:calc(env(safe-area-inset-bottom) + 24px);
+    display:flex; justify-content:center; gap:28px; pointer-events:none; }
+  #actions button { pointer-events:auto; width:64px; height:64px; border-radius:50%; font-size:12px; }
+  #actions button.cooling { opacity:.35; }
+  #prompt { position:absolute; left:0; right:0; bottom:calc(env(safe-area-inset-bottom) + 100px);
+    text-align:center; font-size:13px; opacity:.75; pointer-events:none; padding:0 8px; }
+
+  /* Controller mode: hide the touch buttons (Start pauses instead) */
+  body.pad #actions, body.pad #pauseBtn { display:none; }
+
+  /* Full-screen menus: title, pause, win, lose */
+  .screen { position:absolute; inset:0; display:none; flex-direction:column; align-items:center;
+    justify-content:center; gap:18px; text-align:center; padding:24px; background:rgba(5,2,10,.82); }
+  .screen.show { display:flex; }
+  .screen h1 { margin:0; font-size:40px; color:var(--orange); letter-spacing:2px;
+    text-shadow:0 0 12px #ff6a00; }
+  .screen p { margin:0; max-width:320px; line-height:1.5; font-size:14px; }
+  .big { min-width:180px; min-height:56px; font-size:20px; }
+  #win { background:linear-gradient(#f7b267cc, #4a2b5ccc); }
+
+  #toast { position:absolute; left:50%; top:calc(env(safe-area-inset-top) + 64px); transform:translateX(-50%);
+    background:var(--purple); border:2px solid var(--orange); padding:8px 14px; border-radius:8px;
+    font-size:14px; opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap; }
+  #toast.show { opacity:1; }
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="c"></canvas>
+
+  <div id="hud">
+    <div id="wave">Wave 1/5</div>
+    <div id="fuelWrap"><div id="fuel"></div></div>
+    <button id="pauseBtn" aria-label="Pause">II</button>
+  </div>
+
+  <div id="prompt"></div>
+  <div id="actions">
+    <button id="flareBtn">FLARE</button>
+    <button id="wardBtn">WARD</button>
+  </div>
+  <div id="toast"></div>
+
+  <div id="title" class="screen show">
+    <h1>GRAVELIGHT</h1>
+    <p>Hold the light until dawn. Burn the shadows before your torch goes out.</p>
+    <button class="big" data-action="start">Start</button>
+    <p>Tap, press a key, or press any button on your controller.</p>
+  </div>
+  <div id="paused" class="screen">
+    <h1>Paused</h1>
+    <button class="big" data-action="resume">Resume</button>
+  </div>
+  <div id="win" class="screen">
+    <h1>Dawn</h1>
+    <p>You held the light.</p>
+    <button class="big" data-action="start">Play Again</button>
+  </div>
+  <div id="lose" class="screen">
+    <h1>Darkness</h1>
+    <p>The light is gone.</p>
+    <button class="big" data-action="start">Play Again</button>
+  </div>
+</div>
+<script src="assets/sprites.js"></script>
+<script src="assets/sfx.js"></script>
+<script src="game-v1.js"></script>
+</body>
+</html>

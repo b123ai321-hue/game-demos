@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Sengoku Ink — Music Preview</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 16px;
+    font-family: -apple-system, system-ui, sans-serif;
+    background: #1a1410; color: #e8dcc8;
+    max-width: 390px; margin-inline: auto;
+  }
+  h1 { font-size: 18px; font-weight: 600; margin: 0 0 4px; letter-spacing: 0.04em; }
+  p.sub { margin: 0 0 16px; font-size: 12px; color: #a89070; }
+  .row { display: flex; flex-direction: column; gap: 8px; }
+  button {
+    height: 44px; border: 1px solid #5a4030; border-radius: 8px;
+    background: #2a2018; color: #f0e6d4; font-size: 15px;
+    cursor: pointer;
+  }
+  button:active { background: #3a2c20; }
+  button#stop { border-color: #604040; color: #d8b0a0; }
+  .hint { margin-top: 16px; font-size: 11px; color: #7a6848; line-height: 1.4; }
+</style>
+</head>
+<body>
+  <h1>Sengoku Ink · Music</h1>
+  <p class="sub">Original lo-fi jazz-hop · tap once to unlock</p>
+  <div class="row">
+    <button type="button" data-track="title">Title / Menu</button>
+    <button type="button" data-track="map">Map / Peace</button>
+    <button type="button" data-track="battle">Battle</button>
+    <button type="button" data-track="victory">Victory</button>
+    <button type="button" id="stop">Stop</button>
+  </div>
+  <p class="hint">Warm dusty dusk · Rhodes · koto · shakuhachi · soft boom-bap.
+  All music synthesized in code — no samples. See CREDITS.md.</p>
+  <script src="music-data.js"></script>
+  <script src="music.js"></script>
+  <script>
+    (function () {
+      function unlock() { if (window.Music) Music.unlock(); }
+      document.querySelectorAll("[data-track]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          unlock();
+          Music.play(btn.getAttribute("data-track"));
+        });
+      });
+      document.getElementById("stop").addEventListener("click", function () {
+        unlock();
+        Music.stop();
+      });
+    })();
+  </script>
+</body>
+</html>

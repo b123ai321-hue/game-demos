@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0612">
+<meta name="color-scheme" content="dark">
+<title>Gravelight 3D</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { --orange:#ff9a3c; --bone:#e9e2d0; --purple:#2a1640; --gold:#d4af37; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; height:100%; background:#000; overflow:hidden; overscroll-behavior:none;
+    font-family: ui-monospace, "Courier New", monospace; color:var(--bone);
+    -webkit-user-select:none; user-select:none; touch-action:none; }
+  #game { position:fixed; inset:0; overflow:hidden; background:#07040b; }
+  /* The 3D picture: tiny buffer, stretched with chunky pixels */
+  #view { position:absolute; left:0; top:0; width:100%; height:100%; overflow:hidden; }
+  #view canvas.gl { position:absolute; inset:0; display:block; width:100% !important; height:100% !important;
+    image-rendering:pixelated; image-rendering:crisp-edges; }
+  #touch { position:absolute; inset:0; touch-action:none; }
+  button { font:inherit; color:var(--bone); background:var(--purple); border:2px solid var(--orange);
+    border-radius:8px; cursor:pointer; touch-action:manipulation; }
+
+  /* ---- HUD over the 3D view ---- */
+  #hud { position:absolute; top:0; left:0; right:0; padding:calc(env(safe-area-inset-top) + 6px) 8px 0;
+    display:flex; justify-content:space-between; align-items:flex-start; pointer-events:none; }
+  #stats { font-size:13px; line-height:1.35; text-shadow:0 1px 2px #000; }
+  #hearts { color:#ff4d6d; font-size:17px; letter-spacing:1px; }
+  #fuelWrap { width:92px; height:9px; border:2px solid var(--bone); background:#140a1f; margin:2px 0; }
+  #fuel { height:100%; background:var(--orange); }
+  #embers { color:var(--orange); }
+  #hudBtns { display:flex; gap:6px; }
+  #hudBtns button { pointer-events:auto; width:44px; height:44px; font-size:13px; padding:0; }
+  #quest { position:absolute; left:50%; transform:translateX(-50%); top:calc(env(safe-area-inset-top) + 6px);
+    width:44%; max-width:360px; text-align:center; pointer-events:none; text-shadow:0 1px 3px #000; }
+  #objective { font-size:13px; line-height:1.25; color:#ffe2a8; background:rgba(10,5,18,.6); border-radius:6px; padding:3px 4px; }
+  #compass { margin:4px auto 0; width:48px; }
+  #arrow { width:34px; height:34px; margin:0 auto; border-radius:50%; border:2px solid rgba(233,226,208,.6);
+    background:rgba(10,5,18,.6); position:relative; }
+  #arrow::after { content:''; position:absolute; left:50%; top:3px; transform:translateX(-50%);
+    border:7px solid transparent; border-bottom:16px solid var(--orange); border-top:0; }
+  #dist { font-size:11px; opacity:.9; }
+  #bossBar { position:absolute; left:12%; right:12%; top:70%; display:none;
+    text-align:center; font-size:12px; pointer-events:none; }
+  #bossBar div { height:8px; border:1px solid var(--gold); background:#111; margin-top:2px; }
+  #bossBar span { display:block; height:100%; background:var(--gold); }
+  #sword { position:absolute; right:4%; bottom:0; width:34%; max-width:220px; aspect-ratio:1; pointer-events:none;
+    image-rendering:pixelated; transform-origin:100% 100%; }
+  #flash { position:absolute; inset:0; pointer-events:none; opacity:0; }
+
+  /* ---- Touch controls ---- */
+  #joyBase { position:absolute; width:96px; height:96px; margin:-48px 0 0 -48px; border-radius:50%;
+    border:2px solid rgba(233,226,208,.45); display:none; pointer-events:none; }
+  #joyKnob { position:absolute; width:40px; height:40px; margin:-20px 0 0 -20px; border-radius:50%;
+    background:rgba(233,226,208,.5); display:none; pointer-events:none; }
+  #pad { position:absolute; right:10px; bottom:calc(env(safe-area-inset-bottom) + 18px); width:200px; height:170px;
+    pointer-events:none; display:none; }
+  body.touch #pad { display:block; }
+  body.pad #pad, body.pad #hudBtns { display:none !important; }
+  #pad button { position:absolute; border-radius:50%; pointer-events:auto; font-size:11px; width:60px; height:60px; padding:0; }
+  #atkBtn { right:0; bottom:0; width:76px !important; height:76px !important; font-size:13px !important; }
+  #flareBtn { right:88px; bottom:0; }
+  #wardBtn { right:8px; bottom:88px; }
+  #ctxBtn { right:80px; bottom:74px; border-color:#9fe870 !important; display:none; }
+  #pad button.cooling { opacity:.35; }
+  #hint { position:absolute; left:10px; bottom:calc(env(safe-area-inset-bottom) + 20px); width:40%;
+    font-size:11px; opacity:.55; pointer-events:none; display:none; line-height:1.4; }
+  body.touch #hint { display:block; }
+  #prompt { position:absolute; left:0; right:0; bottom:calc(env(safe-area-inset-bottom) + 8px); text-align:center;
+    font-size:12px; opacity:.85; pointer-events:none; padding:0 6px; text-shadow:0 1px 2px #000; }
+
+  /* ---- Messages ---- */
+  #banner { position:absolute; left:0; right:0; top:34%; text-align:center; font-size:24px; color:var(--orange);
+    text-shadow:0 0 10px #000; opacity:0; transition:opacity .5s; pointer-events:none; padding:0 10px; }
+  #banner.show { opacity:1; }
+  #toast { position:absolute; left:50%; top:calc(env(safe-area-inset-top) + 150px); transform:translateX(-50%);
+    width:max-content; max-width:92%; background:rgba(20,10,31,.92); border:2px solid var(--orange); padding:8px 12px;
+    border-radius:8px; font-size:13px; line-height:1.4; opacity:0; transition:opacity .3s; pointer-events:none; text-align:center; }
+  #toast.show { opacity:1; }
+
+  /* ---- Full screens ---- */
+  .screen { position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; text-align:center; padding:24px; background:rgba(5,2,10,.88); overflow-y:auto; }
+  .screen.show { display:flex; }
+  /* center when it fits, scroll from the top when it doesn't (short iPhone screens) */
+  .screen { justify-content:flex-start; }
+  .screen > :first-child { margin-top:auto; } .screen > :last-child { margin-bottom:auto; }
+  .screen h1 { margin:0; font-size:34px; color:var(--orange); letter-spacing:2px; text-shadow:0 0 12px #ff6a00; }
+  .screen p { margin:0; max-width:340px; line-height:1.55; font-size:15px; }
+  .big { min-width:180px; min-height:56px; font-size:19px; }
+  #intro { background:#000; }
+  #storyText { border:2px solid #6b5a8a; padding:16px; border-radius:8px; background:#140a1f; }
+  #story.ember #storyText { border-color:var(--orange); }
+  #story.lore #storyText { font-style:italic; }
+  #win { background:linear-gradient(#f7b267ee, #4a2b5cee); }
+  #inv { width:100%; max-width:340px; display:flex; flex-direction:column; gap:5px; }
+  #inv button { text-align:left; min-height:44px; padding:5px 10px; font-size:14px; border-color:#3d2a55; background:#140a1f; }
+  #inv button.sel { border-color:var(--orange); }
+  #invInfo { min-height:40px; font-size:13px; opacity:.85; max-width:340px; }
+  .common { color:#b8b8b8; } .uncommon { color:#6fdc6f; } .rare { color:#6fa8ff; } .quest { color:#ffb347; }
+  #soundTip { position:fixed; left:50%; top:70px; transform:translateX(-50%); z-index:50; background:#1a1020ee; color:#ffcf7a;
+    border:2px solid #e8913a; border-radius:10px; padding:10px 16px; font:14px monospace; pointer-events:none; }
+  #fps { position:absolute; left:4px; bottom:4px; font-size:10px; opacity:.6; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="view"><canvas id="sword" width="48" height="48"></canvas><div id="flash"></div></div>
+  <div id="touch"></div>
+  <div id="joyBase"></div><div id="joyKnob"></div>
+
+  <div id="hud">
+    <div id="stats">
+      <div id="hearts"></div>
+      <div id="fuelWrap"><div id="fuel"></div></div>
+      <div id="embers"></div>
+      <div id="floorName"></div>
+    </div>
+    <div id="hudBtns">
+      <button id="bagBtn" aria-label="Bag">BAG</button>
+      <button id="pauseBtn" aria-label="Pause">II</button>
+    </div>
+  </div>
+  <div id="quest">
+    <div id="objective"></div>
+    <div id="compass"><div id="arrow"></div><div id="dist"></div></div>
+  </div>
+  <div id="bossBar">THE HOLLOW KING<div><span id="bossHp"></span></div></div>
+
+  <div id="hint">Left side: drag to walk.<br>Right side: drag to turn.</div>
+  <div id="pad">
+    <button id="ctxBtn">OPEN</button>
+    <button id="wardBtn">WARD</button>
+    <button id="flareBtn">FLARE</button>
+    <button id="atkBtn">ATTACK</button>
+  </div>
+  <div id="prompt"></div>
+  <div id="banner"></div>
+  <div id="toast"></div>
+  <div id="fps" hidden></div>
+
+  <div id="title" class="screen show">
+    <h1>GRAVELIGHT 3D</h1>
+    <p>Find the 3 Embers. Relight the altar. Face the Hollow King.</p>
+    <button class="big" data-action="start">Start</button>
+    <p id="titleNote">Tap, press a key, or press any button on your controller.</p>
+  </div>
+  <div id="intro" class="screen">
+    <p id="introText"></p>
+    <button class="big" data-action="next">Next</button>
+    <button data-action="skip" style="min-height:44px;min-width:100px">Skip</button>
+  </div>
+  <div id="story" class="screen"><p id="storyText"></p><button class="big" data-action="close">Continue</button></div>
+  <div id="paused" class="screen">
+    <h1>Bag</h1>
+    <div id="inv"></div>
+    <div id="invInfo"></div>
+    <button class="big" data-action="resume">Resume</button>
+  </div>
+  <div id="win" class="screen">
+    <h1>Dawn</h1>
+    <p>The Hollow King falls, and the stolen night breaks apart. The Gravelight burns again, and morning comes to Mirehollow.</p>
+    <p id="winStats"></p>
+    <button class="big" data-action="restart">Play Again</button>
+  </div>
+  <div id="lose" class="screen">
+    <h1>Darkness</h1>
+    <p>The light is gone.</p>
+    <p id="loseStats"></p>
+    <button class="big" data-action="restart">Play Again</button>
+  </div>
+</div>
+<div id="soundTip" hidden>🔊 Tap the screen to turn on sound</div>
+<script src="assets/sprites.js?v=2" onerror="this.remove()"></script>
+<script src="assets/art3d.js?v=2" onerror="this.remove()"></script>
+<script src="assets/sfx.js?v=2" onerror="this.remove()"></script>
+<script src="assets/music.js?v=3" onerror="this.remove()"></script>
+<script type="module" src="game.js?v=2"></script>
+<script>
+  // If the 3D engine can't download (no internet), say so instead of a blank screen.
+  setTimeout(function () { if (!window.G) document.getElementById('titleNote').textContent = 'Loading the 3D engine... (needs internet)'; }, 6000);
+</script>
+<div id="demo-pad"><button type="button" data-k="ArrowLeft">←</button><button type="button" data-k="ArrowUp">↑</button><button type="button" data-k="ArrowDown">↓</button><button type="button" data-k="ArrowRight">→</button><button type="button" data-k="w">W</button><button type="button" data-k="a">A</button><button type="button" data-k="s">S</button><button type="button" data-k="d">D</button><button type="button" data-k=" ">Space</button></div>
+<script>
+(function(){
+  var pad=document.getElementById('demo-pad');
+  if(!pad)return;
+  function fire(type,key,shift){
+    document.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
+    window.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
+  }
+  var held=null;
+  function down(ev){
+    var b=ev.target.closest('button[data-k]'); if(!b)return;
+    ev.preventDefault();
+    held=b; fire('keydown', b.getAttribute('data-k'), b.hasAttribute('data-shift'));
+  }
+  function up(){
+    if(!held)return;
+    fire('keyup', held.getAttribute('data-k'), held.hasAttribute('data-shift'));
+    held=null;
+  }
+  pad.addEventListener('pointerdown',down);
+  addEventListener('pointerup',up);
+  addEventListener('pointercancel',up);
+})();
+</script>
+</body>
+</html>

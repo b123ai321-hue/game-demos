@@ -9,7 +9,7 @@
      2 = Shared Words  -> the tribe's own invented words (ctx.words), glossed
      3 = Myths         -> short myths composed from those words
    Words are coined procedurally when "Shared Words" is invented, so every
-   seed grows a different little language. No network, works from file://.
+   seed grows a different little language. No network, works from .
    Swap point: LlmMind (inert stub). See DESIGN.md "Mind layer".
    ===================================================================== */
 const SYL=['ka','ru','om','mu','vel','ta','na','sha','do','ki','lu','ba','ne','ee','ush','ra','ti','po','hm','ya'];

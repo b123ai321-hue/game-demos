@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0612">
+<title>Gravelight</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { --orange:#ff9a3c; --bone:#e9e2d0; --purple:#2a1640; --night:#0b0612; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; height:100%; background:#000; overflow:hidden;
+    font-family: ui-monospace, "Courier New", monospace; color:var(--bone);
+    -webkit-user-select:none; user-select:none; touch-action:manipulation; }
+  #game { position:relative; width:100%; max-width:480px; height:100%; margin:0 auto; background:#000; overflow:hidden; }
+  canvas { display:block; width:100%; height:100%; touch-action:none; }
+  button { font:inherit; color:var(--bone); background:var(--purple); border:2px solid var(--orange);
+    border-radius:8px; cursor:pointer; touch-action:manipulation; }
+
+  /* ---- HUD ---- */
+  #hud { position:absolute; top:0; left:0; right:0; padding:calc(env(safe-area-inset-top) + 6px) 8px 0;
+    display:grid; grid-template-columns:1fr auto auto; gap:6px; align-items:start; pointer-events:none; }
+  #stats { font-size:14px; line-height:1.4; }
+  #hearts { color:#ff4d6d; font-size:18px; letter-spacing:1px; }
+  #fuelWrap { width:150px; height:10px; border:2px solid var(--bone); background:#140a1f; margin:3px 0; }
+  #fuel { height:100%; background:var(--orange); }
+  #hud button { pointer-events:auto; width:44px; height:44px; font-size:15px; }
+  #bossBar { position:absolute; left:10%; right:10%; top:calc(env(safe-area-inset-top) + 70px); display:none;
+    text-align:center; font-size:12px; pointer-events:none; }
+  #bossBar div { height:8px; border:1px solid #d4af37; background:#111; margin-top:2px; }
+  #bossBar span { display:block; height:100%; background:#d4af37; }
+
+  /* ---- Touch buttons (bottom right) ---- */
+  #pad { position:absolute; right:12px; bottom:calc(env(safe-area-inset-bottom) + 20px); width:190px; height:190px; pointer-events:none; }
+  #pad button { position:absolute; border-radius:50%; pointer-events:auto; font-size:11px; width:56px; height:56px; }
+  #atkBtn { right:0; bottom:0; width:72px !important; height:72px !important; font-size:13px !important; }
+  #flareBtn { right:84px; bottom:0; }
+  #wardBtn { right:8px; bottom:84px; }
+  #ctxBtn { right:80px; bottom:74px; border-color:#9fe870 !important; display:none; }
+  #pad button.cooling { opacity:.35; }
+  #prompt { position:absolute; left:0; right:0; bottom:calc(env(safe-area-inset-bottom) + 10px); text-align:center;
+    font-size:12px; opacity:.8; pointer-events:none; padding:0 6px; }
+  body.pad #pad, body.pad #bagBtn, body.pad #pauseBtn { display:none; }
+
+  /* ---- Messages ---- */
+  #banner { position:absolute; left:0; right:0; top:32%; text-align:center; font-size:26px; color:var(--orange);
+    text-shadow:0 0 10px #000; opacity:0; transition:opacity .5s; pointer-events:none; padding:0 10px; }
+  #banner.show { opacity:1; }
+  #toast { position:absolute; left:50%; top:calc(env(safe-area-inset-top) + 96px); transform:translateX(-50%);
+    width:max-content; max-width:92%; background:rgba(20,10,31,.92); border:2px solid var(--orange); padding:8px 12px;
+    border-radius:8px; font-size:13px; line-height:1.4; opacity:0; transition:opacity .3s; pointer-events:none; text-align:center; }
+  #toast.show { opacity:1; }
+
+  /* ---- Full screens ---- */
+  .screen { position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center;
+    gap:16px; text-align:center; padding:24px; background:rgba(5,2,10,.9); }
+  .screen.show { display:flex; }
+  .screen h1 { margin:0; font-size:36px; color:var(--orange); letter-spacing:2px; text-shadow:0 0 12px #ff6a00; }
+  .screen p { margin:0; max-width:330px; line-height:1.55; font-size:15px; }
+  .big { min-width:180px; min-height:56px; font-size:19px; }
+  #intro { background:#000; }
+  #read p { font-style:italic; border:2px solid #6b5a8a; padding:16px; border-radius:8px; background:#140a1f; }
+  #win { background:linear-gradient(#f7b267ee, #4a2b5cee); }
+  #inv { width:100%; max-width:340px; display:flex; flex-direction:column; gap:6px; }
+  #inv button { text-align:left; min-height:44px; padding:6px 10px; font-size:14px; border-color:#3d2a55; background:#140a1f; }
+  #inv button.sel { border-color:var(--orange); }
+  #invInfo { min-height:44px; font-size:13px; opacity:.85; max-width:340px; }
+  .common { color:#b8b8b8; } .uncommon { color:#6fdc6f; } .rare { color:#6fa8ff; }
+#soundTip{position:fixed;left:50%;top:70px;transform:translateX(-50%);z-index:50;background:#1a1020ee;color:#ffcf7a;border:2px solid #e8913a;border-radius:10px;padding:10px 16px;font:14px monospace;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="c"></canvas>
+
+  <div id="hud">
+    <div id="stats">
+      <div id="hearts"></div>
+      <div id="fuelWrap"><div id="fuel"></div></div>
+      <div id="floorName"></div>
+    </div>
+    <button id="bagBtn" aria-label="Bag">BAG</button>
+    <button id="pauseBtn" aria-label="Pause">II</button>
+  </div>
+  <div id="bossBar">THE HOLLOW KING<div><span id="bossHp"></span></div></div>
+
+  <div id="pad">
+    <button id="ctxBtn">OPEN</button>
+    <button id="wardBtn">WARD</button>
+    <button id="flareBtn">FLARE</button>
+    <button id="atkBtn">ATTACK</button>
+  </div>
+  <div id="prompt"></div>
+  <div id="banner"></div>
+  <div id="toast"></div>
+
+  <div id="title" class="screen show">
+    <h1>GRAVELIGHT</h1>
+    <p>Carry the last light into the Hollow King's crypt.</p>
+    <button class="big" data-action="start">Start</button>
+    <p>Tap, press a key, or press any button on your controller.</p>
+  </div>
+  <div id="intro" class="screen">
+    <p id="introText"></p>
+    <button class="big" data-action="next">Next</button>
+    <button data-action="skip" style="min-height:44px;min-width:100px">Skip</button>
+  </div>
+  <div id="read" class="screen"><p id="readText"></p><button class="big" data-action="close">Close</button></div>
+  <div id="paused" class="screen">
+    <h1>Bag</h1>
+    <div id="inv"></div>
+    <div id="invInfo"></div>
+    <button class="big" data-action="resume">Resume</button>
+  </div>
+  <div id="win" class="screen">
+    <h1>Dawn</h1>
+    <p>The Hollow King falls, and the stolen night breaks apart. Morning comes to Mirehollow.</p>
+    <p id="winStats"></p>
+    <button class="big" data-action="restart">Play Again</button>
+  </div>
+  <div id="lose" class="screen">
+    <h1>Darkness</h1>
+    <p>The light is gone.</p>
+    <p id="loseStats"></p>
+    <button class="big" data-action="restart">Play Again</button>
+  </div>
+</div>
+<div id="soundTip" hidden>🔊 Tap the screen to turn on sound</div>
+<script src="assets/sprites.js?v=3"></script>
+<script src="assets/sfx.js?v=3"></script>
+<script src="assets/music.js?v=3" onerror="this.remove()"></script>
+<script src="game.js?v=3"></script>
+<div id="demo-pad"><button type="button" data-k="ArrowLeft">←</button><button type="button" data-k="ArrowUp">↑</button><button type="button" data-k="ArrowDown">↓</button><button type="button" data-k="ArrowRight">→</button><button type="button" data-k="w">W</button><button type="button" data-k="a">A</button><button type="button" data-k="s">S</button><button type="button" data-k="d">D</button><button type="button" data-k=" ">Space</button></div>
+<script>
+(function(){
+  var pad=document.getElementById('demo-pad');
+  if(!pad)return;
+  function fire(type,key,shift){
+    document.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
+    window.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
+  }
+  var held=null;
+  function down(ev){
+    var b=ev.target.closest('button[data-k]'); if(!b)return;
+    ev.preventDefault();
+    held=b; fire('keydown', b.getAttribute('data-k'), b.hasAttribute('data-shift'));
+  }
+  function up(){
+    if(!held)return;
+    fire('keyup', held.getAttribute('data-k'), held.hasAttribute('data-shift'));
+    held=null;
+  }
+  pad.addEventListener('pointerdown',down);
+  addEventListener('pointerup',up);
+  addEventListener('pointercancel',up);
+})();
+</script>
+</body>
+</html>
