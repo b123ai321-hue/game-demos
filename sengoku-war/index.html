@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Sengoku War · 戦国合戦</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+
+#demo-pad{position:fixed;left:8px;right:8px;bottom:8px;z-index:9999;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;pointer-events:none;touch-action:manipulation}
+#demo-pad button{pointer-events:auto;touch-action:manipulation;min-width:44px;min-height:44px;padding:8px 10px;font:16px/1 system-ui,-apple-system,sans-serif;background:#000000bb;color:#fff;border:1px solid #ffffff55;border-radius:8px}
+html,body{touch-action:manipulation}
+
+:root{--ink:#16111a;--paper:#efe2c4;--red:#b8322a;--ind:#26305e;--gold:#e8b04a;--amber:#f0a35a;--mag:#b0507e;--mut:#cdb99a;
+--kf:"Yu Mincho","Hiragino Mincho ProN","Noto Serif CJK JP","Noto Serif JP","MS Mincho",serif;}
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#140f16;color:var(--paper);font:14px/1.35 Georgia,"Times New Roman",serif;user-select:none}
+canvas{display:block;position:fixed;inset:0;width:100vw;height:100vh;cursor:crosshair}
+.ik{font-family:var(--kf);font-style:normal;display:inline-block;border:1.5px solid currentColor;padding:0 4px;margin-right:6px;line-height:1.3;font-weight:700}
+.ik.r{background:var(--red);color:var(--paper);border-color:var(--ink)}
+.btn{background:rgba(22,17,26,.82);color:var(--paper);border:1.5px solid #6d5a48;border-radius:3px;padding:5px 10px;font:inherit;cursor:pointer}
+.btn:hover{border-color:var(--gold);color:#fff}.btn.on{border-color:var(--gold);background:#3a2a20;color:var(--gold)}
+.btn:disabled{opacity:.45;cursor:default}
+#top{position:fixed;left:10px;right:10px;top:8px;display:flex;gap:8px;align-items:center;pointer-events:none;z-index:5}
+#top>*{pointer-events:auto}
+.pan{background:rgba(22,17,26,.78);border:1px solid #4a3c34;border-radius:3px;padding:5px 9px;display:flex;align-items:center;gap:6px}
+.bar{width:90px;height:6px;background:#2c2228;border:1px solid #000;display:inline-block;vertical-align:middle}.bar i{display:block;height:100%;background:var(--gold)}
+#sp{flex:1}
+#selp{position:fixed;left:10px;bottom:10px;max-width:44vw;z-index:5;display:none}
+#chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.chip{background:rgba(239,226,196,.92);color:var(--ink);border:1.5px solid var(--ink);border-left:6px solid var(--red);padding:1px 5px;font-size:12px;border-radius:2px}
+.chip b{font-family:var(--kf)}
+#terr{position:fixed;right:10px;bottom:10px;z-index:5;font-size:12px;color:var(--mut)}
+#toast{position:fixed;left:50%;top:52px;transform:translateX(-50%);z-index:6;text-align:center;pointer-events:none}
+#toast div{background:rgba(22,17,26,.85);border:1px solid #6d5a48;margin:3px auto;padding:4px 12px;border-radius:3px;width:max-content;max-width:80vw;transition:opacity .6s}
+.ov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:10;background:rgba(14,9,16,.45)}
+.card{background:linear-gradient(#211820f2,#160f17f5);border:2px solid #7a6048;outline:1px solid #000;box-shadow:0 10px 40px #000a;padding:22px 28px;max-width:640px;width:92vw;border-radius:4px}
+h1{font-family:var(--kf);font-size:54px;margin:0;letter-spacing:6px;color:var(--paper);text-shadow:3px 3px 0 var(--red),0 0 30px #f0a35a66}
+h2{margin:6px 0 14px;font-weight:normal;color:var(--amber);letter-spacing:3px}
+.subj{display:flex;gap:8px;margin:12px 0}
+.how li{margin:4px 0}.how{padding-left:18px;font-size:13.5px}
+.choices{display:grid;gap:6px;margin-top:10px}.choice{text-align:left}
+.choice.right{border-color:#6c4;color:#bfa}.choice.wrong{border-color:#c44;color:#fbb}
+#num{font:inherit;padding:6px;width:60%;margin-top:10px}
+.good{color:#bfe39a;margin-top:10px}.bad{color:#f3a49a;margin-top:10px}
+#mini{inset:auto;right:10px;bottom:28px;width:220px;height:147px;border:2px solid #7a6048;outline:1px solid #000;display:none;z-index:5;cursor:pointer}
+#recp{position:fixed;right:240px;bottom:10px;z-index:6;display:none;max-width:540px}
+#recL{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px}.rec{text-align:left;font-size:12.5px}.rec small{color:var(--mut)}
+.kj{font-family:var(--kf)}#scg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0 6px}.scB{text-align:left}.scB small{color:var(--mut)}
+</style></head><body>
+<canvas id="cv"></canvas>
+<div id="top" style="display:none">
+ <div class="pan"><i class="ik r">戦</i><span id="clock">0:00</span>
+  <button class="btn" id="bPause" title="Space">⏸</button><button class="btn sp" data-s="1">1x</button><button class="btn sp" data-s="2">2x</button><button class="btn sp" data-s="4">4x</button></div>
+ <div class="pan"><i class="ik r" id="pName">織田</i><span id="pInfo"></span><span id="koku" style="color:var(--gold)"></span></div>
+ <div class="pan"><i class="ik" id="eName" style="color:#9fb0ff">今川</i><span id="eInfo"></span></div><div class="pan" id="wx"></div>
+ <span id="sp"></span>
+ <button class="btn" id="bAid" style="display:none" title="Q">援 Call for aid</button>
+ <button class="btn" id="bMus" title="Music on/off">楽 Music</button><button class="btn" id="bMute" title="Mute">音 Sound</button><button class="btn" id="bHelp">?</button>
+</div>
+<div id="selp" class="pan" style="display:none;flex-direction:column;align-items:flex-start"><div id="chips"></div>
+ <div><button class="btn" id="bHold">止 Hold [H]</button> <button class="btn" id="bMerge">合 Merge [M]</button> <button class="btn" id="bSplit">分 Split [S]</button></div></div>
+<div id="terr"></div><canvas id="mini" width="220" height="147"></canvas>
+<div id="recp" class="pan"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span id="recT"></span><button class="btn" id="recX">✕</button></div><div id="recL"></div></div><div id="toast"></div>
+<div class="ov" id="menu" style="display:flex"><div class="card" style="text-align:center;max-width:760px">
+ <h1>戦国合戦</h1><h2>SENGOKU WAR</h2>
+ <div id="scg"></div><div id="scDesc" style="color:var(--mut);min-height:36px;font-size:13px"></div>
+ <div class="subj" style="justify-content:center"><span style="align-self:center">Difficulty:</span>
+  <button class="btn dfB" data-d="easy">Easy</button><button class="btn on dfB" data-d="normal">Normal</button><button class="btn dfB" data-d="hard">Hard</button></div>
+ <div class="subj" style="justify-content:center"><span style="align-self:center">Study:</span>
+  <button class="btn on subjB" data-s="free">Free play</button><button class="btn subjB" data-s="precalc">Pre-Calc</button><button class="btn subjB" data-s="spanish">Spanish</button></div>
+ <div style="font-size:12px;color:var(--mut);margin-bottom:12px" id="subjNote">Free play: no questions.</div>
+ <button class="btn on" id="bStart" style="font-size:20px;padding:8px 30px">出陣 · Start battle</button>
+ <div style="margin-top:12px;font-size:12px;color:#8d7b68" id="loadNote">Painting the battlefield…</div>
+</div></div>
+
+<div class="ov" id="how"><div class="card" style="max-width:760px"><h2 style="margin-top:0"><i class="ik r">法</i>How to play</h2><ul class="how">
+<li><b>Select:</b> left-click a counter · Shift-click to add · left-drag a box · double-click = all of that type on screen.</li>
+<li><b>Orders:</b> right-click ground to move (keeps formation) · right-click an enemy to attack · <b>right-drag</b> to draw a march path · Shift+right-click queues waypoints.</li>
+<li><b>Keys:</b> H hold · M merge same-type · S split · Ctrl+1–5 save group, 1–5 recall (twice = jump) · R recruit at your main castle · Space pause · + / − speed · wheel zoom · middle-drag, arrow keys or the minimap to pan.</li>
+<li><b>Recruit:</b> left-click one of your towns 町 or castles 城 to open its recruit panel. Rice 米 flows in from every place you hold. Towns train light troops; castles train everything.</li>
+<li><b>Troops:</b> 槍 spears beat cavalry · 侍 heavy samurai beat spears · 騎 cavalry crush 弓 archers, 鉄 guns and 砲 cannon · 僧 monks and spears stop cavalry · 鉄 teppo fire huge, slow volleys (weak in rain and melee) · 砲 cannon outrange everything and smash castle garrisons, but need an escort · 騎弓 mounted archers shoot on the move and back off from melee · 忍 ninja scout far, hide in forest, capture towns fast and cut enemy rice when inside their town.</li>
+<li><b>Terrain &amp; weather:</b> plains fast · forest slow, +30% defense · hills +35% defense and longer range · rivers very slow except at fords/bridges · mountains impassable. You only see enemies near your troops and towns; rain and fog shorten sight.</li>
+<li><b>Tactics:</b> the notch on each counter shows where it faces. Engaged units turn slowly, so pin the enemy from the front, then hit the side (側 FLANK ×1.5) or rear (背 REAR! ×2.2, big morale shock). Units touched by 2+ enemies are 囲 surrounded and break fast. Guard your own flanks — enemy cavalry will try to get behind you.</li>
+<li><b>Counters:</b> the right troop type does about double damage (✓ Counter), the wrong one about half (✗). Cavalry charging spears or monks head-on is 槍 repelled; a 突 charge into a flank or rear does ×2.5 and stuns for 2 s.</li>
+<li><b>Ground:</b> 止 Hold (H) gives +30% defense to the front only. Attacking uphill deals ×0.75; hills add archer range. Forest gives ×1.5 cover from arrows and shot, and troops waiting unseen in forest strike first: 伏 AMBUSH ×2 for 3 s.</li>
+<li><b>Morale:</b> keep your 将 commander alive. Broken units flee (崩) and rally later.</li>
+<li><b>Win:</b> take the enemy's main castle or break their army (Okehazama: slay their commander). <b>Lose</b> if your main castle falls.</li></ul>
+<div style="text-align:right"><button class="btn on" id="bHowOk">Got it [Enter]</button></div></div></div>
+
+<div class="ov" id="qov"><div class="card"><div id="qhead" style="color:var(--amber)"></div><div id="qtext" style="font-size:18px;margin-top:8px"></div><div id="qin"></div><div id="fb"></div></div></div>
+<div class="ov" id="end"><div class="card" style="text-align:center"><h1 id="endT">勝利</h1><h2 id="endS"></h2><div id="endD" style="color:var(--mut);margin-bottom:14px"></div>
+ <button class="btn on" id="bAgain">Play again</button> <button class="btn" id="bMenu">Menu</button></div></div>
+<script src="audio/music-data.js"></script>
+<script>
+/*! Sengoku Ink music player — dependency-free, WebKit-friendly.
+ * Prefers Web Audio (decodeAudioData + looping AudioBufferSourceNode with
+ * exact loopStart/loopEnd to dodge MP3 encoder padding). Falls back to
+ * <audio loop> if fetch fails (e.g. file:// without MUSIC_DATA).
+ * Nothing plays until unlock() after a user tap (iPhone autoplay rule).
+ * Tracks: title, map, battle, victory.
+ */
+(function (global) {
+  "use strict";
+
+  var LOOP_END = {"title": 70.2439, "map": 63.157891, "battle": 64.0, "victory": 48.0};
+  var NAMES = ["title", "map", "battle", "victory"];
+  var BASE = (function () {
+    try {
+      var s = document.currentScript && document.currentScript.src;
+      if (s) return s.replace(/\/[^/]*$/, "/");
+    } catch (e) {}
+    return "audio/";
+  })();
+
+  var ctx = null;
+  var master = null;
+  var unlocked = false;
+  var buffers = {};       // name -> AudioBuffer
+  var current = null;      // {name, src, gain}
+  var nextFade = null;
+  var volume = 0.7;
+  var usingElement = false;
+  var el = null;           // HTMLAudioElement fallback
+  var pendingName = null;
+
+  function ensureCtx() {
+    if (ctx) return ctx;
+    var AC = global.AudioContext || global.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = volume;
+    master.connect(ctx.destination);
+    return ctx;
+  }
+
+  function b64ToArrayBuffer(b64) {
+    var bin = atob(b64);
+    var len = bin.length;
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes.buffer;
+  }
+
+  function dataUrlToBuf(dataUrl) {
+    var i = dataUrl.indexOf(",");
+    return b64ToArrayBuffer(dataUrl.slice(i + 1));
+  }
+
+  function loadOne(name) {
+    return new Promise(function (resolve, reject) {
+      if (buffers[name]) return resolve(buffers[name]);
+      var data = global.MUSIC_DATA && global.MUSIC_DATA[name];
+      function decode(ab) {
+        ensureCtx();
+        if (!ctx) return reject(new Error("no AudioContext"));
+        ctx.decodeAudioData(ab.slice(0), function (buf) {
+          buffers[name] = buf;
+          resolve(buf);
+        }, function (err) { reject(err || new Error("decode fail")); });
+      }
+      if (data) {
+        try { decode(dataUrlToBuf(data)); } catch (e) { reject(e); }
+        return;
+      }
+      var url = BASE + name + ".mp3";
+      fetch(url).then(function (r) {
+        if (!r.ok) throw new Error("fetch " + url + " " + r.status);
+        return r.arrayBuffer();
+      }).then(decode).catch(reject);
+    });
+  }
+
+  function stopSource(entry, fade) {
+    if (!entry) return;
+    var g = entry.gain;
+    var s = entry.src;
+    var t = ctx ? ctx.currentTime : 0;
+    try {
+      if (g && fade && ctx) {
+        g.gain.cancelScheduledValues(t);
+        g.gain.setValueAtTime(g.gain.value, t);
+        g.gain.linearRampToValueAtTime(0.0001, t + fade);
+        setTimeout(function () {
+          try { s.stop(); } catch (e) {}
+          try { s.disconnect(); g.disconnect(); } catch (e) {}
+        }, fade * 1000 + 40);
+      } else {
+        try { s.stop(); } catch (e) {}
+        try { s.disconnect(); g.disconnect(); } catch (e) {}
+      }
+    } catch (e) {}
+  }
+
+  function startBuffer(name, fadeIn) {
+    ensureCtx();
+    var buf = buffers[name];
+    if (!buf || !ctx) return;
+    var src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    src.loopStart = 0;
+    src.loopEnd = LOOP_END[name] || buf.duration;
+    var g = ctx.createGain();
+    var t = ctx.currentTime;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(1, t + (fadeIn || 0.01));
+    src.connect(g);
+    g.connect(master);
+    src.start(0);
+    current = { name: name, src: src, gain: g };
+  }
+
+  function playElement(name) {
+    usingElement = true;
+    if (!el) {
+      el = document.createElement("audio");
+      el.loop = true;
+      el.preload = "auto";
+      el.setAttribute("playsinline", "");
+      el.style.display = "none";
+      document.body.appendChild(el);
+    }
+    var data = global.MUSIC_DATA && global.MUSIC_DATA[name];
+    el.src = data || (BASE + name + ".mp3");
+    el.volume = volume;
+    var p = el.play();
+    if (p && p.catch) p.catch(function () {});
+    current = { name: name, src: null, gain: null };
+  }
+
+  var Music = {
+    unlock: function () {
+      if (unlocked) {
+        if (ctx && ctx.state === "suspended") ctx.resume();
+        return;
+      }
+      unlocked = true;
+      ensureCtx();
+      if (ctx && ctx.state === "suspended") ctx.resume();
+      // preload all
+      NAMES.forEach(function (n) {
+        loadOne(n).catch(function () { /* fallback path later */ });
+      });
+      if (pendingName) {
+        var n = pendingName;
+        pendingName = null;
+        Music.play(n);
+      }
+    },
+
+    play: function (name) {
+      if (NAMES.indexOf(name) < 0) return;
+      if (!unlocked) {
+        pendingName = name;
+        return;
+      }
+      ensureCtx();
+      if (usingElement || !ctx) {
+        if (current && current.name === name) return;
+        playElement(name);
+        return;
+      }
+      if (current && current.name === name) return;
+
+      var fade = 0.7;
+      var prev = current;
+      loadOne(name).then(function () {
+        if (ctx.state === "suspended") ctx.resume();
+        stopSource(prev, fade);
+        startBuffer(name, fade);
+      }).catch(function () {
+        // fetch/decode failed — element fallback
+        stopSource(prev, 0.01);
+        playElement(name);
+      });
+    },
+
+    stop: function () {
+      pendingName = null;
+      if (usingElement && el) {
+        try { el.pause(); el.removeAttribute("src"); el.load(); } catch (e) {}
+        current = null;
+        return;
+      }
+      stopSource(current, 0.4);
+      current = null;
+    },
+
+    setVolume: function (v) {
+      volume = Math.max(0, Math.min(1, +v || 0));
+      if (master) master.gain.value = volume;
+      if (el) el.volume = volume;
+    },
+
+    _meta: LOOP_END
+  };
+
+  global.Music = Music;
+})(typeof window !== "undefined" ? window : this);
+
+</script>
+<script>
+const Q_PRECALC = [
+// ===== END BEHAVIOR / DEGREE =====
+{t:"End Behavior",d:1,q:"End behavior of f(x) = 2x⁴ − 3x + 1?",c:["Up on both ends: x→±∞, f(x)→+∞","Down on both ends","Down on left, up on right","Up on left, down on right"],e:"Leading term 2x⁴: even degree → both ends go the same way; positive leading coefficient → both go UP."},
+{t:"End Behavior",d:1,q:"End behavior of f(x) = −x³ + 5x² − 2?",c:["Up on left, down on right","Down on left, up on right","Up on both ends","Down on both ends"],e:"Leading term −x³: odd degree → ends go opposite ways. Negative coefficient flips the usual x³ shape, so as x→−∞, f→+∞ and as x→+∞, f→−∞."},
+{t:"End Behavior",d:2,q:"End behavior of f(x) = −2x⁴ + x³ + 7?",c:["Down on both ends","Up on both ends","Up on left, down on right","Down on left, up on right"],e:"Only the leading term −2x⁴ matters: even degree (same direction both sides), negative coefficient → both ends DOWN."},
+{t:"End Behavior",d:1,q:"Degree of f(x) = (x − 1)²(x + 3)³?",c:["5","6","3","2"],e:"Add the exponents of the factors: 2 + 3 = 5."},
+{t:"End Behavior",d:1,q:"Leading coefficient and degree of (2x − 1)(3x² + 4)?",c:["LC 6, degree 3","LC 5, degree 3","LC 6, degree 2","LC 2, degree 3"],e:"Multiply the leading terms: (2x)(3x²) = 6x³ → leading coefficient 6, degree 3."},
+{t:"End Behavior",d:3,q:"A polynomial rises to the LEFT and falls to the RIGHT. What must be true?",c:["Odd degree, negative leading coefficient","Odd degree, positive leading coefficient","Even degree, negative leading coefficient","Even degree, positive leading coefficient"],e:"Ends go opposite directions → odd degree. A positive odd polynomial goes down-left/up-right; this one is flipped, so the leading coefficient is negative."},
+// ===== ZEROS / MULTIPLICITY / TURNING POINTS =====
+{t:"Zeros & Multiplicity",d:1,q:"Maximum number of turning points of a degree-5 polynomial?",n:4,e:"A degree-n polynomial has at most n − 1 turning points: 5 − 1 = 4."},
+{t:"Zeros & Multiplicity",d:1,q:"For f(x) = (x − 2)²(x + 1), what happens at x = 2?",c:["Graph touches the x-axis and turns around","Graph crosses the x-axis","Graph has a vertical asymptote","x = 2 is not a zero"],e:"(x − 2) has multiplicity 2 (even) → the graph touches/bounces at x = 2. Odd multiplicity → crosses."},
+{t:"Zeros & Multiplicity",d:1,q:"Zeros of f(x) = x(x − 4)(x + 7)?",c:["0, 4, −7","0, −4, 7","4, −7 only","1, 4, 7"],e:"Set each factor = 0: x = 0, x − 4 = 0 → x = 4, x + 7 = 0 → x = −7."},
+{t:"Zeros & Multiplicity",d:1,q:"y-intercept of f(x) = (x + 2)(x − 3)(x − 1)?",n:6,e:"Plug in x = 0: (2)(−3)(−1) = 6. So the y-intercept is (0, 6)."},
+{t:"Zeros & Multiplicity",d:2,q:"f(x) = x³(x + 2)²(x − 5). Behavior at x = 0?",c:["Crosses, flattening out (S-shape)","Touches and bounces","Crosses straight through like a line","Not a zero"],e:"x³ → multiplicity 3 (odd, > 1): the graph crosses but flattens out like y = x³ near the origin."},
+{t:"Zeros & Multiplicity",d:2,q:"A polynomial graph has 3 turning points. Minimum possible degree?",n:4,e:"Turning points ≤ degree − 1, so degree ≥ 3 + 1 = 4."},
+{t:"Zeros & Multiplicity",d:2,q:"f(x) = (x − 1)(x + 2)². Sign of f(x) for −2 < x < 1?",c:["Negative","Positive","Zero","Changes sign at x = 0"],e:"Test x = 0: (0 − 1)(0 + 2)² = (−1)(4) = −4 → negative. No zeros between −2 and 1, so it stays negative."},
+{t:"Zeros & Multiplicity",d:2,q:"Which polynomial (leading coefficient 1) has zeros 1, −2, and 3?",c:["(x − 1)(x + 2)(x − 3)","(x + 1)(x − 2)(x + 3)","(x − 1)(x − 2)(x − 3)","(x + 1)(x + 2)(x − 3)"],e:"Zero r ↔ factor (x − r). r = −2 gives (x − (−2)) = (x + 2)."},
+{t:"Zeros & Multiplicity",d:3,q:"Degree 3, leading coefficient 1, TOUCHES the x-axis at x = −1 and CROSSES at x = 4. Which f(x)?",c:["(x + 1)²(x − 4)","(x − 1)²(x + 4)","(x + 1)(x − 4)²","(x + 1)(x − 4)"],e:"Touch → even multiplicity → (x + 1)². Cross → odd → (x − 4). Degree 2 + 1 = 3 ✓."},
+{t:"Zeros & Multiplicity",d:3,q:"Zeros of x³ + x² − x − 1 with multiplicity?",c:["−1 (mult. 2), 1 (mult. 1)","1 (mult. 2), −1 (mult. 1)","−1, 1, 0","±1 and ±i"],e:"Group: x²(x + 1) − 1(x + 1) = (x + 1)(x² − 1) = (x + 1)(x + 1)(x − 1) = (x + 1)²(x − 1)."},
+// ===== LONG DIVISION =====
+{t:"Long Division",d:2,q:"(x² + 5x + 7) ÷ (x + 2) = ?",c:["x + 3, remainder 1","x + 3, remainder 0","x + 7, remainder −7","x + 2, remainder 3"],e:"x² ÷ x = x; x(x + 2) = x² + 2x; subtract → 3x + 7. 3x ÷ x = 3; 3(x + 2) = 3x + 6; subtract → 1. Check: (x + 2)(x + 3) + 1 = x² + 5x + 7 ✓"},
+{t:"Long Division",d:2,q:"(6x² + x − 2) ÷ (2x − 1) = ?",c:["3x + 2","3x − 2","3x + 2, remainder 1","2x + 3"],e:"6x² ÷ 2x = 3x; 3x(2x − 1) = 6x² − 3x; subtract → 4x − 2. 4x ÷ 2x = 2; 2(2x − 1) = 4x − 2; remainder 0. Check: (2x − 1)(3x + 2) = 6x² + x − 2 ✓"},
+{t:"Long Division",d:2,q:"(x³ − 1) ÷ (x − 1) = ?",c:["x² + x + 1","x² − x + 1","x² + 1","x² + x − 1"],e:"Write x³ + 0x² + 0x − 1. Divide: x², then x, then 1, remainder 0. Check: (x − 1)(x² + x + 1) = x³ − 1 ✓ (difference of cubes)."},
+{t:"Long Division",d:3,q:"(2x³ + 3x² − x + 5) ÷ (x² + 1) = ?",c:["2x + 3, remainder −3x + 2","2x + 3, remainder 2","2x + 3, remainder −x + 5","2x − 3, remainder x + 8"],e:"2x³ ÷ x² = 2x; 2x(x² + 1) = 2x³ + 2x; subtract → 3x² − 3x + 5. 3x² ÷ x² = 3; 3(x² + 1) = 3x² + 3; subtract → −3x + 2. Degree of −3x + 2 < 2, so stop."},
+{t:"Long Division",d:3,q:"(x³ + 4x² − 3x + 5) ÷ (x² − 1) = ?",c:["x + 4, remainder −2x + 9","x + 4, remainder 9","x + 4, remainder −3x + 5","x + 3, remainder x + 8"],e:"x³ ÷ x² = x; x(x² − 1) = x³ − x; subtract → 4x² − 2x + 5. 4x² ÷ x² = 4; 4(x² − 1) = 4x² − 4; subtract → −2x + 9."},
+{t:"Long Division",d:1,q:"When dividing x³ + 2x − 5 by a binomial, what must you do first?",c:["Insert a 0x² placeholder: x³ + 0x² + 2x − 5","Nothing, just start dividing","Factor out an x","Drop the −5"],e:"Every power must be present (in descending order) or the columns line up wrong. Missing x² term → write 0x²."},
+// ===== SYNTHETIC DIVISION =====
+{t:"Synthetic Division",d:1,q:"To divide by (x + 4) using synthetic division, what number goes in the box?",c:["−4","4","1/4","x"],e:"Divisor x − k → use k. x + 4 = x − (−4), so k = −4."},
+{t:"Synthetic Division",d:2,q:"(x³ + 2x² − 5x − 6) ÷ (x − 2) using synthetic division:",c:["x² + 4x + 3, remainder 0","x² + 4x + 3, remainder 2","x² + 4x − 13, remainder 20","x² − 3, remainder 0"],e:"k = 2, coefficients 1 | 2 | −5 | −6. Bring down 1 → 1·2 = 2, 2 + 2 = 4 → 4·2 = 8, −5 + 8 = 3 → 3·2 = 6, −6 + 6 = 0. Quotient x² + 4x + 3, R 0."},
+{t:"Synthetic Division",d:2,q:"(2x³ − 3x² + 4) ÷ (x + 1) using synthetic division:",c:["2x² − 5x + 5, remainder −1","2x² − x − 1, remainder 3","2x² − 5x − 5, remainder 9","2x² + 5x + 5, remainder 9"],e:"k = −1, coefficients 2 | −3 | 0 | 4 (don't forget the 0x!). Bring 2 → −2, −3 − 2 = −5 → 5, 0 + 5 = 5 → −5, 4 − 5 = −1. Check f(−1) = −2 − 3 + 4 = −1 ✓"},
+{t:"Synthetic Division",d:3,q:"(x⁴ − 81) ÷ (x − 3) = ?",c:["x³ + 3x² + 9x + 27","x³ − 3x² + 9x − 27","x³ + 27","x³ + 3x² + 9x + 27, remainder 1"],e:"Coefficients 1 | 0 | 0 | 0 | −81 with k = 3: 1 → 3 → 9 → 27 → −81 + 81 = 0. Quotient x³ + 3x² + 9x + 27, remainder 0."},
+{t:"Synthetic Division",d:2,q:"Synthetic division bottom row reads: 1  −4  3 | 0. Divisor was degree 1. What is the quotient?",c:["x² − 4x + 3 (remainder 0)","x³ − 4x² + 3x","x² − 4x + 3, remainder 3","x − 4, remainder 3"],e:"The last number is the remainder (0). The others are quotient coefficients, one degree LOWER than the original: x² − 4x + 3."},
+// ===== REMAINDER & FACTOR THEOREMS =====
+{t:"Remainder & Factor Thm",d:1,q:"Remainder when f(x) = x³ − 2x + 5 is divided by (x − 1)?",n:4,e:"Remainder Theorem: remainder = f(1) = 1 − 2 + 5 = 4."},
+{t:"Remainder & Factor Thm",d:1,q:"Is (x − 3) a factor of x² − 5x + 6?",c:["Yes, because f(3) = 0","No, because f(3) = 6","Yes, because f(−3) = 0","No, because f(−3) = 30"],e:"Factor Theorem: (x − k) is a factor ⇔ f(k) = 0. f(3) = 9 − 15 + 6 = 0 ✓ (indeed x² − 5x + 6 = (x − 2)(x − 3))."},
+{t:"Remainder & Factor Thm",d:2,q:"Remainder when x⁴ − 3x² + 2x − 1 is divided by (x + 2)?",n:-1,e:"f(−2) = (−2)⁴ − 3(−2)² + 2(−2) − 1 = 16 − 12 − 4 − 1 = −1."},
+{t:"Remainder & Factor Thm",d:2,q:"Find k so that (x − 2) is a factor of x³ + kx − 6.",n:-1,e:"Need f(2) = 0: 8 + 2k − 6 = 0 → 2k = −2 → k = −1."},
+{t:"Remainder & Factor Thm",d:3,q:"Find k so that x³ + kx² − 4 divided by (x + 2) has remainder 0.",n:3,e:"f(−2) = −8 + 4k − 4 = 0 → 4k = 12 → k = 3."},
+{t:"Remainder & Factor Thm",d:3,q:"f(x) = 2x³ − x² + 4x − 2. Is (x − 1/2) a factor?",c:["Yes, f(1/2) = 0","No, f(1/2) = 1","No, f(1/2) = −2","Yes, f(−1/2) = 0"],e:"f(1/2) = 2(1/8) − 1/4 + 2 − 2 = 1/4 − 1/4 + 0 = 0 ✓. So it's a factor: f(x) = (2x − 1)(x² + 2)."},
+{t:"Remainder & Factor Thm",d:2,q:"f(5) = 0 for a polynomial f. Which statement MUST be true?",c:["(x − 5) is a factor of f(x)","(x + 5) is a factor of f(x)","f(−5) = 0 too","The remainder of f(x) ÷ (x − 5) is 5"],e:"Factor Theorem: f(k) = 0 ⇔ (x − k) is a factor. Here k = 5 → (x − 5)."},
+// ===== RATIONAL ROOT THEOREM =====
+{t:"Rational Root Thm",d:1,q:"Which is NOT a possible rational root of 2x³ + x − 3?",c:["2","3/2","1/2","−3"],e:"p/q: p | 3 → ±1, ±3; q | 2 → ±1, ±2. Candidates: ±1, ±3, ±1/2, ±3/2. 2 is not on the list."},
+{t:"Rational Root Thm",d:2,q:"Possible rational roots of x³ − 2x² − 5x + 6?",c:["±1, ±2, ±3, ±6","±1, ±2, ±3","±1, ±6","±1, ±1/2, ±3, ±3/2"],e:"Leading coefficient 1 → candidates are just factors of 6: ±1, ±2, ±3, ±6. (Actual roots: 1, 3, −2.)"},
+{t:"Rational Root Thm",d:3,q:"How many DISTINCT possible rational roots does 2x³ − 5x + 3 have?",n:8,e:"p | 3: 1, 3. q | 2: 1, 2. p/q: 1, 3, 1/2, 3/2 → with ± that's 8."},
+{t:"Rational Root Thm",d:2,q:"Rational Root Theorem: possible roots are…",c:["± (factors of constant) / (factors of leading coefficient)","± (factors of leading coefficient) / (factors of constant)","Only factors of the leading coefficient","Any fraction between −1 and 1"],e:"p/q where p divides the constant term and q divides the leading coefficient. (Mr. Fleshman: \"factors of the constant over the leading coefficient\")."},
+{t:"Rational Root Thm",d:2,q:"Which IS an actual root of x³ − 2x² − 5x + 6?",c:["−2","2","−1","6"],e:"Test candidates: f(−2) = −8 − 8 + 10 + 6 = 0 ✓. (f(2) = −4, f(−1) = 8, f(6) = 120.) The roots are 1, 3, −2."},
+// ===== FINDING ALL ROOTS =====
+{t:"Finding All Roots",d:1,q:"Real coefficients, and 2 + 3i is a zero. Which must also be a zero?",c:["2 − 3i","−2 + 3i","−2 − 3i","3 + 2i"],e:"Complex Conjugate Theorem: non-real zeros of real-coefficient polynomials come in pairs a ± bi."},
+{t:"Finding All Roots",d:1,q:"How many complex zeros (counting multiplicity) does a degree-6 polynomial have?",n:6,e:"Fundamental Theorem of Algebra: degree n → exactly n complex zeros, counting multiplicity."},
+{t:"Finding All Roots",d:2,q:"Zeros of x² − 4x + 13?",c:["2 ± 3i","−2 ± 3i","2 ± 6i","4 ± 3i"],e:"x = [4 ± √(16 − 52)]/2 = [4 ± √(−36)]/2 = (4 ± 6i)/2 = 2 ± 3i."},
+{t:"Finding All Roots",d:2,q:"f(x) = x³ − 7x + 6 has zero x = 1. Find the other zeros.",c:["2 and −3","−2 and 3","1 and 6","3 and −1"],e:"Synthetic with 1: 1 | 0 | −7 | 6 → 1, 1, −6, R 0 → x² + x − 6 = (x + 3)(x − 2). Zeros 2 and −3."},
+{t:"Finding All Roots",d:2,q:"Degree 3, real coefficients, zeros include 3 and 1 − i. Third zero?",c:["1 + i","−1 + i","−3","−1 − i"],e:"Conjugate of 1 − i is 1 + i, and it must be a zero too. 3 zeros total for degree 3."},
+{t:"Finding All Roots",d:2,q:"A degree-5 polynomial with real coefficients must have at least how many REAL zeros?",n:1,e:"Non-real zeros come in conjugate pairs (even count). 5 is odd, so at least one zero is real."},
+{t:"Finding All Roots",d:3,q:"All zeros of x³ − 3x² + 4x − 12?",c:["3, 2i, −2i","3, 2, −2","−3, 2i, −2i","3, 4i, −4i"],e:"Group: x²(x − 3) + 4(x − 3) = (x − 3)(x² + 4). x² = −4 → x = ±2i. Zeros: 3, ±2i."},
+{t:"Finding All Roots",d:3,q:"All zeros of 2x³ − 3x² − 11x + 6?",c:["3, 1/2, −2","−3, 1/2, 2","3, −1/2, 2","1, 3, −2"],e:"Test 3: 54 − 27 − 33 + 6 = 0 ✓. Synthetic with 3: 2 | −3 | −11 | 6 → 2, 3, −2, R 0 → 2x² + 3x − 2 = (2x − 1)(x + 2). Zeros 3, 1/2, −2."},
+{t:"Finding All Roots",d:3,q:"All zeros of x⁴ − 5x² − 36?",c:["±3, ±2i","±3, ±2","±6, ±i","±2, ±3i"],e:"Quadratic in x²: (x² − 9)(x² + 4) = 0. x² = 9 → ±3. x² = −4 → ±2i."},
+{t:"Finding All Roots",d:3,q:"Lowest-degree polynomial, real coefficients, LC 1, zeros 2 and 3i:",c:["x³ − 2x² + 9x − 18","x³ − 2x² − 9x + 18","x² − (2 + 3i)x + 6i","x³ + 2x² + 9x + 18"],e:"Need 3i AND −3i: (x − 3i)(x + 3i) = x² + 9. Then (x − 2)(x² + 9) = x³ − 2x² + 9x − 18."},
+{t:"Finding All Roots",d:3,q:"Given 1 + 2i is a zero of x³ − x² + 3x + 5, find all zeros.",c:["1 + 2i, 1 − 2i, −1","1 + 2i, 1 − 2i, 1","1 + 2i, −1 − 2i, 5","1 ± 2i, 5"],e:"Conjugates → factor (x − (1 + 2i))(x − (1 − 2i)) = x² − 2x + 5. Divide: (x³ − x² + 3x + 5) ÷ (x² − 2x + 5) = x + 1 → zero −1."},
+{t:"Finding All Roots",d:3,q:"Given x = 2 is a zero, factor x³ − 6x² + 11x − 6 completely.",c:["(x − 1)(x − 2)(x − 3)","(x + 1)(x − 2)(x + 3)","(x − 2)(x² − 4x − 3)","(x − 2)²(x − 3)"],e:"Synthetic with 2: 1 | −6 | 11 | −6 → 1, −4, 3, R 0 → x² − 4x + 3 = (x − 1)(x − 3)."},
+{t:"Finding All Roots",d:3,q:"All zeros of 2x³ − x² + 4x − 2?",c:["1/2, i√2, −i√2","1/2, √2, −√2","−1/2, ±i√2","2, ±i√2"],e:"Group: x²(2x − 1) + 2(2x − 1) = (2x − 1)(x² + 2). 2x − 1 = 0 → 1/2. x² = −2 → x = ±i√2."},
+{t:"Finding All Roots",d:1,q:"After synthetic division, you're left with a quadratic that won't factor. Next step?",c:["Use the quadratic formula","Stop — there are no more zeros","Divide by x again","Use the Rational Root Theorem on the remainder"],e:"Exactly the teacher's process: Rational Root Theorem → synthetic division down to a quadratic → quadratic formula (which also finds complex zeros)."},
+// ===== QUADRATICS =====
+{t:"Quadratics",d:1,q:"Vertex of f(x) = (x − 3)² + 2?",c:["(3, 2)","(−3, 2)","(3, −2)","(2, 3)"],e:"Vertex form a(x − h)² + k has vertex (h, k). Here x − 3 → h = 3 (sign flips!), k = 2 → (3, 2)."},
+{t:"Quadratics",d:1,q:"Axis of symmetry of f(x) = 2(x + 4)² − 1?",c:["x = −4","x = 4","x = −1","y = −1"],e:"Vertex form: (x + 4) = (x − (−4)) → h = −4. The axis of symmetry is the vertical line through the vertex: x = −4."},
+{t:"Quadratics",d:1,q:"y-intercept of f(x) = x² − 6x + 8? (type the y-value)",n:8,e:"Set x = 0: f(0) = 0 − 0 + 8 = 8. For ax² + bx + c the y-intercept is always c → (0, 8)."},
+{t:"Quadratics",d:1,q:"End behavior of f(x) = −3x² + x (arrow notation)?",c:["As x → −∞, f(x) → −∞; as x → +∞, f(x) → −∞","As x → −∞, f(x) → +∞; as x → +∞, f(x) → +∞","As x → −∞, f(x) → +∞; as x → +∞, f(x) → −∞","As x → −∞, f(x) → −∞; as x → +∞, f(x) → +∞"],e:"Degree 2 (even) → both ends match. Leading coefficient −3 < 0 → parabola opens down → both ends → −∞."},
+{t:"Quadratics",d:2,q:"Complete the square: x² + 6x + 1 = ?",c:["(x + 3)² − 8","(x + 3)² + 1","(x + 6)² − 35","(x + 3)² − 10"],e:"Half of 6 is 3, 3² = 9. x² + 6x + 9 − 9 + 1 = (x + 3)² − 8."},
+{t:"Quadratics",d:2,q:"Vertex of f(x) = x² − 8x + 10?",c:["(4, −6)","(−4, −6)","(4, 10)","(8, 10)"],e:"Complete the square: half of −8 is −4, (−4)² = 16. x² − 8x + 16 − 16 + 10 = (x − 4)² − 6 → vertex (4, −6)."},
+{t:"Quadratics",d:2,q:"x-intercepts of f(x) = x² − 2x − 8?",c:["x = 4 and x = −2","x = −4 and x = 2","x = 8 and x = −1","x = 2 and x = −8"],e:"Factor: two numbers multiplying to −8 and adding to −2 → −4 and 2. (x − 4)(x + 2) = 0 → x = 4, x = −2."},
+{t:"Quadratics",d:2,q:"Vertex of f(x) = x² + 10x + 21?",c:["(−5, −4)","(5, −4)","(−5, 21)","(−10, 21)"],e:"Half of 10 is 5, 5² = 25. x² + 10x + 25 − 25 + 21 = (x + 5)² − 4 → vertex (−5, −4)."},
+{t:"Quadratics",d:2,q:"Axis of symmetry of f(x) = 2x² − 12x + 7?  x = ?",n:3,e:"x = −b/(2a) = −(−12)/(2·2) = 12/4 = 3. (Or complete the square: 2(x − 3)² − 11.)"},
+{t:"Quadratics",d:2,q:"How many x-intercepts does f(x) = (x − 1)² + 3 have?",n:0,e:"Vertex (1, 3) is ABOVE the x-axis and a = 1 > 0 means it opens UP, so it never reaches the x-axis. (x − 1)² = −3 has no real solutions → 0 x-intercepts (roots 1 ± i√3 are complex)."},
+{t:"Quadratics",d:3,q:"Vertex form of f(x) = 2x² + 8x − 3?",c:["2(x + 2)² − 11","2(x + 2)² − 7","2(x + 4)² − 3","(x + 2)² − 7"],e:"Factor 2 out of the x-terms: 2(x² + 4x) − 3. Half of 4 is 2, 2² = 4: 2(x² + 4x + 4) − 2·4 − 3 = 2(x + 2)² − 11. (You added 2·4 = 8 inside, so subtract 8.)"},
+{t:"Quadratics",d:3,q:"f(x) = −x² + 6x − 5. Vertex form and vertex?",c:["−(x − 3)² + 4, vertex (3, 4)","−(x − 3)² − 14, vertex (3, −14)","−(x + 3)² + 4, vertex (−3, 4)","(x − 3)² − 4, vertex (3, −4)"],e:"Factor −1: −(x² − 6x) − 5. Add 9 inside: −(x² − 6x + 9) + 9 − 5 = −(x − 3)² + 4. Vertex (3, 4), opens down. (Roots: x = 1, 5.)"},
+{t:"Quadratics",d:3,q:"Roots of x² + 4x + 7 = 0?",c:["−2 ± i√3","−2 ± √3","2 ± i√3","−4 ± i√3"],e:"Complete the square: (x + 2)² + 3 = 0 → (x + 2)² = −3 → x + 2 = ±i√3 → x = −2 ± i√3. (Quadratic formula: [−4 ± √(16 − 28)]/2 = [−4 ± 2i√3]/2.)"},
+{t:"Quadratics",d:3,q:"Solve x² − 6x + 4 = 0 by completing the square.",c:["x = 3 ± √5","x = −3 ± √5","x = 3 ± √13","x = 3 ± i√5"],e:"x² − 6x = −4. Add 9 to both sides: (x − 3)² = 5 → x − 3 = ±√5 → x = 3 ± √5."},
+// ===== RATIONAL FUNCTIONS =====
+{t:"Rational Functions",d:1,q:"Vertical asymptote of f(x) = (x + 2)/(x − 4)?",c:["x = 4","x = −2","y = 1","x = −4"],e:"Set the denominator = 0: x − 4 = 0 → x = 4 (and the numerator isn't 0 there), so x = 4 is a vertical asymptote."},
+{t:"Rational Functions",d:1,q:"Horizontal asymptote of f(x) = (3x + 1)/(x − 2)?",c:["y = 3","y = 0","y = −1/2","None"],e:"Degrees equal (1 and 1) → HA is y = (leading coeff top)/(leading coeff bottom) = 3/1 = 3."},
+{t:"Rational Functions",d:1,q:"Horizontal asymptote of f(x) = 5/(x² + 1)?",c:["y = 0","y = 5","y = 1","None"],e:"Degree of top (0) < degree of bottom (2) → HA is y = 0."},
+{t:"Rational Functions",d:1,q:"Why does f(x) = 1/(x − 5) have a vertical asymptote at x = 5?",c:["The denominator is 0 there and the numerator isn't","The numerator is 0 there","The degrees of top and bottom are equal","f(5) = 1/5"],e:"Vertical asymptotes come from x-values that make the denominator 0 (after canceling common factors). At x = 5: denominator 0, numerator 1 ≠ 0."},
+{t:"Rational Functions",d:2,q:"x-intercept of f(x) = (2x − 6)/(x + 1)?  x = ?",n:3,e:"x-intercepts: set the NUMERATOR = 0 → 2x − 6 = 0 → x = 3 (denominator is 4 ≠ 0 there) → (3, 0)."},
+{t:"Rational Functions",d:2,q:"y-intercept of f(x) = (x − 6)/(x + 3)?  y = ?",n:-2,e:"Plug in x = 0: (0 − 6)/(0 + 3) = −6/3 = −2 → (0, −2)."},
+{t:"Rational Functions",d:2,q:"Vertical asymptote(s) of f(x) = 3/(x² − 9)?",c:["x = 3 and x = −3","x = 9 only","x = 3 only","y = 0"],e:"x² − 9 = (x − 3)(x + 3) = 0 → x = ±3. The numerator 3 is never 0, so both are vertical asymptotes. (HA is y = 0, but that's horizontal.)"},
+{t:"Rational Functions",d:2,q:"Horizontal asymptote of f(x) = (4x² − 1)/(2x² + x)?",c:["y = 2","y = 4","y = 0","y = −1"],e:"Degrees equal (2 and 2) → y = 4/2 = 2."},
+{t:"Rational Functions",d:3,q:"Horizontal asymptote of f(x) = (x² + 1)/(x − 2)?",c:["None — top degree is bigger","y = 1","y = 0","y = −1/2"],e:"Degree top (2) > degree bottom (1) → NO horizontal asymptote. (When it's exactly 1 bigger there's a slant asymptote; here it's y = x + 2.)"},
+{t:"Rational Functions",d:3,q:"Vertical asymptote(s) of f(x) = (x − 3)/(x² − x − 6)?",c:["x = −2 only (hole at x = 3)","x = 3 and x = −2","x = 3 only","x = 2 and x = −3"],e:"Factor: x² − x − 6 = (x − 3)(x + 2). The (x − 3) cancels with the numerator, so x = 3 is a HOLE, not an asymptote. f(x) = 1/(x + 2) for x ≠ 3 → VA x = −2."},
+{t:"Rational Functions",d:3,q:"f(x) = (x² − 16)/(x² + 2x − 3). Which set is all correct?",c:["VA x = −3, x = 1; HA y = 1; x-int ±4; y-int 16/3","VA x = 3, x = −1; HA y = 1; x-int ±4; y-int 16/3","VA x = −3, x = 1; HA y = 0; x-int ±4; y-int −16/3","VA x = ±4; HA y = 1; x-int −3, 1; y-int 3/16"],e:"Bottom: (x + 3)(x − 1) → VA x = −3, 1. Top: (x − 4)(x + 4) → x-ints ±4 (no common factors). Degrees equal → HA y = 1/1 = 1. f(0) = −16/−3 = 16/3."},
+{t:"Rational Functions",d:3,q:"y-intercept of f(x) = 12/(x² − 2x − 8)?  y = ? (decimal or fraction)",n:-1.5,e:"f(0) = 12/(0 − 0 − 8) = 12/(−8) = −3/2 = −1.5 → (0, −1.5). (No x-intercepts: the numerator 12 is never 0.)"}
+];
+const Q_SPANISH = [
+{"t": "Vocabulario", "d": 1, "q": "Un juego de mesa con reyes, reinas, caballos y torres.", "c": ["el ajedrez", "el hockey", "la natación", "el coro"], "e": "El ajedrez = chess (king, queen, knight, rook)."},
+{"t": "Vocabulario", "d": 1, "q": "Un grupo de personas que cantan juntas.", "c": ["el coro", "la orquesta", "el equipo", "la reunión"], "e": "El coro = choir/chorus: people singing together. La orquesta plays instruments."},
+{"t": "Vocabulario", "d": 2, "q": "Un grupo grande de músicos que tocan violines, violonchelos y otros instrumentos.", "c": ["la orquesta", "el coro", "el club atlético", "la práctica"], "e": "La orquesta = orchestra (violins, cellos, etc.)."},
+{"t": "Vocabulario", "d": 1, "q": "Un grupo de jugadores que juegan juntos en un deporte.", "c": ["el equipo", "el ensayo", "el pasatiempo", "la voz"], "e": "El equipo = team."},
+{"t": "Vocabulario", "d": 2, "q": "Practicar una canción o una obra de teatro antes de un concierto o una presentación.", "c": ["ensayar", "grabar", "ganar", "volver"], "e": "Ensayar = to rehearse (el ensayo = rehearsal)."},
+{"t": "Vocabulario", "d": 1, "q": "Una persona que forma parte de un club o de un grupo.", "c": ["el miembro", "el fotógrafo", "el bailarín", "el interés"], "e": "El miembro = member (ser miembro = to be a member)."},
+{"t": "Vocabulario", "d": 2, "q": "Cuando los miembros de un club se juntan para hablar y hacer planes.", "c": ["la reunión", "la canción", "la natación", "la oportunidad"], "e": "La reunión = meeting (plural: las reuniones)."},
+{"t": "Vocabulario", "d": 1, "q": "El deporte de nadar en una piscina.", "c": ["la natación", "la gimnasia", "las artes marciales", "el hockey"], "e": "La natación = swimming (nadar = to swim)."},
+{"t": "Vocabulario", "d": 2, "q": "Una persona que toca un instrumento musical.", "c": ["el músico", "el cantante", "el animador", "el fotógrafo"], "e": "El músico / la música = musician. El cantante sings; he doesn't necessarily play an instrument."},
+{"t": "Vocabulario", "d": 2, "q": "Una persona que baila, por ejemplo en el ballet.", "c": ["el bailarín", "el cantante", "el animador", "el joven"], "e": "El bailarín / la bailarina = dancer (bailar = to dance)."},
+{"t": "Vocabulario", "d": 2, "q": "Una persona que saca fotos.", "c": ["el fotógrafo", "la fotografía", "el músico", "el pasatiempo"], "e": "El fotógrafo / la fotógrafa = photographer. La fotografía is photography (the activity), not the person."},
+{"t": "Vocabulario", "d": 1, "q": "Ir a un evento, como un concierto, una reunión o una clase.", "c": ["asistir a", "ensayar", "grabar", "ganar"], "e": "Asistir a = to attend. (It does NOT mean 'to assist'.)"},
+{"t": "Vocabulario", "d": 2, "q": "Usar la computadora para buscar información sobre un tema.", "c": ["hacer una búsqueda", "visitar salones de chat", "grabar", "jugar a los bolos"], "e": "Hacer una búsqueda = to do a (web) search (buscar = to look for)."},
+{"t": "Vocabulario", "d": 2, "q": "Visitar muchos sitios Web, de una página a otra.", "c": ["navegar en la Red", "crear una página Web", "tomar lecciones", "hacer gimnasia"], "e": "Navegar en la Red = to surf the Web."},
+{"t": "Vocabulario", "d": 1, "q": "Una actividad que haces en tu tiempo libre para divertirte.", "c": ["el pasatiempo", "la reunión", "el ensayo", "el equipo"], "e": "El pasatiempo = pastime/hobby."},
+{"t": "Vocabulario", "d": 1, "q": "Regresar a un lugar; por ejemplo, ir a casa después de las clases.", "c": ["volver", "asistir a", "participar en", "ganar"], "e": "Volver (o→ue) = to return / come back: vuelvo, vuelves, vuelve…"},
+{"t": "Vocabulario", "d": 1, "q": "Ser el número uno en un partido o en un concurso.", "c": ["ganar", "grabar", "ensayar", "volver"], "e": "Ganar = to win (also 'to earn' money)."},
+{"t": "Vocabulario", "d": 2, "q": "Lo que usas para cantar o hablar.", "c": ["la voz", "la canción", "el coro", "la banda"], "e": "La voz = voice (plural: las voces)."},
+{"t": "Vocabulario", "d": 2, "q": "Deportes como el karate y el taekwondo.", "c": ["las artes marciales", "la natación", "la gimnasia", "el hockey"], "e": "Las artes marciales = martial arts (karate, taekwondo, judo)."},
+{"t": "Vocabulario", "d": 2, "q": "Un deporte que se juega en el hielo con palos y un disco.", "c": ["el hockey", "el ajedrez", "la natación", "las artes marciales"], "e": "El hockey = hockey (played on ice with sticks and a puck)."},
+{"t": "Vocabulario", "d": 3, "q": "Guardar música o un video para escucharlo o verlo después.", "c": ["grabar", "ganar", "navegar", "ensayar"], "e": "Grabar = to record (a song, a video, a show)."},
+{"t": "Vocabulario", "d": 3, "q": "Aprender a tocar un instrumento con un profesor, una vez por semana.", "c": ["tomar lecciones", "asistir a una reunión", "hacer una búsqueda", "ser miembro"], "e": "Tomar lecciones = to take lessons."},
+{"t": "Vocabulario", "d": 3, "q": "Lo que haces cuando tiras una bola para derribar bolos.", "c": ["jugar a los bolos", "jugar al ajedrez", "hacer gimnasia", "navegar en la Red"], "e": "Jugar a los bolos = to bowl / go bowling."},
+{"t": "Vocabulario", "d": 1, "q": "What does «estar en línea» mean?", "c": ["to be online", "to stand in line", "to be on the team", "to be a member"], "e": "Estar en línea = to be online."},
+{"t": "Vocabulario", "d": 2, "q": "What does «la oportunidad» mean?", "c": ["opportunity", "interest", "practice", "meeting"], "e": "La oportunidad = opportunity (plural: las oportunidades). El interés = interest."},
+{"t": "Vocabulario", "d": 3, "q": "What does «crear una página Web» mean?", "c": ["to create a Web page", "to visit a chat room", "to surf the Web", "to do a search"], "e": "Crear = to create; una página Web = a Web page."},
+{"t": "Vocabulario", "d": 2, "q": "Which word means 'cheerleader' (female)?", "c": ["la animadora", "la bailarina", "la cantante", "la fotógrafa"], "e": "La animadora / el animador = cheerleader. La bailarina = dancer."},
+{"t": "Vocabulario", "d": 3, "q": "Which word means 'young people'?", "c": ["los jóvenes", "los miembros", "los músicos", "los pasatiempos"], "e": "Los jóvenes = young people. Note the accent in the plural: joven → jóvenes."},
+{"t": "Saber vs. conocer", "d": 1, "q": "Yo ___ tocar la guitarra.", "c": ["sé", "conozco", "sabo", "se"], "e": "Knowing HOW to do something (saber + infinitive) uses saber. The yo form is irregular: sé (with an accent)."},
+{"t": "Saber vs. conocer", "d": 1, "q": "Yo ___ a la cantante de la banda.", "c": ["conozco", "sé", "conoco", "sabo"], "e": "Knowing a PERSON = conocer (+ personal a). Yo form is irregular: conozco."},
+{"t": "Saber vs. conocer", "d": 1, "q": "¿___ tú dónde es la reunión del club?", "c": ["Sabes", "Conoces", "Sé", "Conozco"], "e": "Knowing a FACT/information (where, when, what) = saber. Tú form: sabes."},
+{"t": "Saber vs. conocer", "d": 1, "q": "Nosotros ___ la ciudad de Madrid muy bien.", "c": ["conocemos", "sabemos", "conocen", "saben"], "e": "Being familiar with a PLACE = conocer. Nosotros form: conocemos."},
+{"t": "Saber vs. conocer", "d": 1, "q": "Mis amigos ___ nadar muy bien.", "c": ["saben", "conocen", "sabe", "conoce"], "e": "Saber + infinitive = to know how to do something. Ellos form: saben."},
+{"t": "Saber vs. conocer", "d": 1, "q": "Which verb do you use to say you know (are familiar with) a person or a place?", "c": ["conocer", "saber", "tener", "ser"], "e": "Conocer = to know/be acquainted with people, places, things. Saber = to know facts or how to do something."},
+{"t": "Saber vs. conocer", "d": 2, "q": "Elena ___ al nuevo miembro del equipo.", "c": ["conoce", "sabe", "conozco", "sé"], "e": "A person → conocer (notice «al» = a + el, the personal a). Ella form: conoce."},
+{"t": "Saber vs. conocer", "d": 2, "q": "What is the yo form of conocer?", "c": ["conozco", "conoco", "conosco", "conozo"], "e": "Conocer is irregular only in the yo form: conozco (z + co). Then conoces, conoce, conocemos, conocéis, conocen."},
+{"t": "Saber vs. conocer", "d": 2, "q": "What is the yo form of saber?", "c": ["sé", "sabo", "se", "sabé"], "e": "Saber is irregular in the yo form: sé (with an accent, so it isn't the pronoun «se»). Then sabes, sabe, sabemos, sabéis, saben."},
+{"t": "Saber vs. conocer", "d": 2, "q": "¿___ ustedes la respuesta?", "c": ["Saben", "Conocen", "Sabemos", "Conocemos"], "e": "A fact/answer → saber. Ustedes form: saben."},
+{"t": "Saber vs. conocer", "d": 2, "q": "Yo no ___ el restaurante nuevo del centro.", "c": ["conozco", "sé", "conoce", "sabe"], "e": "Being familiar with a PLACE → conocer. Yo form: conozco."},
+{"t": "Saber vs. conocer", "d": 2, "q": "¿___ tú crear una página Web?", "c": ["Sabes", "Conoces", "Sabe", "Conoce"], "e": "Saber + infinitive (crear) = to know HOW to do something. Tú form: sabes."},
+{"t": "Saber vs. conocer", "d": 2, "q": "Nosotros ___ que el ensayo es a las cuatro.", "c": ["sabemos", "conocemos", "sabe", "conoce"], "e": "Saber + que + information (a fact). Nosotros form: sabemos."},
+{"t": "Saber vs. conocer", "d": 2, "q": "Conozco ___ los músicos de la orquesta.", "c": ["a", "— (nothing)", "de", "en"], "e": "When the direct object is a PERSON, add the personal a: «Conozco a los músicos»."},
+{"t": "Saber vs. conocer", "d": 3, "q": "Which sentence is correct?", "c": ["Conozco a Carlos, pero no sé dónde vive.", "Sé a Carlos, pero no conozco dónde vive.", "Conozco Carlos, pero no sé dónde vive.", "Sé Carlos, pero no conozco dónde vive."], "e": "Person → conocer + personal a (Conozco a Carlos). Information (where he lives) → saber (no sé dónde vive)."},
+{"t": "Saber vs. conocer", "d": 3, "q": "Mi hermano ___ jugar al ajedrez, pero no ___ a ningún campeón.", "c": ["sabe … conoce", "conoce … sabe", "sabe … sabe", "conoce … conoce"], "e": "Know HOW to play → sabe. Know a PERSON (a ningún campeón) → conoce."},
+{"t": "Saber vs. conocer", "d": 3, "q": "Yo no ___ cuándo es el concierto de la banda.", "c": ["sé", "conozco", "sabo", "conoce"], "e": "Information (when something is) → saber. Yo form: sé. «Sabo» does not exist."},
+{"t": "Saber vs. conocer", "d": 3, "q": "Translate: «They know the photographer, and they know that he is very good.»", "c": ["Conocen al fotógrafo y saben que es muy bueno.", "Saben al fotógrafo y conocen que es muy bueno.", "Conocen el fotógrafo y saben que es muy bueno.", "Conocen al fotógrafo y conocen que es muy bueno."], "e": "Person → conocen AL fotógrafo (personal a + el = al). Fact (that he is good) → saben que…"},
+{"t": "Comparaciones (tan/tanto)", "d": 1, "q": "Elena es ___ alta ___ su hermana.", "c": ["tan … como", "tanta … como", "tanto … como", "tan … que"], "e": "Equal comparison with an ADJECTIVE: tan + adjective + como. «Tan» never changes form."},
+{"t": "Comparaciones (tan/tanto)", "d": 1, "q": "Yo tengo ___ tarea ___ tú.", "c": ["tanta … como", "tanto … como", "tan … como", "tantas … como"], "e": "With a NOUN use tanto/tanta/tantos/tantas + noun + como. «La tarea» is feminine singular → tanta."},
+{"t": "Comparaciones (tan/tanto)", "d": 1, "q": "Marcos tiene ___ discos ___ Ana.", "c": ["tantos … como", "tantas … como", "tan … como", "tanto … como"], "e": "«Discos» is masculine plural → tantos + noun + como."},
+{"t": "Comparaciones (tan/tanto)", "d": 1, "q": "Yo practico ___ mi hermano.", "c": ["tanto como", "tan como", "tantos como", "tan mucho como"], "e": "After a VERB (practico), use tanto como = as much as. «Tan como» and «tan mucho» are wrong."},
+{"t": "Comparaciones (tan/tanto)", "d": 1, "q": "La banda tiene ___ canciones ___ el coro.", "c": ["tantas … como", "tantos … como", "tanta … como", "tan … como"], "e": "«Canciones» is feminine plural → tantas + noun + como."},
+{"t": "Comparaciones (tan/tanto)", "d": 1, "q": "What does «tan … como» mean?", "c": ["as … as", "as much … as", "more … than", "less … than"], "e": "Tan + adjective/adverb + como = as … as (tan alto como = as tall as). Tanto como = as much as."},
+{"t": "Comparaciones (tan/tanto)", "d": 2, "q": "Ella canta ___ bien ___ la cantante profesional.", "c": ["tan … como", "tanto … como", "tanta … como", "tan … que"], "e": "«Bien» is an ADVERB → tan + adverb + como (tan bien como)."},
+{"t": "Comparaciones (tan/tanto)", "d": 2, "q": "No hay ___ miembros en el club de ajedrez ___ en el equipo de fútbol.", "c": ["tantos … como", "tantas … como", "tan … como", "tanto … como"], "e": "«Miembros» is masculine plural → tantos … como."},
+{"t": "Comparaciones (tan/tanto)", "d": 2, "q": "Nosotros tenemos ___ oportunidades ___ ellos.", "c": ["tantas … como", "tantos … como", "tanta … como", "tan … como"], "e": "«Oportunidades» is feminine plural → tantas … como."},
+{"t": "Comparaciones (tan/tanto)", "d": 2, "q": "Tengo ___ interés en la fotografía ___ tú.", "c": ["tanto … como", "tanta … como", "tan … como", "tantos … como"], "e": "«El interés» is masculine singular → tanto + noun + como."},
+{"t": "Comparaciones (tan/tanto)", "d": 2, "q": "Mi voz es ___ bonita ___ la tuya.", "c": ["tan … como", "tanta … como", "tanto … como", "tan … que"], "e": "«Bonita» is an ADJECTIVE → tan … como. (Tan doesn't agree; only the adjective does.)"},
+{"t": "Comparaciones (tan/tanto)", "d": 2, "q": "Los músicos ensayan ___ los bailarines.", "c": ["tanto como", "tan como", "tantos como", "tan mucho como"], "e": "After a verb (ensayan) → tanto como (it doesn't change form here)."},
+{"t": "Comparaciones (tan/tanto)", "d": 2, "q": "Mi hermana tiene tantos pasatiempos como ___.", "c": ["yo", "mí", "me", "mío"], "e": "After «como» use subject pronouns: como yo, como tú (not «como mí» or «como ti»)."},
+{"t": "Comparaciones (tan/tanto)", "d": 3, "q": "How do you say «I have as many songs as you»?", "c": ["Tengo tantas canciones como tú.", "Tengo tantos canciones como tú.", "Tengo tan canciones como tú.", "Tengo tantas canciones que tú."], "e": "Canciones = feminine plural → tantas. Equal comparisons always use «como», never «que»."},
+{"t": "Comparaciones (tan/tanto)", "d": 3, "q": "How do you say «Ana swims as fast as her brother»?", "c": ["Ana nada tan rápido como su hermano.", "Ana nada tanto rápido como su hermano.", "Ana nada tan rápido que su hermano.", "Ana nada tanta rápido como su hermano."], "e": "«Rápido» (fast) describes the verb here → tan + adverb + como."},
+{"t": "Comparaciones (tan/tanto)", "d": 3, "q": "Which sentence is correct?", "c": ["Ellos ganan tanto como nosotros.", "Ellos ganan tan como nosotros.", "Ellos ganan tantos como nosotros.", "Ellos ganan tanto que nosotros."], "e": "Verb + tanto como = as much as. «Tan» needs an adjective or adverb right after it."},
+{"t": "Comparaciones (tan/tanto)", "d": 3, "q": "Which sentence is correct?", "c": ["Hay tantas animadoras como jugadores.", "Hay tantos animadoras como jugadores.", "Hay tan animadoras como jugadores.", "Hay tantas animadoras que jugadores."], "e": "Tanto agrees with the noun right after it: animadoras = feminine plural → tantas."},
+{"t": "Comparaciones (tan/tanto)", "d": 3, "q": "Which sentence is correct?", "c": ["Mis primas son tan simpáticas como mis amigas.", "Mis primas son tantas simpáticas como mis amigas.", "Mis primas son tan simpática como mis amigas.", "Mis primas son tanto simpáticas como mis amigas."], "e": "Adjective → tan (never changes) + simpáticas (agrees with primas) + como."},
+{"t": "Hace + tiempo + que", "d": 1, "q": "Complete: «___ tres años que yo canto en el coro.»", "c": ["Hace", "Hacen", "Hago", "Hay"], "e": "The expression is always «Hace + time + que»: it stays «hace» even with plural time (NOT «hacen»)."},
+{"t": "Hace + tiempo + que", "d": 1, "q": "To say how long something HAS BEEN going on, which tense follows «hace + time + que»?", "c": ["the present tense", "the preterite (past) tense", "the future tense", "the infinitive"], "e": "Hace + time + que + PRESENT tense: «Hace dos años que toco» = I have been playing for two years (and still do)."},
+{"t": "Hace + tiempo + que", "d": 1, "q": "Hace una hora que nosotros ___ (ensayar).", "c": ["ensayamos", "ensayan", "ensayar", "ensayé"], "e": "Present tense, nosotros form: ensayamos."},
+{"t": "Hace + tiempo + que", "d": 1, "q": "What does «Hace seis meses que Ana practica las artes marciales» mean?", "c": ["Ana has been practicing martial arts for six months.", "Ana practiced martial arts six months ago.", "Ana will practice martial arts in six months.", "Ana practiced martial arts for six months but stopped."], "e": "Hace + time + que + present = has/have been doing something for that amount of time (still going on)."},
+{"t": "Hace + tiempo + que", "d": 1, "q": "How do you say «I have been playing in the band for two years»?", "c": ["Hace dos años que toco en la banda.", "Hace dos años que toqué en la banda.", "Hacen dos años que toco en la banda.", "Hace que dos años toco en la banda."], "e": "Hace + time + que + present: «Hace dos años que toco…». Not «hacen», not the preterite, and «que» comes after the time."},
+{"t": "Hace + tiempo + que", "d": 2, "q": "Which word order is correct?", "c": ["Hace cuatro años que juego al hockey.", "Hace que cuatro años juego al hockey.", "Que hace cuatro años juego al hockey.", "Hace cuatro años juego que al hockey."], "e": "Order: Hace + TIME + que + present-tense verb."},
+{"t": "Hace + tiempo + que", "d": 2, "q": "Hace un año que ellos ___ (nadar) en el equipo.", "c": ["nadan", "nadamos", "nadar", "nadó"], "e": "Present tense, ellos form: nadan."},
+{"t": "Hace + tiempo + que", "d": 2, "q": "How do you ask a friend «How long have you been taking lessons?»", "c": ["¿Cuánto tiempo hace que tomas lecciones?", "¿Cuánto tiempo hace que tomaste lecciones?", "¿Cuántos tiempos hace que tomas lecciones?", "¿Cuánto tiempo hacen que tomas lecciones?"], "e": "Question pattern: ¿Cuánto tiempo hace que + present tense? (tú → tomas)."},
+{"t": "Hace + tiempo + que", "d": 2, "q": "Which sentence means «Luis has been surfing the Web for an hour»?", "c": ["Hace una hora que Luis navega en la Red.", "Hace una hora que Luis navegó en la Red.", "Hace una hora que Luis navegas en la Red.", "Hace una hora que Luis navegar en la Red."], "e": "Present tense, él form (Luis): navega."},
+{"t": "Hace + tiempo + que", "d": 2, "q": "Hace dos horas que ellos ___ en línea.", "c": ["están", "son", "estamos", "estar"], "e": "«Estar en línea» = to be online; present tense, ellos form: están."},
+{"t": "Hace + tiempo + que", "d": 2, "q": "Hace mucho tiempo que yo ___ a Marta.", "c": ["conozco", "conoce", "conocer", "sé"], "e": "Present tense yo form of conocer (a person): conozco. Hace mucho tiempo que conozco a Marta = I have known Marta for a long time."},
+{"t": "Hace + tiempo + que", "d": 2, "q": "Why do we say «Hace dos años», never «Hacen dos años»?", "c": ["It's an impersonal expression, so «hace» is always third-person singular.", "Because «años» is singular.", "Because the subject is «yo».", "«Hacen» is only used for months."], "e": "In time expressions «hace» is impersonal: hace un año, hace dos años, hace diez minutos."},
+{"t": "Hace + tiempo + que", "d": 2, "q": "Hace cinco años que mis primos ___ (vivir) en Madrid.", "c": ["viven", "vivimos", "vive", "vivieron"], "e": "Present tense, ellos form (mis primos): viven."},
+{"t": "Hace + tiempo + que", "d": 3, "q": "Hace tres semanas que la orquesta ___ para el concierto.", "c": ["ensaya", "ensayan", "ensayo", "ensayar"], "e": "«La orquesta» is ONE group → singular verb: ensaya."},
+{"t": "Hace + tiempo + que", "d": 3, "q": "Translate: «We have been members of the chess club for two weeks.»", "c": ["Hace dos semanas que somos miembros del club de ajedrez.", "Hace dos semanas que estamos miembros del club de ajedrez.", "Hace dos semanas que fuimos miembros del club de ajedrez.", "Hacen dos semanas que somos miembros del club de ajedrez."], "e": "Being a member = ser miembro (nosotros: somos). Keep «hace» singular and the verb in the present."},
+{"t": "Hace + tiempo + que", "d": 3, "q": "Hace diez años que mi familia ___ (asistir) a los conciertos de la orquesta.", "c": ["asiste", "asistimos", "asisten", "asistió"], "e": "«Mi familia» is singular → asiste. (A common mistake is «asistimos» because you're in the family.)"},
+{"t": "Hace + tiempo + que", "d": 3, "q": "Which sentence says the action is STILL going on?", "c": ["Hace dos años que grabo canciones.", "Grabé canciones hace dos años.", "Hace dos años que grabé canciones.", "Voy a grabar canciones en dos años."], "e": "Hace + time + que + PRESENT (grabo) = I have been recording songs for two years. The preterite (grabé) talks about the past."},
+{"t": "Hace + tiempo + que", "d": 3, "q": "Hace ocho meses que tú ___ (hacer) gimnasia.", "c": ["haces", "hago", "hace", "hiciste"], "e": "Present tense, tú form of hacer: haces."},
+{"t": "¿Cuánto tiempo hace que…?", "d": 1, "q": "¿Cuánto tiempo hace que juegas al ajedrez? <small>(cue: 3 years)</small><br><small>Choose the best full-sentence answer.</small>", "c": ["Hace tres años que juego al ajedrez.", "Hace tres años que juegas al ajedrez.", "Hace tres años que jugar al ajedrez.", "Hacen tres años que juego al ajedrez."], "e": "Answer about yourself: tú (juegas) → yo (juego). Keep «hace» singular.", "s": "¿Cuánto tiempo hace que juegas al ajedrez?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 1, "q": "¿Cuánto tiempo hace que cantas en el coro? <small>(cue: 2 years)</small><br><small>Choose the best full-sentence answer.</small>", "c": ["Hace dos años que canto en el coro.", "Hacen dos años que canto en el coro.", "Hace dos años que cantas en el coro.", "Hace dos años que canté en el coro."], "e": "tú → yo: canto. Present tense, and «hace» never becomes «hacen».", "s": "¿Cuánto tiempo hace que cantas en el coro?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 1, "q": "¿Cuánto tiempo hace que tomas lecciones de piano? <small>(cue: 1 year)</small><br><small>Choose the best full-sentence answer.</small>", "c": ["Hace un año que tomo lecciones de piano.", "Hace uno año que tomo lecciones de piano.", "Hace un año que tomas lecciones de piano.", "Hace un año que tomé lecciones de piano."], "e": "«Uno» shortens to «un» before a masculine noun: un año. tú → yo: tomo.", "s": "¿Cuánto tiempo hace que tomas lecciones de piano?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 1, "q": "¿Cuánto tiempo hace que haces gimnasia? <small>(cue: 6 years)</small><br><small>Choose the best full-sentence answer.</small>", "c": ["Hace seis años que hago gimnasia.", "Hace seis años que haces gimnasia.", "Hace seis años que hace gimnasia.", "Hace seis años que hice gimnasia."], "e": "Hacer is irregular in the yo form: hago.", "s": "¿Cuánto tiempo hace que haces gimnasia?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 2, "q": "¿Cuánto tiempo hace que ustedes ensayan con la orquesta? <small>(cue: 6 months)</small><br><small>Choose the best full-sentence answer.</small>", "c": ["Hace seis meses que ensayamos con la orquesta.", "Hace seis meses que ensayan con la orquesta.", "Hace seis meses que ensayar con la orquesta.", "Hacen seis meses que ensayamos con la orquesta."], "e": "A question to ustedes is answered with nosotros: ensayamos.", "s": "¿Cuánto tiempo hace que ustedes ensayan con la orquesta?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 2, "q": "¿Cuánto tiempo hace que eres miembro del club? <small>(cue: 4 months)</small><br><small>Choose the best full-sentence answer.</small>", "c": ["Hace cuatro meses que soy miembro del club.", "Hace cuatro meses que estoy miembro del club.", "Hace cuatro meses que eres miembro del club.", "Hace cuatro meses que fui miembro del club."], "e": "Ser miembro: tú eres → yo soy. Membership uses ser, not estar.", "s": "¿Cuánto tiempo hace que eres miembro del club?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 2, "q": "¿Cuánto tiempo hace que sabes nadar? <small>(cue: 10 years)</small><br><small>Choose the best full-sentence answer.</small>", "c": ["Hace diez años que sé nadar.", "Hace diez años que conozco nadar.", "Hace diez años que sabo nadar.", "Hace diez años que sabes nadar."], "e": "Knowing how to swim → saber; yo form: sé.", "s": "¿Cuánto tiempo hace que sabes nadar?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 2, "q": "¿Cuánto tiempo hace que grabas canciones? <small>(cue: 3 months)</small><br><small>Choose the best full-sentence answer.</small>", "c": ["Hace tres meses que grabo canciones.", "Hace tres meses que grabas canciones.", "Hace tres meses que grabé canciones.", "Tres meses hace que grabar canciones."], "e": "tú → yo: grabo, present tense.", "s": "¿Cuánto tiempo hace que grabas canciones?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 2, "q": "¿Cuánto tiempo hace que estás en línea? <small>(cue: 20 minutes)</small><br><small>Choose the best full-sentence answer.</small>", "c": ["Hace veinte minutos que estoy en línea.", "Hace veinte minutos que soy en línea.", "Hace veinte minutos que estás en línea.", "Hace veinte minutos que estuve en línea."], "e": "Estar en línea: tú estás → yo estoy.", "s": "¿Cuánto tiempo hace que estás en línea?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 2, "q": "¿Cuánto tiempo hace que tus amigos juegan a los bolos? <small>(cue: 2 weeks)</small><br><small>Choose the best full-sentence answer.</small>", "c": ["Hace dos semanas que mis amigos juegan a los bolos.", "Hace dos semanas que mis amigos jugamos a los bolos.", "Hace dos semanas que mis amigos juego a los bolos.", "Hace dos semanas que mis amigos jugaron a los bolos."], "e": "Tus amigos → mis amigos, and the verb stays ellos form: juegan.", "s": "¿Cuánto tiempo hace que tus amigos juegan a los bolos?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 2, "q": "¿Cuánto tiempo hace que ustedes son miembros del coro? <small>(cue: 1 year)</small><br><small>Choose the best full-sentence answer.</small>", "c": ["Hace un año que somos miembros del coro.", "Hace un año que son miembros del coro.", "Hace un año que estamos miembros del coro.", "Hace un año que fuimos miembros del coro."], "e": "ustedes → nosotros: somos (ser miembro).", "s": "¿Cuánto tiempo hace que ustedes son miembros del coro?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 3, "q": "¿Cuánto tiempo hace que conoces a tu mejor amigo? <small>(cue: 5 years)</small><br><small>Choose the best full-sentence answer.</small>", "c": ["Hace cinco años que conozco a mi mejor amigo.", "Hace cinco años que sé a mi mejor amigo.", "Hace cinco años que conoces a tu mejor amigo.", "Hace cinco años que conozco mi mejor amigo."], "e": "Person → conocer + personal a; yo form: conozco; tu → mi.", "s": "¿Cuánto tiempo hace que conoces a tu mejor amigo?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 3, "q": "¿Cuánto tiempo hace que tu hermana practica la natación? <small>(cue: 8 years)</small><br><small>Choose the best full-sentence answer.</small>", "c": ["Hace ocho años que mi hermana practica la natación.", "Hace ocho años que mi hermana practico la natación.", "Hace ocho años que mi hermana practicó la natación.", "Hacen ocho años que mi hermana practica la natación."], "e": "Mi hermana = ella → practica (present). «Practico» is the yo form.", "s": "¿Cuánto tiempo hace que tu hermana practica la natación?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 3, "q": "¿Cuánto tiempo hace que tu familia vive en Madrid? <small>(cue: 12 years)</small><br><small>Choose the best full-sentence answer.</small>", "c": ["Hace doce años que mi familia vive en Madrid.", "Hace doce años que mi familia vivimos en Madrid.", "Hace doce años que tu familia vive en Madrid.", "Hace doce años que mi familia vivió en Madrid."], "e": "«Mi familia» is singular → vive. Change tu → mi.", "s": "¿Cuánto tiempo hace que tu familia vive en Madrid?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 3, "q": "¿Cuánto tiempo hace que tú y tus amigos navegan en la Red? <small>(cue: 1 hour)</small><br><small>Choose the best full-sentence answer.</small>", "c": ["Hace una hora que navegamos en la Red.", "Hace una hora que navegan en la Red.", "Hace una hora que navegar en la Red.", "Hacen una hora que navegamos en la Red."], "e": "Tú y tus amigos → nosotros: navegamos. «Hora» is feminine → una hora.", "s": "¿Cuánto tiempo hace que tú y tus amigos navegan en la Red?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 3, "q": "¿Cuánto tiempo hace que asistes a las reuniones del club? <small>(cue: 3 weeks)</small><br><small>Choose the best full-sentence answer.</small>", "c": ["Hace tres semanas que asisto a las reuniones del club.", "Hace tres semanas que asistes a las reuniones del club.", "Hace tres semanas que asisto las reuniones del club.", "Hace tres semanas que asistí a las reuniones del club."], "e": "tú → yo: asisto. Keep «asistir a» (the «a» is part of the expression).", "s": "¿Cuánto tiempo hace que asistes a las reuniones del club?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 1, "q": "🎧 <b>Listening:</b> press 🔊 Escuchar (or <kbd>L</kbd>) and listen. Which question did you hear?<details><summary>Show the text</summary>¿Cuánto tiempo hace que Pablo toca la guitarra?</details>", "c": ["How long has Pablo been playing the guitar?", "When did Pablo play the guitar?", "How long ago did Pablo buy the guitar?", "How long will Pablo play the guitar?"], "e": "¿Cuánto tiempo hace que + present? = How long has … been …ing? (You heard: «¿Cuánto tiempo hace que Pablo toca la guitarra?»)", "s": "¿Cuánto tiempo hace que Pablo toca la guitarra?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 1, "q": "🎧 <b>Listening:</b> press 🔊 Escuchar (or <kbd>L</kbd>) and listen. How long has he been singing?<details><summary>Show the text</summary>Hace quince años que mi padre canta en el coro.</details>", "c": ["15 years", "50 years", "5 years", "14 years"], "e": "Quince = 15. (Cinco = 5, catorce = 14, cincuenta = 50.) (You heard: «Hace quince años que mi padre canta en el coro.»)", "s": "Hace quince años que mi padre canta en el coro."},
+{"t": "¿Cuánto tiempo hace que…?", "d": 2, "q": "🎧 <b>Listening:</b> press 🔊 Escuchar (or <kbd>L</kbd>) and listen. Which question did you hear?<details><summary>Show the text</summary>¿Cuánto tiempo hace que ustedes juegan al hockey?</details>", "c": ["How long have you all been playing hockey?", "How long ago did you all play hockey?", "When do you all play hockey?", "How long will you all play hockey?"], "e": "Ustedes = you all; hace + que + present = how long have … been …ing. (You heard: «¿Cuánto tiempo hace que ustedes juegan al hockey?»)", "s": "¿Cuánto tiempo hace que ustedes juegan al hockey?"},
+{"t": "¿Cuánto tiempo hace que…?", "d": 2, "q": "🎧 <b>Listening:</b> press 🔊 Escuchar (or <kbd>L</kbd>) and listen. How long has Marta been surfing the Web?<details><summary>Show the text</summary>Hace veinte minutos que Marta navega en la Red.</details>", "c": ["20 minutes", "12 minutes", "2 minutes", "20 hours"], "e": "Veinte = 20, minutos = minutes. (Doce = 12, dos = 2, horas = hours.) (You heard: «Hace veinte minutos que Marta navega en la Red.»)", "s": "Hace veinte minutos que Marta navega en la Red."}
+];
+</script>
+<script id="game">
+"use strict";
+const $=id=>document.getElementById(id);
+const W=2400,H=1600,CS=10,GW=W/CS,GH=H/CS,CW=GW+1,CH=GH+1,PS=20,PW=W/PS,PH=H/PS;
+const KF='"Yu Mincho","Hiragino Mincho ProN","Noto Serif CJK JP","Noto Serif JP","MS Mincho",serif';
+let SIDEC=['#b8322a','#26305e'],SIDEL=['#e0664f','#6d7bc4'],SIDEN=['Oda','Imagawa'];
+const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t;
+const smooth=(e0,e1,x)=>{const t=clamp((x-e0)/(e1-e0),0,1);return t*t*(3-2*t);};
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const SEED=1560;
+function hash2(i,j){let h=(Math.imul(i,374761393)+Math.imul(j,668265263)+Math.imul(SEED,1442695041))|0;h=Math.imul(h^(h>>>13),1274126177);h^=h>>>16;return (h>>>0)/4294967296;}
+function vn(x,y){const i=Math.floor(x),j=Math.floor(y),fx=x-i,fy=y-j,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy);const a=hash2(i,j),b=hash2(i+1,j),c=hash2(i,j+1),d=hash2(i+1,j+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v;}
+function fbm(x,y,o){let s=0,a=0.5,f=1,n=0;for(let k=0;k<o;k++){s+=a*vn(x*f+k*17.3,y*f-k*9.1);n+=a;a*=0.5;f*=2.03;}return s/n;}
+let rs=12345;const rnd=()=>{rs=(Math.imul(rs,1103515245)+12345)>>>0;return rs/4294967296;};
+
+// ===================== MAP =====================
+const T_SEA=0,T_PL=1,T_FO=2,T_HI=3,T_MT=4,T_RV=5,T_FD=6;
+const SPD=[0,1,0.6,0.75,0,0.3,0.8],DEFM=[1,1,1.3,1.35,1,0.75,0.85];
+const TINFO=['Sea — impassable','Plains — fast','Forest 林 — slow, +30% defense, hides 忍 ninja','Hills 丘 — +35% defense, ranged units shoot farther','Mountains 山 — impassable','River 川 — very slow, −25% defense','Ford / bridge 橋 — crossing point'];
+const CLANS={oda:{n:'Oda',jp:'織田',mon:'mokko'},takeda:{n:'Takeda',jp:'武田',mon:'bishi'},toyotomi:{n:'Toyotomi',jp:'豊臣',mon:'kiri'},
+ imagawa:{n:'Imagawa',jp:'今川',mon:'hiki',c:'#26305e',l:'#6d7bc4'},uesugi:{n:'Uesugi',jp:'上杉',mon:'take',c:'#1d3d38',l:'#5fae9f'},hojo:{n:'Hojo',jp:'北条',mon:'uroko',c:'#4a2c5e',l:'#a77fd0'}};
+const WXN={clear:'晴 Clear',rain:'雨 Rain',fog:'霧 Fog'};
+const SCEN=[
+ {id:'owari',name:'Owari Border',jp:'尾張',year:1560,pc:'oda',ec:'imagawa',weather:'clear',ai:'attack',koku:[200,200],
+  desc:'Open war across two rivers and a mountain ridge with two passes. Take 駿府 castle or break the Imagawa army. Lose if 清洲 falls.',
+  coast:[1345,85,[[1230,190,150]]],ridges:[[[[1200,-60],[1270,250],[1150,560],[1240,820],[1200,990]],85]],passes:[[1200,390,85],[1200,845,85]],clus:0.6,forest:0.58,
+  rivers:[[[870,-20],[820,250],[905,520],[840,800],[930,1000],[860,1220],[890,1500]],[[1570,-20],[1615,300],[1530,600],[1625,860],[1560,1090],[1645,1500]]],
+  fords:[[0,860,400,1],[0,860,860,0],[0,870,1190,1],[1,1600,380,1],[1,1600,830,0],[1,1590,1150,1]],
+  sets:[{n:'清洲',k:'castle',main:1,x:300,y:820,o:0},{n:'岩倉',k:'castle',x:520,y:330,o:0},{n:'駿府',k:'castle',main:1,x:2100,y:800,o:1},{n:'掛川',k:'castle',x:1880,y:1220,o:1},
+   {n:'津島',k:'town',x:640,y:560,o:0},{n:'犬山',k:'town',x:620,y:1040,o:-1},{n:'桶狭間',k:'town',x:1020,y:400,o:-1},{n:'大高',k:'town',x:1010,y:860,o:-1},{n:'知多',k:'town',x:1040,y:1190,o:-1},
+   {n:'岡崎',k:'town',x:1390,y:380,o:-1},{n:'吉田',k:'town',x:1400,y:830,o:-1},{n:'浜松',k:'town',x:1390,y:1150,o:-1},{n:'二俣',k:'town',x:1780,y:560,o:1},{n:'見附',k:'town',x:1760,y:980,o:-1}],
+  p:[['gen',330,800],['spear',420,740],['spear',430,800],['spear',420,860],['spear',600,560],['spear',520,380],['bow',380,770],['bow',380,830],['bow',620,610],['cav',460,920],['cav',350,940],['teppo',360,700],['ninja',650,1000]],
+  e:[['gen',2080,800],['spear',1980,740],['spear',1970,800],['spear',1980,860],['spear',1760,580],['spear',1870,1170],['spear',1830,330],['spear',1720,820],['bow',2030,760],['bow',2030,840],['bow',1800,600],['cav',1940,950],['cav',2000,660],['cav',1900,1100],['samurai',1950,800],['teppo',2040,880]],
+  mix:['spear','bow','cav','spear','samurai','teppo','monk']},
+ {id:'okehazama',name:'Okehazama Ambush',jp:'桶狭間',year:1560,pc:'oda',ec:'imagawa',weather:'rain',ai:'attack',genStay:1,winGen:1,koku:[150,250],
+  desc:'A storm hides your small army. Yoshimoto rests in the gorge at 桶狭間 — slay his 将 commander to win. Rain soaks gunpowder (鉄 weak). Lose if 清洲 falls.',
+  coast:[1470,60,[]],ridges:[[[[1120,860],[1350,800],[1620,870]],55],[[[1150,1230],[1420,1180],[1680,1250]],60],[[[1900,-60],[1950,300],[1880,520]],80]],passes:[],clus:0.63,forest:0.52,
+  rivers:[[[620,-20],[660,350],[570,780],[650,1150],[600,1550]]],fords:[[0,650,380,1],[0,575,780,0],[0,640,1150,1]],
+  sets:[{n:'清洲',k:'castle',main:1,x:260,y:420,o:0},{n:'善照寺',k:'castle',x:860,y:420,o:0},{n:'熱田',k:'town',x:420,y:950,o:0},{n:'鳴海',k:'castle',x:1000,y:720,o:1},{n:'大高',k:'castle',x:1000,y:1250,o:1},
+   {n:'沓掛',k:'castle',main:1,x:2100,y:800,o:1},{n:'桶狭間',k:'town',x:1380,y:1000,o:-1},{n:'中島',k:'town',x:760,y:640,o:-1},{n:'有松',k:'town',x:1250,y:600,o:-1},{n:'知立',k:'town',x:1650,y:500,o:1},{n:'豊明',k:'town',x:1750,y:1100,o:1}],
+  p:[['gen',850,480],['samurai',900,520],['samurai',820,540],['samurai',780,470],['spear',300,480],['spear',330,400],['spear',450,900],['teppo',880,380],['teppo',940,450],['ninja',760,600],['ninja',700,700],['cav',700,420],['cav',400,500]],
+  e:[['gen',1400,1000],['samurai',1360,960],['spear',1420,1040],['bow',1340,1040],['spear',980,700],['spear',1030,760],['bow',1020,680],['spear',980,1220],['spear',1040,1260],['teppo',1010,1200],
+   ['spear',1250,900],['spear',1200,1000],['spear',1520,980],['cav',1600,1000],['cav',1300,1120],['mbow',1550,1050],['monk',1700,1050],['spear',2080,760],['spear',2100,850],['bow',2050,800]],
+  mix:['spear','bow','spear','cav','samurai']},
+ {id:'kawanakajima',name:'River Crossing',jp:'川中島',year:1561,pc:'takeda',ec:'uesugi',weather:'fog',fogUntil:240,ai:'attack',koku:[200,200],
+  desc:'Takeda vs Uesugi across the Chikuma. Morning fog hides the enemy until it lifts (~4 min). Seize the fords, take 春日山. Lose if 海津 falls.',
+  coast:[1900,0,[]],ridges:[[[[60,-60],[160,500],[90,1000],[150,1660]],110],[[[2340,-60],[2240,600],[2330,1100],[2260,1660]],110]],passes:[],clus:0.63,forest:0.6,
+  rivers:[[[1180,-20],[1230,400],[1150,800],[1260,1200],[1200,1660]],[[-20,1150],[450,1080],[850,1150],[1190,1010]]],
+  fords:[[0,1230,300,1],[0,1160,700,0],[0,1240,1100,1],[0,1220,1450,0],[1,450,1080,1],[1,850,1150,0]],
+  sets:[{n:'海津',k:'castle',main:1,x:480,y:700,o:0},{n:'松代',k:'castle',x:420,y:1350,o:0},{n:'篠ノ井',k:'town',x:800,y:350,o:0},{n:'八幡原',k:'town',x:950,y:850,o:-1},{n:'川中島',k:'town',x:1450,y:700,o:-1},
+   {n:'善光寺',k:'town',x:1550,y:250,o:-1},{n:'屋代',k:'town',x:850,y:1350,o:-1},{n:'雨宮',k:'town',x:1500,y:1250,o:-1},{n:'春日山',k:'castle',main:1,x:2000,y:750,o:1},{n:'妻女山',k:'castle',x:1850,y:1350,o:1},{n:'飯山',k:'town',x:1900,y:300,o:1}],
+  p:[['gen',520,700],['spear',600,640],['spear',600,760],['spear',560,560],['spear',780,380],['bow',560,700],['bow',520,820],['cav',650,850],['cav',450,600],['cav',450,1300],['mbow',700,700],['mbow',480,1380],['teppo',420,760]],
+  e:[['gen',1980,750],['spear',1880,700],['spear',1880,800],['spear',1900,330],['spear',1830,1300],['samurai',1850,750],['samurai',1820,1380],['cav',1950,600],['cav',1950,900],['cav',1700,1300],
+   ['mbow',1780,700],['mbow',1780,820],['bow',2050,700],['bow',2050,820],['monk',1900,1200]],
+  mix:['spear','cav','mbow','samurai','bow','monk']},
+ {id:'odawara',name:'Siege of Odawara',jp:'小田原',year:1590,pc:'toyotomi',ec:'hojo',weather:'clear',ai:'defend',koku:[400,150],
+  desc:'Besiege the great Hojo fortress 小田原 (huge castle defense). Cannons 砲 smash garrisons and packed troops — escort them. Lose if your camp 石垣山 falls.',
+  coast:[1400,60,[[1500,260,90]]],ridges:[[[[-60,230],[700,170],[1500,240],[2460,180]],95]],passes:[[600,200,95],[1700,220,95]],clus:0.64,forest:0.57,
+  rivers:[[[1450,-20],[1500,500],[1420,900],[1480,1500]]],fords:[[0,1500,450,1],[0,1420,850,0],[0,1460,1200,1]],
+  sets:[{n:'石垣山',k:'castle',main:1,x:350,y:800,o:0},{n:'早川',k:'town',x:600,y:1150,o:0},{n:'箱根',k:'town',x:500,y:420,o:0},{n:'松田',k:'town',x:1100,y:1000,o:-1},{n:'曽我',k:'town',x:1250,y:1220,o:-1},
+   {n:'山中',k:'castle',x:1150,y:520,o:1,def:1.9},{n:'小田原',k:'castle',main:1,x:1900,y:850,o:1,def:2.3,r:80},{n:'韮山',k:'castle',x:1750,y:420,o:1},{n:'荻窪',k:'town',x:2150,y:480,o:1},{n:'酒匂',k:'town',x:1650,y:1150,o:1},{n:'大磯',k:'town',x:2200,y:1150,o:1}],
+  p:[['gen',380,800],['spear',500,740],['spear',500,860],['spear',560,800],['spear',600,1100],['spear',520,450],['samurai',620,700],['samurai',620,800],['samurai',620,900],['teppo',450,700],['teppo',450,900],['teppo',560,1180],
+   ['cannon',400,760],['cannon',400,860],['bow',680,1150],['bow',560,400],['cav',300,950],['cav',300,650],['ninja',700,500]],
+  e:[['gen',1920,830],['spear',1860,800],['spear',1880,900],['spear',1960,880],['bow',1940,780],['bow',1840,860],['teppo',1900,760],['teppo',1990,830],['spear',1730,400],['spear',1780,450],['bow',1760,380],
+   ['spear',1140,500],['spear',1170,560],['teppo',1120,540],['monk',1650,1100],['monk',2150,1100],['cav',2100,500],['cav',1700,650],['samurai',1600,850]],
+  mix:['spear','teppo','monk','bow','samurai','cav']}];
+const T=new Uint8Array(GW*GH),PC=new Float32Array(PW*PH);
+let RIVP=[],FORDS=[],terr=null,miniImg=null,SC=null;
+function coastY(x){const c=SC.coast;let y=c[0]+c[1]*(fbm(x/280,7.3,3)-0.5)*2;for(const b of c[2])y-=b[2]*Math.exp(-(((x-b[0])/b[1])**2));return y;}
+function genMap(S){SC=S;const EC=CLANS[S.ec];SIDEC[1]=EC.c;SIDEL[1]=EC.l;SIDEN=[CLANS[S.pc].n,EC.n];
+ const FL=new Float32Array(CW*CH),FM=new Float32Array(CW*CH),FH=new Float32Array(CW*CH),FF=new Float32Array(CW*CH),FN=new Float32Array(CW*CH),FE=new Float32Array(CW*CH),FS=new Float32Array(CW*CH);
+ const cy=[];for(let i=0;i<CW;i++)cy[i]=coastY(i*CS);
+ const RG=S.ridges.map(([pl,w])=>[pl.map(p=>({x:p[0],y:p[1]})),w]);
+ for(let j=0;j<CH;j++)for(let i=0;i<CW;i++){const x=i*CS,y=j*CS,k=j*CW+i;
+  let near=0;for(const s of S.sets){const d=Math.hypot(x-s.x,y-s.y);near=Math.max(near,1-d/(s.k==='castle'?120:95));}
+  let land=(cy[i]-y)/40+0.5;if(near>0)land=Math.max(land,0.5+near*2);
+  let m=0;RG.forEach(([pl,w],ri)=>{let d=1e9;for(let q=0;q<pl.length-1;q++)d=Math.min(d,segD(x,y,pl[q],pl[q+1]));d+=(fbm(x/200,y/200+ri*7,3)-0.5)*70;m=Math.max(m,Math.exp(-((Math.max(0,d)/w)**2)));});
+  m+=Math.max(0,fbm(x/230+11,y/230+5,4)-S.clus)*3.2;for(const p of S.passes)m*=1-0.97*Math.exp(-((Math.hypot(x-p[0],y-p[1])/p[2])**2));
+  m=Math.max(0,m*(1-near*1.7));
+  const h=smooth(0.52,0.7,fbm(x/200+3,y/200+9,4))*0.8*(1-near)+m*0.6;
+  FL[k]=land;FM[k]=m;FH[k]=h;FF[k]=fbm(x/150+20,y/150+40,4);FN[k]=near;FE[k]=0.3*fbm(x/500,y/500,3)+h*0.45+m*1.1;}
+ const L=[-0.75,-0.45,0.55],ll=Math.hypot(...L),flat=L[2]/ll;
+ for(let j=0;j<CH;j++)for(let i=0;i<CW;i++){const k=j*CW+i;const gx=(FE[j*CW+Math.min(CW-1,i+1)]-FE[j*CW+Math.max(0,i-1)])/(2*CS)*70,gy=(FE[Math.min(CH-1,j+1)*CW+i]-FE[Math.max(0,j-1)*CW+i])/(2*CS)*70;
+  const nl=Math.hypot(gx,gy,1);FS[k]=((-gx*L[0]-gy*L[1]+L[2])/nl/ll)/flat;}
+ const bil=(A,k,tx,ty)=>{const a=A[k],b=A[k+1],c=A[k+CW],e=A[k+CW+1];return a+(b-a)*tx+(c-a)*ty+(a-b-c+e)*tx*ty;};
+ for(let j=0;j<GH;j++)for(let i=0;i<GW;i++){const k=j*CW+i,land=bil(FL,k,.5,.5),m=bil(FM,k,.5,.5),h=bil(FH,k,.5,.5),f=bil(FF,k,.5,.5),n=bil(FN,k,.5,.5);
+  T[j*GW+i]=land<0.5?T_SEA:m>0.55?T_MT:h>0.45?T_HI:(f>S.forest&&n<0.25)?T_FO:T_PL;}
+ RIVP=S.rivers.map((cp,ri)=>{const pts=[];for(let s=0;s<cp.length-1;s++){const p0=cp[Math.max(0,s-1)],p1=cp[s],p2=cp[s+1],p3=cp[Math.min(cp.length-1,s+2)];
+   for(let t=0;t<1;t+=1/14){const t2=t*t,t3=t2*t;const f=(a,b,c,d)=>0.5*((2*b)+(-a+c)*t+(2*a-5*b+4*c-d)*t2+(-a+3*b-3*c+d)*t3);pts.push({x:f(p0[0],p1[0],p2[0],p3[0]),y:f(p0[1],p1[1],p2[1],p3[1])});}}
+  pts.push({x:cp[cp.length-1][0],y:cp[cp.length-1][1]});
+  return pts.map((p,i)=>{const a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)];const dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy)||1;const o=(fbm(i/8,ri*5+1,2)-0.5)*40;return {x:p.x-dy/l*o,y:p.y+dx/l*o};});});
+ FORDS=S.fords.map(([ri,fx,fy,br])=>{let best=RIVP[ri][0];for(const p of RIVP[ri])if(Math.hypot(p.x-fx,p.y-fy)<Math.hypot(best.x-fx,best.y-fy))best=p;return {x:best.x,y:best.y,bridge:!!br,ri};});
+ for(const pts of RIVP)for(let s=0;s<pts.length-1;s++){const a=pts[s],b=pts[s+1];
+  for(let j=Math.max(0,Math.floor((Math.min(a.y,b.y)-16)/CS));j<=Math.min(GH-1,Math.floor((Math.max(a.y,b.y)+16)/CS));j++)
+  for(let i=Math.max(0,Math.floor((Math.min(a.x,b.x)-16)/CS));i<=Math.min(GW-1,Math.floor((Math.max(a.x,b.x)+16)/CS));i++){
+   const px=i*CS+5,py=j*CS+5;if(segD(px,py,a,b)<11&&T[j*GW+i]!==T_SEA)T[j*GW+i]=T_RV;}}
+ for(const f of FORDS)for(let j=0;j<GH;j++)for(let i=0;i<GW;i++){if(T[j*GW+i]===T_RV&&Math.hypot(i*CS+5-f.x,j*CS+5-f.y)<26)T[j*GW+i]=T_FD;}
+ for(let j=0;j<PH;j++)for(let i=0;i<PW;i++){let n=0,c=0,fd=0;for(let b=0;b<2;b++)for(let a=0;a<2;a++){const t=T[(j*2+b)*GW+i*2+a];if(SPD[t]>0){n++;c+=1/SPD[t];}if(t===T_FD)fd++;}
+  PC[j*PW+i]=n<2?0:fd?1.25:c/n;}
+ paint(FL,FM,FH,FF,FN,FS,bil);
+ miniImg=document.createElement('canvas');miniImg.width=220;miniImg.height=147;const mc=miniImg.getContext('2d');mc.drawImage(terr,0,0,220,147);mc.fillStyle='rgba(20,10,20,.15)';mc.fillRect(0,0,220,147);
+}
+function segD(px,py,a,b){const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy||1;const t=clamp(((px-a.x)*dx+(py-a.y)*dy)/l,0,1);return Math.hypot(px-a.x-dx*t,py-a.y-dy*t);}
+const tAt=(x,y)=>T[clamp(Math.floor(y/CS),0,GH-1)*GW+clamp(Math.floor(x/CS),0,GW-1)];
+
+function paint(FL,FM,FH,FF,FN,FS,bil){
+ terr=document.createElement('canvas');terr.width=W;terr.height=H;const c=terr.getContext('2d');
+ const img=c.createImageData(W,H),d=img.data;
+ for(let y=0;y<H;y++){const fy=y/CS,j=Math.min(fy|0,GH-1),ty=fy-j;
+  for(let x=0;x<W;x++){const fx=x/CS,i=Math.min(fx|0,GW-1),tx=fx-i,k=j*CW+i,o=(y*W+x)*4;
+   const land=bil(FL,k,tx,ty);let r,g,b;const gr=(hash2(x,y)-0.5)*9+(vn(x/4,y/4)-0.5)*12;
+   if(land<0.5){const dep=clamp((0.5-land)*1.4,0,1);r=lerp(62,24,dep);g=lerp(82,32,dep);b=lerp(130,70,dep);
+    const w=Math.sin(y*0.32+vn(x/60,y/30)*9);if(w>0.86){r+=26;g+=24;b+=30;}
+    if(land>0.47){const t=(land-0.47)/0.03;r=lerp(r,22,t);g=lerp(g,18,t);b=lerp(b,26,t);}
+    // dusk reflection
+    r+=18*(1-dep);b+=6;}
+   else{const m=bil(FM,k,tx,ty),h=bil(FH,k,tx,ty),f=bil(FF,k,tx,ty),n=bil(FN,k,tx,ty),sh=bil(FS,k,tx,ty);
+    const v=vn(x/90,y/90);r=lerp(176,204,v);g=lerp(138,164,v);b=lerp(80,92,v);
+    if(n>0.05){const t=smooth(0.05,0.35,n)*(Math.sin((x*0.6+y*0.35)*0.32)>0.2?1:0.7);r=lerp(r,226,t);g=lerp(g,186,t);b=lerp(b,92,t);}
+    const fw=smooth(SC.forest-0.02,SC.forest+0.02,f)*(1-smooth(0.15,0.25,n))*(1-smooth(0.43,0.45,h));if(fw>0){const fv=vn(x/12,y/12);r=lerp(r,lerp(30,58,fv),fw);g=lerp(g,lerp(52,88,fv),fw);b=lerp(b,lerp(40,60,fv),fw);}
+    const hw=smooth(0.42,0.48,h);if(hw>0){r=lerp(r,188,hw*0.7);g=lerp(g,146,hw*0.7);b=lerp(b,100,hw*0.7);}
+    const mw=smooth(0.5,0.58,m);if(mw>0){const e=clamp((m-0.5)*1.4,0,1);r=lerp(r,lerp(124,206,e),mw);g=lerp(g,lerp(98,180,e),mw);b=lerp(b,lerp(112,168,e),mw);}
+    const s=clamp(sh,0.72,1.35);
+    if(s<1){const t=(1-s)*0.9;r=lerp(r*s,110,t*0.35);g=lerp(g*s,52,t*0.35);b=lerp(b*s,104,t*0.35);}
+    else{const t=(s-1)*0.7;r=lerp(r,255,t*0.5);g=lerp(g,196,t*0.4);b=lerp(b,120,t*0.2);}
+    if(land<0.56){const t=1-Math.abs(land-0.53)/0.03;if(t>0){r=lerp(r,20,t);g=lerp(g,16,t);b=lerp(b,24,t);}}}
+   d[o]=r+gr;d[o+1]=g+gr;d[o+2]=b+gr;d[o+3]=255;}}
+ c.putImageData(img,0,0);
+ rs=777;
+ // hills ink arcs
+ c.strokeStyle='rgba(40,24,30,.35)';c.lineWidth=1.2;
+ for(let j=0;j<GH;j++)for(let i=0;i<GW;i++)if(T[j*GW+i]===T_HI&&rnd()<0.035){const x=i*CS+5,y=j*CS+5,s=10+rnd()*10;c.beginPath();c.ellipse(x,y,s,s*0.45,0,Math.PI*1.05,Math.PI*1.95);c.stroke();}
+ // rivers
+ for(const pts of RIVP){const path=()=>{c.beginPath();c.moveTo(pts[0].x,pts[0].y);for(const p of pts)c.lineTo(p.x,p.y);};
+  c.lineCap='round';c.lineJoin='round';path();c.strokeStyle='#130f17';c.lineWidth=21;c.stroke();path();c.strokeStyle='#2b3d74';c.lineWidth=16;c.stroke();
+  path();c.strokeStyle='rgba(120,150,210,.35)';c.lineWidth=5;c.stroke();path();c.strokeStyle='rgba(240,160,120,.25)';c.lineWidth=1.5;c.stroke();}
+ // re-ink coast over river mouths: sea cells repaint skipped (rivers end in sea)
+ // fords / bridges
+ for(const f of FORDS){const pts=RIVP[f.ri];let a=0;let bi=0;for(let q=0;q<pts.length;q++)if(dist(pts[q],f)<dist(pts[bi],f))bi=q;
+  const p0=pts[Math.max(0,bi-2)],p1=pts[Math.min(pts.length-1,bi+2)];a=Math.atan2(p1.y-p0.y,p1.x-p0.x)+Math.PI/2;
+  c.save();c.translate(f.x,f.y);c.rotate(a);
+  if(f.bridge){c.fillStyle='#6b3d26';c.fillRect(-22,-7,44,14);c.strokeStyle='#130f17';c.lineWidth=1.5;c.strokeRect(-22,-7,44,14);
+   c.strokeStyle='#a33a2a';c.lineWidth=2.5;c.beginPath();c.moveTo(-22,-8);c.quadraticCurveTo(0,-13,22,-8);c.moveTo(-22,8);c.quadraticCurveTo(0,3,22,8);c.stroke();
+   c.strokeStyle='rgba(19,15,23,.6)';c.lineWidth=1;for(let q=-18;q<=18;q+=6){c.beginPath();c.moveTo(q,-6);c.lineTo(q,6);c.stroke();}}
+  else{for(let q=-20;q<=20;q+=6){c.fillStyle='#b8a890';c.beginPath();c.ellipse(q,(q%12)?3:-3,4,3,0,0,7);c.fill();c.strokeStyle='#130f17';c.lineWidth=1;c.stroke();}}
+  c.restore();}
+ // mountains and pines, y-sorted
+ const items=[];
+ for(let j=0;j<GH;j++)for(let i=0;i<GW;i++){const t=T[j*GW+i];if(t===T_MT&&rnd()<0.2)items.push({y:j*CS+5+rnd()*6,x:i*CS+5+rnd()*6-3,m:1,s:12+rnd()*14});
+  else if(t===T_FO&&rnd()<0.6)items.push({y:j*CS+rnd()*10,x:i*CS+rnd()*10,m:0,s:4+rnd()*3});}
+ items.sort((a,b)=>a.y-b.y);
+ for(const it of items){if(it.m)peak(c,it.x,it.y,it.s);else pine(c,it.x,it.y,it.s);}
+ // settlements
+ for(const s of SC.sets){if(s.k==='castle')castleArt(c,s.x,s.y,s.main);else townArt(c,s.x,s.y);}
+}
+function peak(c,x,y,s){c.beginPath();c.moveTo(x-s,y);c.lineTo(x-s*0.15,y-s*1.2);c.lineTo(x+s*0.95,y);c.closePath();c.fillStyle='#6a5268';c.fill();
+ c.beginPath();c.moveTo(x-s,y);c.lineTo(x-s*0.15,y-s*1.2);c.lineTo(x+s*0.1,y);c.closePath();c.fillStyle='#d6a88c';c.fill();
+ c.strokeStyle='rgba(18,12,20,.9)';c.lineWidth=1.7;c.beginPath();c.moveTo(x-s,y);c.lineTo(x-s*0.15,y-s*1.2);c.lineTo(x+s*0.95,y);c.stroke();
+ c.lineWidth=0.8;c.beginPath();c.moveTo(x-s*0.15,y-s*1.2);c.lineTo(x+s*0.1,y-s*0.15);c.stroke();}
+function pine(c,x,y,s){c.fillStyle='rgba(15,20,18,.35)';c.beginPath();c.ellipse(x+s*0.6,y+1,s*0.9,s*0.35,0,0,7);c.fill();
+ for(let t=0;t<2;t++){const yy=y-t*s*0.7,w=s*(0.95-t*0.3);c.beginPath();c.moveTo(x,yy-s*1.2);c.lineTo(x+w,yy);c.lineTo(x-w,yy);c.closePath();c.fillStyle='#1f3627';c.fill();
+  c.beginPath();c.moveTo(x,yy-s*1.2);c.lineTo(x-w,yy);c.lineTo(x-w*0.1,yy);c.closePath();c.fillStyle='#41694a';c.fill();
+  c.strokeStyle='rgba(12,10,14,.55)';c.lineWidth=0.7;c.beginPath();c.moveTo(x-w,yy);c.lineTo(x,yy-s*1.2);c.lineTo(x+w,yy);c.stroke();}}
+function castleArt(c,x,y,big){const k=big?1.2:1;
+ c.lineWidth=10*k;c.strokeStyle='#130f17';c.beginPath();c.arc(x,y+4,44*k,0,7);c.stroke();c.lineWidth=6.5*k;c.strokeStyle='#2e4078';c.stroke();
+ c.lineWidth=1;c.strokeStyle='rgba(150,170,230,.4)';c.beginPath();c.arc(x,y+4,44*k,Math.PI*0.9,Math.PI*1.4);c.stroke();
+ c.fillStyle='#8a7d76';c.strokeStyle='#130f17';c.lineWidth=1.6;c.beginPath();c.moveTo(x-24*k,y+14*k);c.lineTo(x+24*k,y+14*k);c.lineTo(x+17*k,y);c.lineTo(x-17*k,y);c.closePath();c.fill();c.stroke();
+ c.lineWidth=0.8;for(let q=-1;q<=1;q++){c.beginPath();c.moveTo(x-20*k,y+5*k+q*3*k+3*k);c.lineTo(x+20*k,y+5*k+q*3*k+3*k);c.stroke();}
+ let yy=y;for(let t=0;t<3;t++){const w=(28-8*t)*k,hh=7*k;c.fillStyle='#efe6d2';c.fillRect(x-w/2,yy-hh,w,hh);c.lineWidth=1.2;c.strokeRect(x-w/2,yy-hh,w,hh);
+  c.fillStyle='#231b22';c.beginPath();c.moveTo(x-w/2-5*k,yy-hh);c.quadraticCurveTo(x-w/2,yy-hh-2*k,x-w/2+3*k,yy-hh-5*k);c.lineTo(x+w/2-3*k,yy-hh-5*k);c.quadraticCurveTo(x+w/2,yy-hh-2*k,x+w/2+5*k,yy-hh);c.closePath();c.fill();
+  yy-=hh+5*k;}
+ c.fillStyle='#e8b04a';c.fillRect(x-1.5*k,yy-3*k,3*k,4*k);}
+function townArt(c,x,y){c.fillStyle='rgba(20,12,18,.25)';c.beginPath();c.ellipse(x,y+6,30,12,0,0,7);c.fill();
+ const hs=[[-16,-6],[2,-10],[16,-2],[-6,6],[12,10],[-20,8]];for(const [dx,dy] of hs){const X=x+dx,Y=y+dy;c.fillStyle='#e9dcc0';c.fillRect(X-6,Y-3,12,7);c.strokeStyle='#130f17';c.lineWidth=1;c.strokeRect(X-6,Y-3,12,7);
+  c.fillStyle='#3a2a2c';c.beginPath();c.moveTo(X-8,Y-3);c.lineTo(X-4,Y-8);c.lineTo(X+4,Y-8);c.lineTo(X+8,Y-3);c.closePath();c.fill();c.stroke();}}
+
+// ===================== PATHING =====================
+const pIdx=(x,y)=>clamp(Math.floor(y/PS),0,PH-1)*PW+clamp(Math.floor(x/PS),0,PW-1);
+function nearPass(k){if(PC[k]>0)return k;const ci=k%PW,cj=(k/PW)|0;for(let r=1;r<20;r++){let best=-1,bd=1e9;for(let j=cj-r;j<=cj+r;j++)for(let i=ci-r;i<=ci+r;i++){if(i<0||j<0||i>=PW||j>=PH)continue;if(Math.max(Math.abs(i-ci),Math.abs(j-cj))!==r)continue;const q=j*PW+i;if(PC[q]>0){const dd=(i-ci)**2+(j-cj)**2;if(dd<bd){bd=dd;best=q;}}}if(best>=0)return best;}return -1;}
+function passPt(x,y){const t=tAt(x,y);if(SPD[t]>0)return {x,y};const k=nearPass(pIdx(x,y));return k<0?{x,y}:{x:(k%PW)*PS+PS/2,y:((k/PW)|0)*PS+PS/2};}
+const AG=new Float32Array(PW*PH),AFR=new Int32Array(PW*PH),AST=new Uint32Array(PW*PH),ACL=new Uint32Array(PW*PH);let stamp=0;
+function astar(sx,sy,tx,ty){const s=nearPass(pIdx(sx,sy)),t=nearPass(pIdx(tx,ty));if(s<0||t<0)return null;if(s===t)return [];
+ stamp++;const hf=[],hk=[];const push=(f,k)=>{hf.push(f);hk.push(k);let i=hf.length-1;while(i>0){const p=(i-1)>>1;if(hf[p]<=hf[i])break;[hf[p],hf[i]]=[hf[i],hf[p]];[hk[p],hk[i]]=[hk[i],hk[p]];i=p;}};
+ const pop=()=>{const k=hk[0],lf=hf.pop(),lk=hk.pop();if(hf.length){hf[0]=lf;hk[0]=lk;let i=0;for(;;){const l=2*i+1,r=l+1;let m=i;if(l<hf.length&&hf[l]<hf[m])m=l;if(r<hf.length&&hf[r]<hf[m])m=r;if(m===i)break;[hf[m],hf[i]]=[hf[i],hf[m]];[hk[m],hk[i]]=[hk[i],hk[m]];i=m;}}return k;};
+ const ti=t%PW,tj=(t/PW)|0;const hh=k=>{const dx=Math.abs(k%PW-ti),dy=Math.abs(((k/PW)|0)-tj);return (dx+dy+(1.414-2)*Math.min(dx,dy));};
+ AG[s]=0;AST[s]=stamp;AFR[s]=-1;push(hh(s),s);let found=false,it=0;
+ while(hf.length&&it++<12000){const k=pop();if(ACL[k]===stamp)continue;ACL[k]=stamp;if(k===t){found=true;break;}
+  const ki=k%PW,kj=(k/PW)|0;
+  for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){if(!di&&!dj)continue;const ni=ki+di,nj=kj+dj;if(ni<0||nj<0||ni>=PW||nj>=PH)continue;const n=nj*PW+ni;if(PC[n]<=0||ACL[n]===stamp)continue;
+   if(di&&dj&&(PC[kj*PW+ni]<=0||PC[nj*PW+ki]<=0))continue;const g=AG[k]+(di&&dj?1.414:1)*(PC[k]+PC[n])/2;
+   if(AST[n]!==stamp||g<AG[n]){AST[n]=stamp;AG[n]=g;AFR[n]=k;push(g+hh(n),n);}}}
+ if(!found)return null;const out=[];for(let k=t;k!==s&&k>=0;k=AFR[k])out.push({x:(k%PW)*PS+PS/2,y:((k/PW)|0)*PS+PS/2});out.reverse();return out;}
+function los(a,b){const d=dist(a,b),n=Math.ceil(d/6);for(let i=1;i<n;i++){const t=i/n;if(t*d<9||(1-t)*d<9)continue;const tt=tAt(lerp(a.x,b.x,t),lerp(a.y,b.y,t));if(SPD[tt]===0||tt===T_RV)return false;}return true;}
+function smoothPath(start,pts){if(pts.length<2)return pts;const out=[];let cur=start,i=0;while(i<pts.length){let j=pts.length-1;while(j>i&&!los(cur,pts[j]))j--;out.push(pts[j]);cur=pts[j];i=j+1;}return out;}
+function buildPath(start,targets){let res=[],cur=start;for(const p0 of targets){const p=passPt(p0.x,p0.y);
+  if(los(cur,p))res.push(p);else{const a=astar(cur.x,cur.y,p.x,p.y);if(a){if(a.length)a[a.length-1]=p;else a.push(p);res.push(...smoothPath(cur,a));}}cur=p;}return res;}
+
+// ===================== UNITS =====================
+const UT={
+ spear:{n:'Ashigaru spears',g:'槍',spd:24,atk:1,def:1,mres:1,cost:60,role:'cheap line troops · beat cavalry'},
+ bow:{n:'Archers',g:'弓',spd:24,atk:0.55,def:0.8,mres:1,rng:125,vol:7,rel:2.4,shots:5,proj:'arrow',cost:70,role:'ranged · cheap, steady volleys'},
+ cav:{n:'Samurai cavalry',g:'騎',spd:50,atk:1.25,def:1,mres:1,charge:1,cost:110,castle:1,role:'fast · big charge · crush archers, guns, cannon'},
+ gen:{n:'Commander',g:'将',spd:34,atk:0.9,def:1.4,mres:0.8,role:'morale aura · if he falls, morale crashes'},
+ teppo:{n:'Teppo arquebusiers',g:'鉄',spd:20,atk:0.45,def:0.7,mres:1.05,rng:150,vol:20,rel:6,shots:6,proj:'shot',cost:100,castle:1,role:'huge volleys, slow reload · weak in melee & rain'},
+ samurai:{n:'Heavy samurai',g:'侍',spd:19,atk:1.4,def:1.35,mres:0.65,cost:120,castle:1,role:'slow, tough, steady · beat spears'},
+ ninja:{n:'Ninja scouts',g:'忍',spd:46,atk:0.6,def:0.7,mres:1.1,sight:460,cost:50,role:'fast scouts · hidden in forest · capture towns 3x, raid income'},
+ cannon:{n:'Ozutsu cannon',g:'砲',spd:12,atk:0.3,def:0.6,mres:1.2,rng:270,minR:60,vol:18,rel:9,shots:1,proj:'ball',splash:45,cost:160,castle:1,role:'very long range · splash · 2.5x vs castle garrisons · needs escort'},
+ monk:{n:'Sohei warrior monks',g:'僧',spd:23,atk:1.1,def:1.1,mres:0.55,cost:90,role:'iron morale · beat cavalry'},
+ mbow:{n:'Mounted archers',g:'騎弓',spd:46,atk:0.7,def:0.85,mres:1,rng:110,vol:6,rel:2.8,shots:4,proj:'arrow',fireMove:1,kite:1,cost:120,castle:1,role:'hit and run · shoot while moving · auto-retreat from melee'}};
+const MAT={spear:{cav:2.0,mbow:1.8,samurai:0.6},cav:{spear:0.5,monk:0.5,samurai:0.7,bow:2.2,teppo:2.4,cannon:2.6,ninja:1.5,mbow:1.3},bow:{samurai:0.6},gen:{},
+ teppo:{cav:2.0,samurai:1.7,mbow:1.8},samurai:{spear:2.0,monk:1.2,ninja:1.6},ninja:{cannon:2.0,bow:1.5,teppo:1.7,samurai:0.5},cannon:{samurai:1.6,spear:1.4},
+ monk:{cav:2.0,mbow:1.8,samurai:0.8},mbow:{spear:1.4,samurai:1.3,cannon:1.6}};
+// tactics: direction classes 0 front · 1 side (>60°) · 2 rear (>120°)
+const DIRM=[1,1.5,2.2],DIRMOR=[1,1.5,2.5],DIRR=[1,1.25,1.5],DIRSHOCK=[0,7,15],HOLDF=1.3,UPHILL=0.75,DOWNHILL=1.15,AMBM=2,AMBT=3,CHFLANK=2.5,STUNT=2,TURN=1;
+const angD=(a,b)=>{let d=a-b;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;return d;};
+function dirCls(e,ax,ay){const off=Math.abs(angD(Math.atan2(ay-e.y,ax-e.x),e.face));return off>2.094?2:off>1.047?1:0;}
+function slope(a,e){const ah=tAt(a.x,a.y)===T_HI,eh=tAt(e.x,e.y)===T_HI;return eh&&!ah?UPHILL:ah&&!eh?DOWNHILL:1;}
+function pop(u,x,y,s,c,big,gap){if(!G||G.t<(u.popT||0))return;u.popT=G.t+(gap||1.1);x+=(Math.random()-.5)*10;
+ for(let k=0;k<4;k++){if(!FX.some(f=>f.k==='txt'&&f.t<0.8&&Math.abs(f.x-x)<70&&Math.abs((f.y-f.t/f.d*24)-y)<14))break;y-=16;}// stack instead of overlapping
+ if(FX.length<450)FX.push({k:'txt',x,y,t:0,d:1.5,s,c,big});}
+const popC=(u,good)=>good===false?'#c9cfe6':u.side===0?'#ffd27a':'#ff7a5c';
+const DIFFS={easy:{inc:0.7,dm:0.85},normal:{inc:0.95,dm:0.97},hard:{inc:1.3,dm:1.08}};
+let G=null,units=[],SETS=[],FX=[],UID=1,sel=[],groups={},save={},curDiff='normal';
+try{save=JSON.parse(localStorage.getItem('sengokuWar')||'{}');}catch(e){save={};}
+const persist=()=>{try{localStorage.setItem('sengokuWar',JSON.stringify(save));}catch(e){}};
+function mkUnit(side,type,x,y,str){const p=passPt(x,y);return {id:UID++,side,type,x:p.x,y:p.y,str:str||100,mor:100,path:[],target:null,hold:false,rout:false,face:side?Math.PI:0,disT:0,reload:rnd()*2,lastHit:-99,run:0,melee:false,hits:0,sel:false,repath:0,goal:null,role:null,clash:0,moving:false,seen:side===0,kiteT:0};}
+function newGame(subject){const S=SC;
+ rs=4242;UID=1;units=[];FX=[];sel=[];groups={};
+ SETS=S.sets.map((s,i)=>({...s,id:i,side0:s.o,r:s.r||(s.k==='castle'?62:50),prog:s.o===0?100:s.o===1?-100:0,raided:0}));
+ G={t:0,speed:1,paused:false,over:false,subject:subject||'free',koku:S.koku.slice(),killed:[0,0],lost:[0,0],start:[0,0],aiT:0,aiTarget:null,aiTargetT:0,flankT:40,aidCD:0,
+   battleMus:false,calmT:0,spawnI:[0,0],gen:[null,null],modal:null,qa:0,qc:0,weather:S.weather,diff:DIFFS[curDiff],buyI:0,engaged:{},selSet:null,recruited:0};
+ for(const [t,x,y] of S.p)units.push(mkUnit(0,t,x,y));for(const [t,x,y] of S.e)units.push(mkUnit(1,t,x,y));
+ G.gen=[units.find(u=>u.side===0&&u.type==='gen'),units.find(u=>u.side===1&&u.type==='gen')];G.genHome=G.gen[1]?{x:G.gen[1].x,y:G.gen[1].y}:null;
+ G.EM=SETS.find(s=>s.main&&s.side0===1);G.PM=SETS.find(s=>s.main&&s.side0===0);
+ for(const s of [0,1])G.start[s]=units.filter(u=>u.side===s).reduce((a,u)=>a+u.str,0);
+ cam.z=0.9;cam.x=G.PM.x-260;cam.y=G.PM.y-innerHeight/2/cam.z;clampCam();
+}
+function hiddenFrom(e,side){if(!(e.type==='ninja'||e.amb)||tAt(e.x,e.y)!==T_FO)return false;const r=e.type==='ninja'?70:80;for(const o of units)if(o.side===side&&dist(o,e)<r)return false;return true;}
+function nearestEnemy(u,maxD,noRout,minD){let best=null,bd=maxD;for(const e of units){if(e.side===u.side||(noRout&&e.rout))continue;const d=dist(u,e);if(d<bd&&!(minD&&d<minD)&&!(u.side===0&&!e.seen)&&!hiddenFrom(e,u.side)){bd=d;best=e;}}return best;}
+function inOwnCastle(v){for(const s of SETS)if(s.k==='castle'&&s.o===v.side&&dist(s,v)<s.r)return true;return false;}
+function terrDef(u,rng,dc){const t=tAt(u.x,u.y);let m=rng&&t===T_FO?1.5:DEFM[t];for(const s of SETS){if(s.o===u.side&&dist(u,s)<s.r){m*=s.def||(s.k==='castle'?1.7:1.2);break;}}return m*UT[u.type].def*(u.hold&&!dc?HOLDF:1);}
+function rangeOf(u){return UT[u.type].rng+(tAt(u.x,u.y)===T_HI?60:0);}
+function nearGen(u){const g=G.gen[u.side];return g&&g!==u&&!g.rout&&units.includes(g)&&dist(g,u)<230;}
+function hit(a,e,dmg,mf){if(a&&a.side===1)dmg*=G.diff.dm;e.str-=dmg;e.mor-=dmg*(mf||1.9)*(nearGen(e)?0.8:1)*UT[e.type].mres;e.lastHit=G.t;if(a)G.engaged[a.type]=(G.engaged[a.type]||0)+1;}
+function setRout(u){u.rout=true;u.target=null;u.path=[];u.hold=false;u.goal=null;u.role=null;
+ for(const f of units)if(f.side===u.side&&f!==u&&dist(f,u)<150)f.mor-=5;if(u.side===0)toast(`${UT[u.type].g} ${UT[u.type].n} broke and flee!`);}
+function killUnit(u){units=units.filter(x=>x!==u);sel=sel.filter(x=>x!==u);G.lost[u.side]++;G.killed[1-u.side]++;
+ for(let i=0;i<8;i++)FX.push({k:'dust',x:u.x+(rnd()-.5)*20,y:u.y+(rnd()-.5)*20,t:0,d:1.2+rnd(),r:6+rnd()*10});
+ if(u.type==='gen'){G.gen[u.side]=null;for(const f of units)if(f.side===u.side){f.mor-=12;if(dist(f,u)<300)f.mor-=25;}
+  toast(u.side===0?'Your commander 将 has fallen! Morale collapses.':`The ${SIDEN[1]} commander 将 is slain! Their lines waver.`,1);}}
+function spawnAt(side,t,s,str){if(units.filter(u=>u.side===side).length>=30)return null;const u=mkUnit(side,t,s.x+(rnd()-.5)*50,s.y+30+rnd()*20,str||100);units.push(u);return u;}
+function spawn(side){const own=SETS.filter(s=>s.o===side);if(!own.length)return false;const s=own.find(s=>s.main)||own.find(s=>s.k==='castle')||own[0];
+ const t=['spear','samurai','bow','monk'][G.spawnI[side]++%4];const u=spawnAt(side,t,s,100);if(u&&side===0)toast(`Reinforcements: ${UT[t].g} ${UT[t].n} at ${s.n}`);return u;}
+function canRecruit(s,t){return s&&s.o===0&&t!=='gen'&&(s.k==='castle'||!UT[t].castle);}
+function recruit(s,t){if(!G||!canRecruit(s,t))return false;if(G.koku[0]<UT[t].cost){toast('Not enough rice 米');return false;}const u=spawnAt(0,t,s,100);if(!u){toast('Army is at full size (30)');return false;}
+ G.koku[0]-=UT[t].cost;G.recruited++;toast(`Recruited ${UT[t].g} ${UT[t].n} at ${s.n}`);FX.push({k:'ring',x:u.x,y:u.y,t:0,d:0.8,c:'#ffd27a'});updRecruit();return u;}
+// ===================== ORDERS =====================
+function setPath(u,pts,queue){const from=queue&&u.path.length?u.path[u.path.length-1]:u;const p=buildPath(from,pts);
+ if(queue&&u.path.length)u.path=u.path.concat(p);else u.path=p;if(!queue)u.target=null;u.hold=false;if(u.melee)u.disT=2.5;}
+function formation(us,P,dirFrom){const c=dirFrom||centroid(us);let dx=P.x-c.x,dy=P.y-c.y;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;const px=-dy,py=dx;
+ const n=us.length,cols=Math.min(n,Math.max(3,Math.ceil(Math.sqrt(n*2))));const so=us.slice().sort((a,b)=>(a.x*px+a.y*py)-(b.x*px+b.y*py));const out=new Map();
+ so.forEach((u,i)=>{const col=i%cols,row=Math.floor(i/cols),rn=Math.min(cols,n-row*cols);const ox=(col-(rn-1)/2)*34,oy=-row*34;out.set(u,{x:px*ox+dx*oy,y:py*ox+dy*oy});});return out;}
+const centroid=us=>{let x=0,y=0;for(const u of us){x+=u.x;y+=u.y;}return {x:x/us.length,y:y/us.length};};
+function orderMove(us,P,queue){us=us.filter(u=>!u.rout);if(!us.length)return;if(us.length===1){setPath(us[0],[P],queue);return;}
+ const f=formation(us,P);for(const u of us){const o=f.get(u);setPath(u,[{x:P.x+o.x,y:P.y+o.y}],queue);}}
+function orderPath(us,pts){us=us.filter(u=>!u.rout);if(!us.length||!pts.length)return;const last=pts[pts.length-1],prev=pts.length>1?pts[Math.max(0,pts.length-4)]:centroid(us);
+ const f=us.length>1?formation(us,last,prev):null;for(const u of us){const o=f?f.get(u):{x:0,y:0};setPath(u,pts.map(p=>({x:p.x+o.x,y:p.y+o.y})),false);}}
+function orderAttack(us,e){for(const u of us){if(u.rout)continue;u.target=e;u.hold=false;u.path=buildPath(u,[e]);u.repath=1;if(u.melee)u.disT=0;}}
+
+// ===================== SIM =====================
+function fire(u,e){const ut=UT[u.type],rain=G.weather==='rain';u.face=Math.atan2(e.y-u.y,e.x-u.x);u.fireT=G.t;
+ const dc=dirCls(e,u.x,u.y),rm=DIRR[dc],mat=(MAT[u.type][e.type]||1),hill=tAt(u.x,u.y)===T_HI&&tAt(e.x,e.y)!==T_HI?1.15:1;
+ let dmg=ut.vol*(0.3+0.007*u.str)*mat*rm*hill/terrDef(e,true,dc)*(u.side===1?G.diff.dm:1);
+ if(dc)pop(u,e.x,e.y-6,dc===2?'背 REAR!':'側 FLANK',popC(u),dc===2);
+ else if((mat>=1.5||mat<=0.7)&&G.t>(u.matT||0)){u.matT=G.t+4;pop(u,e.x,e.y-6,mat>=1.5?'✓ Counter':'✗ Bad matchup',popC(u,mat>=1.5?true:false));}
+ if(rain)dmg*=u.type==='teppo'?0.35:ut.proj==='arrow'?0.8:1;
+ u.reload=ut.rel*(rain&&u.type==='teppo'?1.5:1)*(0.9+rnd()*0.2);G.engaged[u.type]=(G.engaged[u.type]||0)+1;
+ if(ut.proj==='ball'){if(inOwnCastle(e))dmg*=2.5;FX.push({k:'ball',x0:u.x,y0:u.y,x1:e.x,y1:e.y,t:0,d:1.0,tg:e,dmg,splash:ut.splash,side:u.side});FX.push({k:'smoke',x:u.x+Math.cos(u.face)*14,y:u.y+Math.sin(u.face)*14,t:0,d:1.8,r:10});}
+ else if(ut.proj==='shot'){for(let q=0;q<ut.shots;q++){FX.push({k:'shot',x0:u.x+(rnd()-.5)*18,y0:u.y+(rnd()-.5)*12,x1:e.x+(rnd()-.5)*20,y1:e.y+(rnd()-.5)*14,t:-q*0.03,d:0.15,tg:q?null:e,dmg,mf:2.4*rm});
+   FX.push({k:'smoke',x:u.x+Math.cos(u.face)*12+(rnd()-.5)*16,y:u.y+Math.sin(u.face)*12+(rnd()-.5)*12,t:-q*0.03,d:1.5+rnd(),r:5+rnd()*4});}}
+ else for(let q=0;q<ut.shots;q++)FX.push({k:'arrow',x0:u.x+(rnd()-.5)*14,y0:u.y+(rnd()-.5)*10,x1:e.x+(rnd()-.5)*22,y1:e.y+(rnd()-.5)*16,t:-q*0.05,d:0.55,tg:q?null:e,dmg,mf:1.4*rm});}
+function step(dt){
+ G.t+=dt;const n=units.length;
+ if(G.weather==='fog'&&SC.fogUntil&&G.t>SC.fogUntil){G.weather='clear';toast('The morning fog lifts 霧晴');}
+ for(const u of units){u.wasMelee=u.melee;u.amb=!u.rout&&!u.melee&&(!u.moving||u.type==='ninja')&&tAt(u.x,u.y)===T_FO&&G.t-u.lastHit>4&&G.t-(u.fireT||-99)>4;
+  u.hits=0;u.melee=false;u.cont=null;u.disT-=dt;}
+ // concealment memory for ambush: stationary in forest and no enemy close enough to spot it
+ for(const u of units)if(u.amb&&!units.some(o=>o.side!==u.side&&dist(o,u)<80))u.hidT=G.t;
+ for(let i=0;i<n;i++){const a=units[i];for(let j=i+1;j<n;j++){const b=units[j];if(a.side===b.side)continue;const d=Math.hypot(a.x-b.x,a.y-b.y);
+  if(d<31){(a.cont||(a.cont=[])).push(b);(b.cont||(b.cont=[])).push(a);}}}
+ for(const u of units){if(u.cont&&!u.rout&&u.disT<=0)u.melee=true;if(!u.cont)u.shk=null;}
+ for(const u of units){if(!u.melee)continue;let e=u.target&&u.cont.includes(u.target)?u.target:u.cont.reduce((a,b)=>dist(u,a)<dist(u,b)?a:b);
+  // keep facing the first opponent (or an explicitly ordered target); turn slowly
+  if(!u.wasMelee||!u.foe||!u.cont.includes(u.foe)||(u.target&&u.target!==u.foe&&u.cont.includes(u.target))){
+   if(!u.wasMelee&&u.hidT!=null&&G.t-u.hidT<4){u.ambT=G.t+AMBT;pop(u,(u.x+e.x)/2,(u.y+e.y)/2-8,'伏 AMBUSH',popC(u),1);for(const v of u.cont)v.mor-=10*UT[v.type].mres;}
+   u.foe=e;}
+  e=u.foe;{const df=angD(Math.atan2(e.y-u.y,e.x-u.x),u.face),mx=TURN*dt;u.face+=clamp(df,-mx,mx);}
+  const mat=(MAT[u.type][e.type]||1),dc=dirCls(e,u.x,u.y),sl=slope(u,e),hx=(u.x+e.x)/2,hy=(u.y+e.y)/2-8;
+  if(DIRSHOCK[dc]&&!e.rout&&!(e.shk||(e.shk={}))[u.id]){e.shk[u.id]=1;e.mor-=DIRSHOCK[dc]*UT[e.type].mres;}
+  let said=false;
+  if(UT[u.type].charge&&u.run>1.2){u.run=0;const anti=(MAT[e.type][u.type]||1)>=1.5&&!e.rout;
+   if(anti&&dc===0){hit(e,u,14*(0.3+0.007*e.str)*MAT[e.type][u.type]/terrDef(u),1.6);u.mor-=15*UT[u.type].mres;u.stunT=G.t+STUNT;
+    FX.push({k:'ring',x:hx,y:hy+8,t:0,d:0.6,c:'#9fb0e8'});u.popT=0;pop(u,hx,hy,'✗ Repelled! 槍',popC(u,false),1);said=true;}
+   else{const cm=dc?CHFLANK:1;hit(u,e,14*(0.3+0.007*u.str)*Math.min(3.5,mat*cm)*sl/terrDef(e,false,dc),1.2*(dc?1.6:1));e.mor-=(dc===2?28:dc?20:15)*UT[e.type].mres;if(dc)e.stunT=G.t+STUNT;
+    FX.push({k:'ring',x:e.x,y:e.y,t:0,d:0.6,c:'#f2d39a'});u.popT=0;pop(u,hx,hy,'突 CHARGE'+(dc===2?' · 背 REAR!':dc===1?' · 側 FLANK':''),popC(u),1);said=true;}}
+  const amb=G.t<(u.ambT||0);
+  const dmg=2.7*UT[u.type].atk*(0.3+0.007*u.str)*(0.6+0.004*Math.max(0,u.mor))*mat*DIRM[dc]*sl*(amb?AMBM:1)*(G.t<(u.stunT||0)?0.5:1)/terrDef(e,false,dc)*(e.rout?1.5:1);hit(u,e,dmg*dt,1.9*DIRMOR[dc]);e.hits++;
+  if(!said&&!e.rout){if(amb)pop(u,hx,hy,'伏 AMBUSH',popC(u),1);else if(dc)pop(u,hx,hy,dc===2?'背 REAR!':'側 FLANK',popC(u),dc===2);
+   else if((mat>=1.5||mat<=0.7)&&(!u.wasMelee||G.t>(u.matT||0))){u.matT=G.t+4;pop(u,hx,hy,mat>=1.5?'✓ Counter':'✗ Bad matchup',popC(u,mat>=1.5?true:false));}
+   else if(sl===UPHILL&&G.t>(u.matT||0)){u.matT=G.t+4;pop(u,hx,hy,'坂 Uphill ✗',popC(u,false));}}
+  u.clash-=dt;if(u.clash<=0){u.clash=0.35+rnd()*0.3;if(FX.length<300)FX.push({k:'dust',x:(u.x+e.x)/2+(rnd()-.5)*14,y:(u.y+e.y)/2+(rnd()-.5)*14,t:0,d:0.7+rnd()*0.5,r:3+rnd()*5,sp:1});}}
+ for(const u of units){if(!u.cont||u.rout)continue;const n=u.cont.filter(v=>!v.rout).length;if(n>=2){u.mor-=10*(n-1)*dt*UT[u.type].mres;pop(u,u.x,u.y-22,'囲 SURROUNDED',u.side===0?'#ff7a5c':'#ffd27a',0,2);}}
+ const wsp=G.weather==='rain'?0.9:1;
+ for(const u of units){const ut=UT[u.type];u.moving=false;
+  if(u.rout){if(!u.path.length){const home=nearestOwn(u.side,u);if(home&&dist(home,u)>40)u.path=buildPath(u,[{x:home.x+(rnd()-.5)*40,y:home.y+(rnd()-.5)*40}]);}}
+  else if(u.melee){if(ut.charge)u.run=0;continue;}
+  else{
+   if(ut.kite&&!u.hold&&G.t>u.kiteT){let th=null;for(const e of units)if(e.side!==u.side&&!e.rout&&!UT[e.type].rng&&dist(u,e)<85){th=e;break;}
+    if(th){const dx=u.x-th.x,dy=u.y-th.y,l=Math.hypot(dx,dy)||1;u.path=buildPath(u,[{x:clamp(u.x+dx/l*110,20,W-20),y:clamp(u.y+dy/l*110,20,H-20)}]);u.kiteT=G.t+2.2;}}
+   if(G.t<u.kiteT){}
+   else if(u.target){const e=u.target;if(!units.includes(e)||(u.side===0&&u.autoT&&(e.rout||!e.seen))){u.target=null;u.path=[];u.autoT=false;}
+    else{const d=dist(u,e);if(u.autoT&&d>260){u.target=null;u.path=[];u.autoT=false;}
+     else if(ut.rng&&d<=rangeOf(u)&&!(ut.minR&&d<ut.minR)){if(!ut.fireMove)u.path=[];}else{u.repath-=dt;if(u.repath<=0||!u.path.length){u.path=buildPath(u,[e]);u.repath=1.2;}}}}
+   else if(!u.path.length&&!u.hold&&u.type!=='ninja'&&u.type!=='cannon'){const e=nearestEnemy(u,u.side===0?95:150,false);if(e&&!(ut.rng&&dist(u,e)<=rangeOf(u))){u.target=e;u.autoT=true;u.repath=0;}}}
+  if(ut.rng&&!u.rout&&!u.melee&&(!u.path.length||ut.fireMove)){u.reload-=dt;if(u.reload<=0){const tg=u.target;
+    const e=tg&&units.includes(tg)&&dist(u,tg)<=rangeOf(u)&&!(ut.minR&&dist(u,tg)<ut.minR)&&(u.side===1||tg.seen)?tg:nearestEnemy(u,rangeOf(u),false,ut.minR);if(e)fire(u,e);}}
+  if(u.path.length){const p=u.path[0];const dx=p.x-u.x,dy=p.y-u.y,d=Math.hypot(dx,dy);const sp=ut.spd*Math.max(0.3,SPD[tAt(u.x,u.y)])*(u.rout?1.15:1)*wsp;const st=sp*dt;
+   if(d<=st){u.x=p.x;u.y=p.y;u.path.shift();}else{u.x+=dx/d*st;u.y+=dy/d*st;}u.moving=true;
+   let df=Math.atan2(dy,dx)-u.face;while(df>Math.PI)df-=2*Math.PI;while(df<-Math.PI)df+=2*Math.PI;u.face+=df*Math.min(1,dt*6);}
+  if(ut.charge)u.run=u.moving&&!u.rout?u.run+dt:0;}
+ for(let i=0;i<n;i++){const a=units[i];for(let j=i+1;j<n;j++){const b=units[j];const lim=a.side===b.side?25:22;let dx=b.x-a.x,dy=b.y-a.y;const d=Math.hypot(dx,dy);
+  if(d<lim){if(d<0.01){dx=rnd()-.5;dy=rnd()-.5;}const l=Math.hypot(dx,dy),push=(lim-d)*0.5*Math.min(1,dt*10);const ox=dx/l*push,oy=dy/l*push;
+   if(SPD[tAt(a.x-ox,a.y-oy)]>0){a.x-=ox;a.y-=oy;}if(SPD[tAt(b.x+ox,b.y+oy)]>0){b.x+=ox;b.y+=oy;}}}}
+ for(const u of [...units]){u.x=clamp(u.x,5,W-5);u.y=clamp(u.y,5,H-5);
+  const quiet=!u.melee&&G.t-u.lastHit>2;
+  if(u.rout){if(quiet&&!nearestEnemy(u,140,true))u.mor+=5*dt;}
+  else if(quiet)u.mor+=(3+(nearGen(u)?3:0))*dt;
+  const home=nearestOwn(u.side,u);if(home&&G.t-u.lastHit>5&&dist(home,u)<260)u.str=Math.min(100,u.str+0.5*dt);
+  u.mor=clamp(u.mor,0,u.str<35?45+u.str:100);
+  if(u.str<=1){killUnit(u);continue;}
+  if(!u.rout&&u.mor<12)setRout(u);else if(u.rout&&u.mor>=45&&!nearestEnemy(u,140,true)){u.rout=false;u.path=[];u.mor=48;}}
+ // visibility (player's view)
+ const ws=G.weather==='fog'?0.5:G.weather==='rain'?0.8:1;
+ for(const e of units){if(e.side===0)continue;let s=false;const hid=(e.type==='ninja'||e.amb)&&tAt(e.x,e.y)===T_FO,hr=e.type==='ninja'?70:80;
+  for(const p of units){if(p.side!==0)continue;const d=dist(p,e);if(hid?d<hr:d<(UT[p.type].sight||300)*ws){s=true;break;}}
+  if(!s&&!hid)for(const st of SETS)if(st.o===0&&dist(st,e)<260*ws){s=true;break;}e.seen=s;}
+ // captures, raids
+ for(const s of SETS){let c0=0,c1=0,nj=[0,0];for(const u of units)if(!u.rout&&dist(u,s)<s.r){if(u.side)c1++;else c0++;if(u.type==='ninja')nj[u.side]=1;}
+  const rate=(s.k==='castle'?9:22),bon=k=>Math.min(3,1+0.25*(k-1)+(s.k==='town'&&nj[k===c0?0:1]?2:0));
+  if(c0&&!c1)s.prog=Math.min(100,s.prog+rate*Math.min(3,1+0.25*(c0-1)+(s.k==='town'&&nj[0]?2:0))*dt);else if(c1&&!c0)s.prog=Math.max(-100,s.prog-rate*Math.min(3,1+0.25*(c1-1)+(s.k==='town'&&nj[1]?2:0))*dt);
+  else if(!c0&&!c1){const tgt=s.o===0?100:s.o===1?-100:0;s.prog+=clamp(tgt-s.prog,-4*dt,4*dt);}
+  if(s.o>=0&&nj[1-s.o]){s.raided=G.t+1;G.koku[s.o]=Math.max(0,G.koku[s.o]-0.5*dt);}
+  const old=s.o;if(s.prog>=100)s.o=0;else if(s.prog<=-100)s.o=1;else if((s.o===0&&s.prog<=0)||(s.o===1&&s.prog>=0))s.o=-1;
+  if(s.o!==old&&s.o>=0){FX.push({k:'ring',x:s.x,y:s.y,t:0,d:1.4,c:SIDEL[s.o],big:1});toast(`${s.n} ${s.k==='castle'?'城 castle':'町 town'} taken by ${SIDEN[s.o]}!`,s.o===0?0:1);if(s.o===1)G.aiTargetT=0;}}
+ // rice income + AI recruiting
+ for(const side of [0,1])for(const s of SETS)if(s.o===side&&!(s.raided>G.t))G.koku[side]+=(s.main?0.8:s.k==='castle'?0.5:0.35)*dt*(side?G.diff.inc:1);
+ {const t=SC.mix[G.buyI%SC.mix.length];if(G.koku[1]>=UT[t].cost){const own=SETS.filter(s=>s.o===1&&s.k==='castle');const s=own.sort((a,b)=>dist(a,G.PM)-dist(b,G.PM))[0]||SETS.find(s=>s.o===1);
+   if(s&&spawnAt(1,t,s,100)){G.koku[1]-=UT[t].cost;G.buyI++;}}}
+ for(const f of FX){f.t+=dt;if(f.tg&&f.t>=f.d){const e=f.tg;f.tg=null;
+  if(f.splash){const ix=units.includes(e)?e.x:f.x1,iy=units.includes(e)?e.y:f.y1;for(const v of units.slice())if(v.side!==f.side&&Math.hypot(v.x-ix,v.y-iy)<f.splash)hit(null,v,f.dmg*(v===e?1:0.5),2.2);
+   for(let q=0;q<5;q++)FX.push({k:'dust',x:ix+(rnd()-.5)*30,y:iy+(rnd()-.5)*30,t:0,d:1+rnd(),r:6+rnd()*8});}
+  else if(units.includes(e))hit(null,e,f.dmg,f.mf||1.4);}}
+ FX=FX.filter(f=>f.t<f.d);
+ G.aiT-=dt;if(G.aiT<=0){G.aiT=2.5;ai();}
+ G.aidCD=Math.max(0,G.aidCD-dt);
+ checkEnd();
+}
+function nearestOwn(side,p){let b=null,bd=1e9;for(const s of SETS)if(s.o===side){const d=dist(s,p);if(d<bd){bd=d;b=s;}}return b;}
+
+// ===================== AI =====================
+function ai(){
+ const my=units.filter(u=>u.side===1&&!u.rout),foe=units.filter(u=>u.side===0&&!u.rout&&!hiddenFrom(u,1));if(!my.length)return;
+ const EM=G.EM,PM=G.PM;const free=new Set(my.filter(u=>u.type!=='gen'));const gen=G.gen[1];
+ const anchor=SC.genStay&&gen&&!gen.rout?gen:(EM.o===1?EM:(SETS.find(s=>s.o===1)||EM));
+ const guards=my.filter(u=>u.role==='guard');const nG=SC.genStay?3:2;
+ if(guards.length<nG){const c=[...free].filter(u=>u.type!=='cav'&&u.type!=='mbow'&&u.role!=='guard').sort((a,b)=>dist(a,anchor)-dist(b,anchor));for(const u of c.slice(0,nG-guards.length))u.role='guard';}
+ for(const u of my.filter(u=>u.role==='guard')){free.delete(u);if(!u.melee&&!u.target&&dist(u,anchor)>80&&!u.path.length)setPath(u,[{x:anchor.x+(rnd()-.5)*70,y:anchor.y+(rnd()-.5)*70}]);
+  const e=nearestEnemy(u,230,false);if(e&&!u.target&&!u.melee)orderAttack([u],e);}
+ const thr=SETS.filter(s=>s.o===1).map(s=>({s,f:foe.filter(e=>dist(e,s)<330),v:0})).filter(t=>t.f.length);
+ for(const t of thr)t.v=t.f.reduce((a,e)=>a+e.str,0)*(t.s.main?2:t.s.k==='castle'?1.4:1);thr.sort((a,b)=>b.v-a.v);
+ for(const t of thr){let got=0;const c=[...free].sort((a,b)=>dist(a,t.s)-dist(b,t.s));for(const u of c){if(got>=t.v*0.8||dist(u,t.s)>900)break;free.delete(u);got+=u.str;
+  if(!u.melee&&(!u.target||!units.includes(u.target))){const e=t.f.reduce((a,b)=>dist(u,a)<dist(u,b)?a:b);orderAttack([u],e);}}}
+ const myStr=my.reduce((a,u)=>a+u.str,0),foeStr=foe.reduce((a,u)=>a+u.str,0);
+ if(SC.ai==='defend'&&myStr<foeStr*1.4){
+  for(const u of free){if(u.melee)continue;const home=nearestOwn(1,u)||EM;const e=foe.filter(e=>dist(e,home)<380).sort((a,b)=>dist(a,u)-dist(b,u))[0];
+   if(e){if(!u.target||!units.includes(u.target))orderAttack([u],e);}else if(u.target&&!units.includes(u.target))u.target=null;
+   else if(!u.target&&!u.path.length&&dist(u,home)>home.r*0.8)setPath(u,[{x:home.x+(rnd()-.5)*home.r,y:home.y+(rnd()-.5)*home.r}]);}
+  genAI(gen,EM,[]);return;}
+ G.flankT-=2.5;if(G.flankT<=0){G.flankT=30+rnd()*25;const cav=[...free].filter(u=>(u.type==='cav'||u.type==='mbow')&&!u.melee);if(cav.length&&rnd()<0.6){
+  const sc=e=>dist(e,cav[0])-(e.melee?350:0);// prefer pinned (engaged) units: they can't turn to face the flankers
+  const tg=foe.filter(e=>e.melee||UT[e.type].rng||e.type==='ninja'||!foe.some(f=>f!==e&&dist(f,e)<150)).sort((a,b)=>sc(a)-sc(b))[0];
+  if(tg&&dist(tg,cav[0])<1000){const c=cav.slice(0,2);const m=centroid(c);const bx=-Math.cos(tg.face),by=-Math.sin(tg.face),px=-by,py=bx;
+   const s=((m.x-tg.x)*px+(m.y-tg.y)*py)>=0?1:-1;// swing round the flank the cavalry is already on, then come in from behind
+   const w1=passPt(clamp(tg.x+px*s*210+bx*60,40,W-40),clamp(tg.y+py*s*210+by*60,40,H-40)),w2=passPt(clamp(tg.x+bx*120,40,W-40),clamp(tg.y+by*120,40,H-40));
+   for(const u of c){u.role='flank';u.flankT=G.t+45;setPath(u,[w1,w2]);u.target=tg;u.goal=null;}}}}
+ for(const u of my)if(u.role==='flank'){if(!units.includes(u.target)||G.t>u.flankT){u.role=null;u.target=null;}else{free.delete(u);if(!u.path.length)orderAttack([u],u.target);}}
+ const fr=[...free];if(!fr.length){genAI(gen,EM,fr);return;}const C=centroid(fr);
+ G.aiTargetT-=2.5;if(G.aiTargetT<=0||!G.aiTarget||G.aiTarget.o===1){G.aiTargetT=25;
+  const pmDef=foe.filter(e=>dist(e,PM)<420).reduce((a,e)=>a+e.str,0),frStr=fr.reduce((a,u)=>a+u.str,0);
+  let best=null,bs=1e9;for(const s of SETS){if(s.o===1)continue;let sc=dist(C,s)*(s.o===0?0.9:1)+(s.main?700:0)+(s.k==='castle'&&!s.main?200:0);
+   sc+=foe.filter(e=>dist(e,s)<300).reduce((a,e)=>a+e.str,0)*1.5;if(s.main&&frStr>pmDef*1.8+200)sc-=900;if(sc<bs){bs=sc;best=s;}}G.aiTarget=best;}
+ const tgt=G.aiTarget;if(tgt){const f=formation(fr,tgt);
+  for(const u of fr){if(u.melee)continue;const e=nearestEnemy(u,170,true);
+   if(e&&(!u.target||!units.includes(u.target))){orderAttack([u],e);u.goal=null;continue;}if(u.target&&units.includes(u.target))continue;
+   if(u.goal!==tgt.id||(!u.path.length&&dist(u,tgt)>tgt.r*0.7)){const o=f.get(u)||{x:0,y:0};u.goal=tgt.id;setPath(u,[{x:tgt.x+o.x*0.6,y:tgt.y+o.y*0.6}]);}}}
+ genAI(gen,EM,fr);}
+function genAI(gen,EM,fr){if(!gen||gen.rout||gen.melee)return;
+ if(SC.genStay){if(G.genHome&&dist(gen,G.genHome)>60&&!gen.path.length)setPath(gen,[G.genHome]);return;}
+ const tg=fr.length?centroid(fr):EM;const want={x:lerp(EM.x,tg.x,0.6),y:lerp(EM.y,tg.y,0.6)};if(dist(gen,want)>120&&!gen.path.length)setPath(gen,[want]);
+ const e=nearestEnemy(gen,120,false);if(e&&dist(gen,EM)>150)setPath(gen,[{x:lerp(gen.x,EM.x,0.3),y:lerp(gen.y,EM.y,0.3)}]);}
+
+// ===================== END =====================
+function checkEnd(){if(G.over)return;const EM=G.EM,PM=G.PM;
+ const str=s=>units.filter(u=>u.side===s).reduce((a,u)=>a+u.str,0);
+ if(EM.o===0)return endGame(true,`${EM.n} castle has fallen to you.`);
+ if(SC.winGen&&!G.gen[1])return endGame(true,`The ${SIDEN[1]} commander is slain!`);
+ if(G.t>60&&str(1)<G.start[1]*0.12)return endGame(true,`The ${SIDEN[1]} army is broken.`);
+ if(PM.o===1)return endGame(false,`${PM.n} has fallen.`);
+ if(G.t>60&&str(0)<G.start[0]*0.08)return endGame(false,'Your army is broken.');}
+function endGame(win,why){G.over=true;G.win=win;$('endT').textContent=win?'勝利':'敗北';$('endT').style.textShadow=win?'':'3px 3px 0 #26305e';
+ $('endS').textContent=(win?'VICTORY — ':'DEFEAT — ')+why;
+ $('endD').innerHTML=`${SC.name} · ${curDiff} · Battle time ${fmt(G.t)} · Enemy units destroyed ${G.killed[0]} · Units lost ${G.lost[0]} · Recruited ${G.recruited} · Held ${SETS.filter(s=>s.o===0).length}/${SETS.length}`+(G.qa?` · Questions ${G.qc}/${G.qa}`:'');
+ $('end').style.display='flex';closeRecruit();music(win?'victory':'map');}
+const fmt=t=>`${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}`;
+
+// ===================== RENDER =====================
+const cv=$('cv'),ctx=cv.getContext('2d');let DPR=1,VW=0,VH=0,ovl=null;
+const cam={x:0,y:0,z:0.9};
+function resize(){DPR=window.devicePixelRatio||1;VW=innerWidth;VH=innerHeight;cv.width=VW*DPR;cv.height=VH*DPR;
+ ovl=document.createElement('canvas');ovl.width=VW;ovl.height=VH;const o=ovl.getContext('2d');
+ let g=o.createLinearGradient(0,0,0,VH);g.addColorStop(0,'rgba(255,170,90,.13)');g.addColorStop(0.55,'rgba(255,140,90,0)');g.addColorStop(1,'rgba(150,60,130,.16)');o.fillStyle=g;o.fillRect(0,0,VW,VH);
+ g=o.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*0.35,VW/2,VH/2,Math.max(VW,VH)*0.75);g.addColorStop(0,'rgba(20,10,20,0)');g.addColorStop(1,'rgba(20,8,22,.55)');o.fillStyle=g;o.fillRect(0,0,VW,VH);clampCam();}
+const minZ=()=>Math.max(VW/W,VH/H);
+function clampCam(){cam.z=clamp(cam.z,minZ(),2.6);cam.x=clamp(cam.x,0,W-VW/cam.z);cam.y=clamp(cam.y,0,H-VH/cam.z);}
+const toW=(sx,sy)=>({x:cam.x+sx/cam.z,y:cam.y+sy/cam.z});
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function mon(side,x,y,r){const kind=side===0?CLANS[SC.pc].mon:CLANS[SC.ec].mon;ctx.save();ctx.translate(x,y);ctx.fillStyle='#efe2c4';ctx.strokeStyle='#efe2c4';
+ if(kind==='mokko'){for(let i=0;i<5;i++){const a=i*Math.PI*2/5-Math.PI/2;ctx.beginPath();ctx.arc(Math.cos(a)*r*0.5,Math.sin(a)*r*0.5,r*0.42,0,7);ctx.fill();}ctx.fillStyle=SIDEC[side];ctx.beginPath();ctx.arc(0,0,r*0.22,0,7);ctx.fill();}
+ else if(kind==='bishi'){const d=r*0.48;for(const [dx,dy] of [[0,-d],[-d,0],[d,0],[0,d]]){ctx.beginPath();ctx.moveTo(dx,dy-d*0.9);ctx.lineTo(dx+d*0.9,dy);ctx.lineTo(dx,dy+d*0.9);ctx.lineTo(dx-d*0.9,dy);ctx.closePath();ctx.fill();}}
+ else if(kind==='kiri'){for(const dx of [-0.5,0,0.5]){ctx.fillRect(dx*r-r*0.07,-r*0.6,r*0.14,r*0.7);for(let k=0;k<3;k++){ctx.beginPath();ctx.arc(dx*r,-r*0.75+k*r*0.28,r*0.13,0,7);ctx.fill();}}ctx.beginPath();ctx.ellipse(0,r*0.45,r*0.85,r*0.35,0,0,7);ctx.fill();}
+ else if(kind==='hiki'){ctx.lineWidth=r*0.18;ctx.beginPath();ctx.arc(0,0,r*0.85,0,7);ctx.stroke();ctx.fillRect(-r*0.75,-r*0.38,r*1.5,r*0.22);ctx.fillRect(-r*0.75,r*0.16,r*1.5,r*0.22);}
+ else if(kind==='take'){ctx.lineWidth=r*0.18;ctx.beginPath();ctx.arc(0,0,r*0.85,0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(-r*0.5,-r*0.5);ctx.lineTo(r*0.5,r*0.5);ctx.moveTo(r*0.5,-r*0.5);ctx.lineTo(-r*0.5,r*0.5);ctx.stroke();ctx.beginPath();ctx.arc(0,0,r*0.2,0,7);ctx.fill();}
+ else{const d=r*0.95;for(const [dx,dy] of [[0,-d*0.45],[-d*0.5,d*0.45],[d*0.5,d*0.45]]){ctx.beginPath();ctx.moveTo(dx,dy-d*0.45);ctx.lineTo(dx+d*0.5,dy+d*0.45);ctx.lineTo(dx-d*0.5,dy+d*0.45);ctx.closePath();ctx.fill();}}
+ ctx.restore();}
+function drawUnit(u){const s=Math.max(1,0.85/cam.z)*(u.type==='gen'?1.15:1),w=28*s,h=19*s;ctx.save();ctx.translate(u.x,u.y);
+ if(u.rout){ctx.rotate(Math.sin(G.t*9+u.id)*0.15);ctx.globalAlpha=0.6+0.3*Math.sin(G.t*12+u.id);}
+ else if(u.side===0&&u.type==='ninja'&&tAt(u.x,u.y)===T_FO)ctx.globalAlpha=0.6;
+ ctx.fillStyle='rgba(25,10,25,.35)';ctx.beginPath();ctx.ellipse(2*s,h/2+3*s,w*0.55,4*s,0,0,7);ctx.fill();
+ if(u.sel){ctx.strokeStyle='#ffd27a';ctx.lineWidth=2.5*s;ctx.shadowColor='#ffcf70';ctx.shadowBlur=10;rr(-w/2-3*s,-h/2-3*s,w+6*s,h+6*s,5*s);ctx.stroke();ctx.shadowBlur=0;}
+ {const ca=Math.abs(Math.cos(u.face)),sa=Math.abs(Math.sin(u.face)),r0=Math.min(ca>1e-3?w/2/ca:1e9,sa>1e-3?h/2/sa:1e9)-1.5*s;
+  ctx.save();ctx.rotate(u.face);ctx.beginPath();ctx.moveTo(r0+8*s,0);ctx.lineTo(r0-1*s,-5*s);ctx.lineTo(r0-1*s,5*s);ctx.closePath();ctx.fillStyle=SIDEL[u.side];ctx.fill();ctx.strokeStyle='#16111a';ctx.lineWidth=1.4*s;ctx.stroke();ctx.restore();}
+ ctx.fillStyle='#efe2c4';rr(-w/2,-h/2,w,h,3*s);ctx.fill();ctx.save();ctx.clip();ctx.fillStyle=SIDEC[u.side];ctx.fillRect(-w/2,-h/2,w*0.43,h);ctx.restore();
+ mon(u.side,-w/2+w*0.215,0,h*0.32);
+ const g=UT[u.type].g;ctx.fillStyle=u.type==='gen'?'#8a1d18':'#16111a';ctx.font=`700 ${(g.length>1?8.5:13)*s}px ${KF}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(g,w*0.21,1*s);
+ ctx.strokeStyle=u.type==='gen'?'#c8962e':'#16111a';ctx.lineWidth=(u.type==='gen'?2.2:1.4)*s;rr(-w/2,-h/2,w,h,3*s);ctx.stroke();
+ const by=h/2+2.5*s;ctx.fillStyle='#16111a';ctx.fillRect(-w/2,by,w,5.2*s);ctx.fillStyle=SIDEL[u.side];ctx.fillRect(-w/2+0.8*s,by+0.8*s,(w-1.6*s)*clamp(u.str/100,0,1),2.2*s);
+ ctx.fillStyle=u.mor<30?'#c05a9a':'#e8b04a';ctx.fillRect(-w/2+0.8*s,by+3.4*s,(w-1.6*s)*clamp(u.mor/100,0,1),1.2*s);
+ if(u.hold){ctx.fillStyle='#16111a';ctx.fillRect(w/2-5*s,-h/2-5*s,9*s,9*s);ctx.fillStyle='#efe2c4';ctx.font=`${7*s}px ${KF}`;ctx.fillText('止',w/2-0.5*s,-h/2-0.5*s);}
+ if(UT[u.type].rng&&u.reload>0&&UT[u.type].rel>=6&&!u.rout){ctx.fillStyle='rgba(22,17,26,.8)';ctx.fillRect(-w/2,-h/2-4*s,w*clamp(1-u.reload/UT[u.type].rel,0,1),2*s);}
+ if(u.rout){ctx.fillStyle='#e0664f';ctx.font=`700 ${11*s}px ${KF}`;ctx.fillText('崩',0,-h/2-8*s);}
+ ctx.restore();}
+function drawSet(s){const z=cam.z,sc=Math.max(1,0.8/z);
+ if(G.selSet===s){ctx.strokeStyle='#ffd27a';ctx.lineWidth=3*sc;ctx.beginPath();ctx.arc(s.x,s.y,s.r+5,0,7);ctx.stroke();}
+ ctx.setLineDash([4,5]);ctx.lineWidth=1.2*sc;ctx.strokeStyle=s.o>=0?SIDEL[s.o]+'99':'rgba(239,226,196,.35)';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.stroke();ctx.setLineDash([]);
+ if(Math.abs(s.prog)<100&&(s.prog!==0||s.o>=0)){const p=s.prog/100;ctx.lineWidth=4*sc;ctx.strokeStyle=p>0?SIDEL[0]:SIDEL[1];ctx.beginPath();ctx.arc(s.x,s.y,s.r,-Math.PI/2,-Math.PI/2+Math.abs(p)*Math.PI*2*(p>0?1:-1),p<0);ctx.stroke();}
+ const label=s.n+(s.k==='castle'?'城':''),fs=12*sc;ctx.font=`700 ${fs}px ${KF}`;const tw=ctx.measureText(label).width+10*sc,ly=s.y-(s.k==='castle'?78:44)*(s.main?1.05:1);
+ ctx.fillStyle=s.o===0?SIDEC[0]:s.o===1?SIDEC[1]:'#efe2c4';ctx.fillRect(s.x-tw/2,ly-fs*0.75,tw,fs*1.5);ctx.strokeStyle='#16111a';ctx.lineWidth=1.5*sc;ctx.strokeRect(s.x-tw/2,ly-fs*0.75,tw,fs*1.5);
+ ctx.fillStyle=s.o>=0?'#efe2c4':'#16111a';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,s.x,ly+1);
+ if(s.raided>G.t){ctx.fillStyle='#e0664f';ctx.fillText('忍',s.x-tw/2-8*sc,ly+1);}
+ if(s.o>=0){ctx.fillStyle=SIDEC[s.o];ctx.strokeStyle='#16111a';ctx.lineWidth=1;const fx=s.x+tw/2+2*sc;ctx.fillRect(fx,ly-fs*0.75,2*sc,fs*2.2);ctx.fillRect(fx+2*sc,ly-fs*0.75,8*sc,fs*1.1);ctx.strokeRect(fx+2*sc,ly-fs*0.75,8*sc,fs*1.1);}}
+const HAZE=[0,1,2,3,4,5].map(i=>({x:400*i+100,y:300+((i*530)%1000),r:260+i*30,v:6+i}));
+const RAIN=Array.from({length:160},()=>({x:Math.random(),y:Math.random(),v:0.6+Math.random()*0.6}));
+function render(){ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle='#140f16';ctx.fillRect(0,0,VW,VH);
+ if(!terr){return;}
+ ctx.setTransform(DPR*cam.z,0,0,DPR*cam.z,-cam.x*cam.z*DPR,-cam.y*cam.z*DPR);ctx.drawImage(terr,0,0);
+ const t=G?G.t:performance.now()/1000,wx=G?G.weather:SC.weather;
+ const hc=wx==='fog'?'225,215,225':'200,90,150',ha=wx==='fog'?0.28:0.10;
+ for(const h of HAZE){const x=(h.x+t*h.v)%(W+600)-300;const g=ctx.createRadialGradient(x,h.y,0,x,h.y,h.r);g.addColorStop(0,`rgba(${hc},${ha})`);g.addColorStop(1,`rgba(${hc},0)`);ctx.fillStyle=g;ctx.fillRect(x-h.r,h.y-h.r,h.r*2,h.r*2);}
+ if(G){for(const s of SETS)drawSet(s);
+  ctx.setLineDash([6/cam.z,6/cam.z]);ctx.lineWidth=1.6/cam.z;ctx.strokeStyle='rgba(240,120,90,.85)';
+  for(const u of sel){if(!u.path.length)continue;ctx.beginPath();ctx.moveTo(u.x,u.y);for(const p of u.path)ctx.lineTo(p.x,p.y);ctx.stroke();const l=u.path[u.path.length-1];ctx.beginPath();ctx.arc(l.x,l.y,4/cam.z,0,7);ctx.stroke();}
+  ctx.setLineDash([]);
+  for(const u of sel)if(u.target&&units.includes(u.target)){ctx.strokeStyle='rgba(255,90,70,.9)';ctx.lineWidth=2/cam.z;ctx.beginPath();ctx.moveTo(u.x,u.y);ctx.lineTo(u.target.x,u.target.y);ctx.stroke();}
+  const us=units.filter(u=>u.side===0||u.seen).sort((a,b)=>a.y-b.y);for(const u of us)drawUnit(u);
+  for(const f of FX){const p=clamp(f.t/f.d,0,1);if(f.t<0)continue;
+   if(f.k==='dust'){ctx.fillStyle=`rgba(22,16,24,${0.55*(1-p)})`;ctx.beginPath();ctx.arc(f.x,f.y,f.r*(0.6+p),0,7);ctx.fill();if(f.sp&&p<0.4){ctx.strokeStyle=`rgba(240,220,180,${0.8*(1-p*2.5)})`;ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(f.x-6,f.y-6);ctx.lineTo(f.x+6,f.y+6);ctx.moveTo(f.x+6,f.y-6);ctx.lineTo(f.x-6,f.y+6);ctx.stroke();}}
+   else if(f.k==='smoke'){ctx.fillStyle=`rgba(236,228,214,${0.5*(1-p)})`;ctx.beginPath();ctx.arc(f.x+p*8,f.y-p*10,f.r*(0.6+p*1.4),0,7);ctx.fill();}
+   else if(f.k==='shot'){ctx.strokeStyle=`rgba(255,226,150,${1-p})`;ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(lerp(f.x0,f.x1,Math.max(0,p-0.4)),lerp(f.y0,f.y1,Math.max(0,p-0.4)));ctx.lineTo(lerp(f.x0,f.x1,p),lerp(f.y0,f.y1,p));ctx.stroke();}
+   else if(f.k==='ball'){const x=lerp(f.x0,f.x1,p),y=lerp(f.y0,f.y1,p)-Math.sin(p*Math.PI)*60;ctx.fillStyle='#16111a';ctx.beginPath();ctx.arc(x,y,3.5,0,7);ctx.fill();}
+   else if(f.k==='arrow'){const x=lerp(f.x0,f.x1,p),y=lerp(f.y0,f.y1,p)-Math.sin(p*Math.PI)*30,a=Math.atan2(f.y1-f.y0,f.x1-f.x0);ctx.strokeStyle='#16111a';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-Math.cos(a)*7,y-Math.sin(a)*7+(p-0.5)*4);ctx.stroke();}
+   else if(f.k==='txt'){const s=Math.max(1,0.85/cam.z)*(f.big?1.2:1),y=f.y-p*24*s;ctx.globalAlpha=p<0.65?1:Math.max(0,1-(p-0.65)/0.35);ctx.font=`700 ${12.5*s}px ${KF}`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.lineJoin='round';ctx.lineWidth=3.4*s;ctx.strokeStyle='#16111a';ctx.strokeText(f.s,f.x,y);ctx.fillStyle=f.c;ctx.fillText(f.s,f.x,y);ctx.globalAlpha=1;}
+   else if(f.k==='ring'){ctx.strokeStyle=f.c;ctx.globalAlpha=1-p;ctx.lineWidth=(f.big?4:2)/cam.z;ctx.beginPath();ctx.arc(f.x,f.y,(f.big?40:10)+p*(f.big?60:25),0,7);ctx.stroke();ctx.globalAlpha=1;}}
+  if(drag&&drag.box){const a=drag.w0,b=toW(mouse.x,mouse.y);ctx.strokeStyle='#ffd27a';ctx.lineWidth=1.5/cam.z;ctx.setLineDash([5/cam.z,4/cam.z]);ctx.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);ctx.setLineDash([]);}
+  if(rdrag&&rdrag.pts.length>1){ctx.strokeStyle='rgba(22,16,24,.85)';ctx.lineWidth=5/cam.z;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(rdrag.pts[0].x,rdrag.pts[0].y);for(const p of rdrag.pts)ctx.lineTo(p.x,p.y);ctx.stroke();ctx.strokeStyle='rgba(224,102,79,.9)';ctx.lineWidth=2/cam.z;ctx.stroke();}}
+ ctx.setTransform(DPR,0,0,DPR,0,0);
+ if(wx==='rain'){ctx.fillStyle='rgba(30,40,80,.18)';ctx.fillRect(0,0,VW,VH);ctx.strokeStyle='rgba(200,210,240,.35)';ctx.lineWidth=1;ctx.beginPath();
+  for(const r of RAIN){const y=((r.y+t*r.v*1.6)%1)*VH,x=((r.x+t*0.05)%1)*VW;ctx.moveTo(x,y);ctx.lineTo(x-4,y+16);}ctx.stroke();}
+ else if(wx==='fog'){ctx.fillStyle='rgba(225,215,220,.16)';ctx.fillRect(0,0,VW,VH);}
+ ctx.drawImage(ovl,0,0,VW,VH);}
+
+// ===================== INPUT =====================
+const mouse={x:0,y:0};let drag=null,rdrag=null,mdrag=null,lastClick={t:0,u:null},lastGroup={k:0,t:0};
+const unitAt=(w,side)=>{let b=null,bd=16*Math.max(1,0.85/cam.z);for(const u of units){if(side!=null&&u.side!==side)continue;if(u.side===1&&!u.seen)continue;const d=dist(u,w);if(d<bd){bd=d;b=u;}}return b;};
+function setSel(list,add){if(!add){for(const u of sel)u.sel=false;sel=[];}for(const u of list)if(!sel.includes(u)){u.sel=true;sel.push(u);}updSel();}
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+cv.addEventListener('mousedown',e=>{if(!G||G.over)return;mouse.x=e.clientX;mouse.y=e.clientY;const w=toW(e.clientX,e.clientY);
+ if(e.button===0)drag={sx:e.clientX,sy:e.clientY,w0:w,box:false,shift:e.shiftKey};
+ else if(e.button===2)rdrag={sx:e.clientX,sy:e.clientY,pts:[w],shift:e.shiftKey,moved:false};
+ else if(e.button===1){e.preventDefault();mdrag={sx:e.clientX,sy:e.clientY,cx:cam.x,cy:cam.y};}});
+addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;if(!G)return;const w=toW(e.clientX,e.clientY);
+ if(drag&&!drag.box&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)>6)drag.box=true;
+ if(rdrag){if(Math.hypot(e.clientX-rdrag.sx,e.clientY-rdrag.sy)>14)rdrag.moved=true;const l=rdrag.pts[rdrag.pts.length-1];if(dist(l,w)>12/cam.z)rdrag.pts.push(w);}
+ if(mdrag){cam.x=mdrag.cx-(e.clientX-mdrag.sx)/cam.z;cam.y=mdrag.cy-(e.clientY-mdrag.sy)/cam.z;clampCam();}
+ const t=tAt(w.x,w.y);$('terr').textContent=TINFO[t];});
+addEventListener('mouseup',e=>{if(!G)return;const w=toW(e.clientX,e.clientY);
+ if(e.button===0&&drag){if(drag.box){const a=drag.w0;const x0=Math.min(a.x,w.x),x1=Math.max(a.x,w.x),y0=Math.min(a.y,w.y),y1=Math.max(a.y,w.y);setSel(units.filter(u=>u.side===0&&u.x>=x0&&u.x<=x1&&u.y>=y0&&u.y<=y1),drag.shift);}
+  else{const u=unitAt(w,0);const now=performance.now();
+   if(u&&lastClick.u===u&&now-lastClick.t<350){const v0=toW(0,0),v1=toW(VW,VH);setSel(units.filter(x=>x.side===0&&x.type===u.type&&x.x>v0.x&&x.x<v1.x&&x.y>v0.y&&x.y<v1.y),false);}
+   else if(u){if(drag.shift){if(u.sel){u.sel=false;sel=sel.filter(x=>x!==u);updSel();}else setSel([u],true);}else setSel([u],false);}
+   else{const st=SETS.find(q=>dist(q,w)<q.r);if(st&&st.o===0){openRecruit(st);if(!drag.shift)setSel([],false);}else{closeRecruit();if(!drag.shift)setSel([],false);}}lastClick={t:now,u};}drag=null;}
+ if(e.button===2&&rdrag){const R=rdrag;rdrag=null;const us=sel.filter(u=>units.includes(u));if(!us.length)return;
+  if(R.moved&&R.pts.length>1){const pts=[];let last=null;for(const p of R.pts){if(!last||dist(last,p)>40){pts.push(p);last=p;}}const end=R.pts[R.pts.length-1];if(dist(pts[pts.length-1],end)>5)pts.push(end);orderPath(us,pts);}
+  else{const e2=unitAt(R.pts[0],1);if(e2)orderAttack(us,e2);else orderMove(us,R.pts[0],R.shift);FX.push({k:'ring',x:R.pts[0].x,y:R.pts[0].y,t:0,d:0.5,c:e2?'#ff5a46':'#ffd27a'});}}
+ if(e.button===1)mdrag=null;});
+cv.addEventListener('wheel',e=>{e.preventDefault();const w=toW(e.clientX,e.clientY);cam.z*=Math.exp(-e.deltaY*0.0015);clampCam();cam.x=w.x-e.clientX/cam.z;cam.y=w.y-e.clientY/cam.z;clampCam();},{passive:false});
+const keys={};
+addEventListener('keydown',e=>{Music.unlock();
+ if($('how').style.display==='flex'){if(e.key==='Enter'||e.key==='Escape')closeHow();return;}
+ if(G&&G.modal==='q'){qKey(e);return;}
+ if(!G||G.over||$('menu').style.display==='flex')return;const k=e.key;
+ if(k===' '){e.preventDefault();togglePause();}
+ else if(k==='+'||k==='='){setSpeed(G.speed===1?2:4);}else if(k==='-'||k==='_'){setSpeed(G.speed===4?2:1);}
+ else if(/^[1-5]$/.test(k)){e.preventDefault();if(e.ctrlKey||e.metaKey){groups[k]=sel.map(u=>u.id);toast(`Group ${k} saved (${sel.length})`);}
+  else{const g=(groups[k]||[]).map(id=>units.find(u=>u.id===id)).filter(Boolean);setSel(g,e.shiftKey);const now=performance.now();if(g.length&&lastGroup.k===k&&now-lastGroup.t<400){const c=centroid(g);cam.x=c.x-VW/2/cam.z;cam.y=c.y-VH/2/cam.z;clampCam();}lastGroup={k,t:now};}}
+ else if(k==='h'||k==='H')doHold();else if(k==='m'||k==='M')doMerge();else if(k==='s'||k==='S')doSplit();
+ else if((k==='q'||k==='Q')&&G.subject!=='free')askAid();
+ else if(k==='r'||k==='R'){if(G.selSet)closeRecruit();else{const s=SETS.find(q=>q.o===0&&q.main)||SETS.find(q=>q.o===0&&q.k==='castle');if(s)openRecruit(s);}}
+ else if(k==='Escape')setSel([],false);
+ else if(k.startsWith('Arrow')){keys[k]=true;e.preventDefault();}});
+addEventListener('keyup',e=>{keys[e.key]=false;});
+addEventListener('pointerdown',()=>Music.unlock(),true);
+function doHold(){const on=!sel.every(u=>u.hold);for(const u of sel){u.hold=on;if(on){u.path=[];u.target=null;}}toast(on?'Holding position 止':'Hold released');updSel();}
+function doMerge(){const by={};for(const u of sel)if(u.type!=='gen'&&!u.rout)(by[u.type]=by[u.type]||[]).push(u);let did=0;
+ for(const t in by){const l=by[t].sort((a,b)=>b.str-a.str);let i=0;while(i<l.length){const a=l[i];for(let j=l.length-1;j>i;j--){const b=l[j];if(a.str>=100)break;const take=Math.min(100-a.str,b.str);a.mor=(a.mor*a.str+b.mor*take)/(a.str+take);a.str+=take;b.str-=take;did++;if(b.str<1){units=units.filter(x=>x!==b);sel=sel.filter(x=>x!==b);l.splice(j,1);}}i++;}}
+ toast(did?'Units merged 合':'Select 2+ units of the same type to merge');updSel();}
+function doSplit(){const add=[];for(const u of sel){if(u.type==='gen'||u.rout||u.str<30||units.filter(x=>x.side===0).length+add.length>=30)continue;const h=u.str/2;u.str=h;const v=mkUnit(0,u.type,u.x+20,u.y+8,h);v.mor=u.mor;v.face=u.face;add.push(v);}
+ units.push(...add);setSel(add,true);toast(add.length?'Units split 分':'Units need 30+ strength to split');}
+function togglePause(){G.paused=!G.paused;$('bPause').textContent=G.paused?'▶':'⏸';$('bPause').classList.toggle('on',G.paused);if(G.paused)toast('Paused — give orders, Space to resume');}
+function setSpeed(s){G.speed=s;document.querySelectorAll('.sp').forEach(b=>b.classList.toggle('on',+b.dataset.s===s));}
+
+// ===================== HUD / UI =====================
+function toast(m,imp){const d=document.createElement('div');d.textContent=m;if(imp)d.style.borderColor=imp===1?'#e0664f':'#6d7bc4';$('toast').appendChild(d);while($('toast').children.length>4)$('toast').firstChild.remove();
+ setTimeout(()=>{d.style.opacity=0;setTimeout(()=>d.remove(),700);},3200);}
+function updSel(){sel=sel.filter(u=>units.includes(u));const p=$('selp');if(!sel.length){p.style.display='none';return;}p.style.display='flex';
+ $('chips').innerHTML=sel.slice(0,16).map(u=>`<span class="chip" title="${UT[u.type].n}"><b>${UT[u.type].g}</b> ${Math.max(0,Math.round(u.str))}${u.rout?' 崩':''}${u.hold?' 止':''} <small style="color:${u.mor<30?'#a0306a':'#8a6420'}">♦${Math.max(0,Math.round(u.mor))}</small></span>`).join('')+(sel.length>16?`<span class="chip">+${sel.length-16}</span>`:'');}
+function hud(){if(!G)return;$('clock').textContent=fmt(G.t);const info=s=>{const l=units.filter(u=>u.side===s);return `${l.length} units · ${Math.round(l.reduce((a,u)=>a+u.str,0)*10)} men · ${SETS.filter(x=>x.o===s).length} held`;};
+ $('pInfo').textContent=info(0);const seen=units.filter(u=>u.side===1&&u.seen).length;$('eInfo').textContent=`${seen} seen · ${SETS.filter(x=>x.o===1).length} held`;
+ let inc=0;for(const s of SETS)if(s.o===0&&!(s.raided>G.t))inc+=s.main?0.8:s.k==='castle'?0.5:0.35;$('koku').textContent=`米 ${Math.floor(G.koku[0])} (+${(inc*60).toFixed(0)}/min)`;
+ $('wx').textContent=WXN[G.weather];
+ const a=$('bAid');if(G.subject!=='free'){a.style.display='';a.disabled=G.aidCD>0;a.textContent=G.aidCD>0?`援 Aid in ${Math.ceil(G.aidCD)}s`:'援 Call for aid [Q]';}else a.style.display='none';
+ if(sel.length)updSel();updRecruit();drawMini();}
+// recruit panel
+function openRecruit(s){if(!G)return;G.selSet=s;const types=Object.keys(UT).filter(t=>canRecruit(s,t));
+ $('recT').innerHTML=`<i class="ik r">${s.n}</i>${s.k==='castle'?'Castle 城 — all troops':'Town 町 — light troops'} · rice 米`;
+ $('recL').innerHTML=types.map(t=>`<button class="btn rec" data-t="${t}"><b class="kj">${UT[t].g}</b> ${UT[t].n} <span style="color:var(--gold)">${UT[t].cost}米</span><br><small>${UT[t].role}</small></button>`).join('');
+ document.querySelectorAll('.rec').forEach(b=>b.onclick=()=>recruit(G.selSet,b.dataset.t));$('recp').style.display='block';updRecruit();}
+function updRecruit(){if(!G||!G.selSet)return;if(G.selSet.o!==0){closeRecruit();return;}const n=units.filter(u=>u.side===0).length;document.querySelectorAll('.rec').forEach(b=>b.disabled=G.koku[0]<UT[b.dataset.t].cost||n>=30);}
+function closeRecruit(){if(G)G.selSet=null;$('recp').style.display='none';}
+$('recX').onclick=closeRecruit;
+// minimap
+const mini=$('mini'),mctx=mini.getContext('2d');let mdown=false;
+function drawMini(){if(!miniImg||!G)return;const k=220/W;mctx.drawImage(miniImg,0,0);
+ for(const s of SETS){mctx.fillStyle=s.o===0?SIDEC[0]:s.o===1?SIDEL[1]:'#efe2c4';const r=s.k==='castle'?4:3;mctx.fillRect(s.x*k-r,s.y*k-r,r*2,r*2);mctx.strokeStyle='#000';mctx.lineWidth=1;mctx.strokeRect(s.x*k-r,s.y*k-r,r*2,r*2);}
+ for(const u of units){if(u.side===1&&!u.seen)continue;mctx.fillStyle=u.side?'#bcd0ff':'#ff6a50';mctx.fillRect(u.x*k-1.5,u.y*k-1.5,3,3);}
+ mctx.strokeStyle='#ffd27a';mctx.lineWidth=1;mctx.strokeRect(cam.x*k,cam.y*k,VW/cam.z*k,VH/cam.z*k);}
+function miniGo(e){const r=mini.getBoundingClientRect(),k=W/220;cam.x=(e.clientX-r.left)*k-VW/2/cam.z;cam.y=(e.clientY-r.top)*k-VH/2/cam.z;clampCam();drawMini();}
+mini.addEventListener('mousedown',e=>{mdown=true;miniGo(e);e.stopPropagation();});addEventListener('mousemove',e=>{if(mdown)miniGo(e);});addEventListener('mouseup',()=>{mdown=false;});
+// music
+let curTrack='title';
+function music(n){curTrack=n;if(save.musicOff)return;try{Music.play(n);}catch(e){}}
+function musLogic(dt){if(!G||G.over)return;const eng=units.filter(u=>u.melee).length;
+ if(!G.battleMus&&eng>=6){G.battleMus=true;music('battle');}else if(G.battleMus){if(eng<=2)G.calmT+=dt;else G.calmT=0;if(G.calmT>10){G.battleMus=false;G.calmT=0;music('map');}}}
+function updMusBtns(){$('bMus').classList.toggle('on',!save.musicOff);$('bMus').textContent=save.musicOff?'楽 Music off':'楽 Music on';$('bMute').classList.toggle('on',!save.mute);$('bMute').textContent=save.mute?'音 Muted':'音 Sound';try{Music.setVolume(save.mute?0:0.7);}catch(e){}}
+$('bMus').onclick=()=>{save.musicOff=!save.musicOff;persist();if(save.musicOff)Music.stop();else Music.play(curTrack);updMusBtns();};
+$('bMute').onclick=()=>{save.mute=!save.mute;persist();updMusBtns();};
+$('bPause').onclick=()=>G&&togglePause();document.querySelectorAll('.sp').forEach(b=>b.onclick=()=>G&&setSpeed(+b.dataset.s));
+$('bHold').onclick=doHold;$('bMerge').onclick=doMerge;$('bSplit').onclick=doSplit;$('bAid').onclick=()=>askAid();
+$('bHelp').onclick=()=>openHow();$('bHowOk').onclick=()=>closeHow();
+function openHow(){$('how').style.display='flex';if(G)G.modal=G.modal||'how';}
+function closeHow(){$('how').style.display='none';if(G&&G.modal==='how')G.modal=null;save.seen=2;persist();}
+let subject='free',genBusy=false;const NOTES={free:'Free play: no questions.',precalc:'Pre-Calc: press Q / 援 to answer a question — right answers bring reinforcements or rally your army.',spanish:'Spanish: press Q / 援 to answer a question — right answers bring reinforcements or rally your army.'};
+document.querySelectorAll('.subjB').forEach(b=>b.onclick=()=>{subject=b.dataset.s;document.querySelectorAll('.subjB').forEach(x=>x.classList.toggle('on',x===b));$('subjNote').textContent=NOTES[subject];});
+document.querySelectorAll('.dfB').forEach(b=>b.onclick=()=>{curDiff=b.dataset.d;document.querySelectorAll('.dfB').forEach(x=>x.classList.toggle('on',x===b));});
+$('scg').innerHTML=SCEN.map((s,i)=>`<button class="btn scB${i?'':' on'}" data-i="${i}"><b class="kj">${s.jp}</b> ${s.name}<br><small>${s.year} · ${CLANS[s.pc].jp} vs ${CLANS[s.ec].jp} · ${WXN[s.weather]}</small></button>`).join('');
+function pickScen(i,cb){document.querySelectorAll('.scB').forEach(x=>x.classList.toggle('on',+x.dataset.i===i));$('scDesc').textContent=SCEN[i].desc;
+ if(SC===SCEN[i]){if(cb)cb();return;}genBusy=true;$('loadNote').textContent='Painting the battlefield…';
+ setTimeout(()=>{genMap(SCEN[i]);genBusy=false;$('loadNote').textContent='Right-click to command · Space to pause';if(cb)cb();},30);}
+document.querySelectorAll('.scB').forEach(b=>b.onclick=()=>pickScen(+b.dataset.i));
+function startGame(){if(!terr||genBusy)return;Music.unlock();newGame(subject);$('menu').style.display='none';$('end').style.display='none';$('top').style.display='flex';$('mini').style.display='block';setSpeed(1);$('bPause').textContent='⏸';
+ $('pName').textContent=CLANS[SC.pc].jp;$('eName').textContent=CLANS[SC.ec].jp;$('eName').style.color=SIDEL[1];
+ music('map');updMusBtns();updSel();closeRecruit();toast(`${SC.jp} ${SC.name}: ${SC.desc.split('.')[0]}.`);if(save.seen!==2)openHow();}
+$('bStart').onclick=startGame;$('bAgain').onclick=startGame;
+$('bMenu').onclick=()=>{$('end').style.display='none';$('top').style.display='none';$('selp').style.display='none';$('mini').style.display='none';closeRecruit();$('menu').style.display='flex';G=null;units=[];music('title');};
+
+// ===================== STUDY (optional) =====================
+let curQ=null;const DECK={};
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function askAid(){if(!G||G.subject==='free'||G.aidCD>0||G.modal||G.over)return;const bank=G.subject==='spanish'?Q_SPANISH:Q_PRECALC;
+ if(!DECK[G.subject]||!DECK[G.subject].length)DECK[G.subject]=shuffle(bank.map((_,i)=>i));const q=bank[DECK[G.subject].pop()];
+ const ch=q.c?shuffle(q.c.map((s,i)=>({s,ok:i===0}))):null;curQ={q,ch,done:false};G.modal='q';
+ $('qhead').innerHTML=`<i class="ik r">援</i>Call for aid · ${q.t}`;$('qtext').innerHTML=q.q;$('fb').innerHTML='';
+ $('qin').innerHTML=ch?`<div class="choices">${ch.map((c,i)=>`<button class="btn choice" data-i="${i}">${'ABCD'[i]}. ${c.s}</button>`).join('')}</div>`:`<input id="num" placeholder="Type a number (fractions OK), Enter"><button class="btn" id="numSub">Submit</button>`;
+ $('qov').style.display='flex';document.querySelectorAll('.choice').forEach(b=>b.onclick=()=>answer(+b.dataset.i));const n=$('num');if(n){setTimeout(()=>n.focus(),30);$('numSub').onclick=()=>answer();}}
+function qKey(e){if(!curQ)return;if(curQ.done){if(e.key==='Enter'||e.key==='Escape'){const b=document.querySelector('#fb .btn');if(b)b.click();}return;}
+ if(curQ.ch){const i='abcd1234'.indexOf(e.key.toLowerCase());if(i>=0)answer(i%4);}else if(e.key==='Enter')answer();}
+function answer(i){if(!curQ||curQ.done)return;const q=curQ.q;let ok;
+ if(curQ.ch){if(!curQ.ch[i])return;ok=curQ.ch[i].ok;document.querySelectorAll('.choice').forEach((b,j)=>{b.disabled=true;if(curQ.ch[j].ok)b.classList.add('right');else if(j===i)b.classList.add('wrong');});}
+ else{const raw=($('num').value||'').trim().replace(/−/g,'-');if(!raw)return;const m=raw.replace(/\s/g,'').match(/^(-?\d*\.?\d+)\/(-?\d*\.?\d+)$/);const v=m?parseFloat(m[1])/parseFloat(m[2]):Number(raw);ok=Number.isFinite(v)&&Math.abs(v-q.n)<1e-6;}
+ curQ.done=true;G.qa++;if(ok)G.qc++;G.aidCD=ok?60:30;
+ $('fb').innerHTML=(ok?`<div class="good">✔ Correct! Choose your reward:</div>`:`<div class="bad">✘ Not quite. Answer: ${q.c?q.c[0]:q.n}</div>`)+`<div style="color:var(--mut);margin-top:6px">${q.e||''}</div><div style="margin-top:10px">`+
+  (ok?`<button class="btn on" id="rwR">援 Reinforcements</button> <button class="btn" id="rwM">鼓 Rally (+35 morale)</button>`:`<button class="btn on" id="rwC">Continue [Enter]</button>`)+'</div>';
+ if(ok){$('rwR').onclick=()=>{if(!spawn(0))toast('Army is at full size');closeQ();};$('rwM').onclick=()=>{for(const u of units)if(u.side===0){u.mor=Math.min(100,u.mor+35);if(u.rout&&u.mor>=45){u.rout=false;u.path=[];}}toast('War drums! Morale rallies 鼓');closeQ();};}
+ else $('rwC').onclick=closeQ;}
+function closeQ(){curQ=null;$('qov').style.display='none';if(G)G.modal=null;}
+
+// ===================== LOOP =====================
+let lastT=performance.now(),hudT=0;
+function frame(now){const rdt=Math.min(0.05,(now-lastT)/1000);lastT=now;
+ if(G){if(!G.paused&&!G.modal&&!G.over){let left=rdt*G.speed;while(left>1e-6){const d=Math.min(0.05,left);step(d);left-=d;}}
+  const ps=600/cam.z*rdt;if(keys.ArrowLeft)cam.x-=ps;if(keys.ArrowRight)cam.x+=ps;if(keys.ArrowUp)cam.y-=ps;if(keys.ArrowDown)cam.y+=ps;clampCam();
+  musLogic(G.paused?0:rdt*G.speed);hudT-=rdt;if(hudT<=0){hudT=0.25;hud();}}
+ else if(terr){cam.z=minZ();cam.x+=rdt*8;if(cam.x>W-VW/cam.z)cam.x=0;clampCam();}
+ render();requestAnimationFrame(frame);}
+addEventListener('resize',resize);resize();
+setTimeout(()=>{const t0=performance.now();genMap(SCEN[0]);$('scDesc').textContent=SCEN[0].desc;window.__genMs=Math.round(performance.now()-t0);$('loadNote').textContent='Right-click to command · Space to pause';music('title');},30);
+requestAnimationFrame(frame);
+// test/automation hook
+window.SW={get G(){return G;},get units(){return units;},get sets(){return SETS;},step(sec){let n=Math.round(sec/0.05);while(n-->0&&G&&!G.over)step(0.05);},orderMove,orderAttack,orderPath,setSel,get sel(){return sel;},cam,toW,T,tAt,recruit,SCEN,
+ get SC(){return SC;},get busy(){return genBusy;},pick:pickScen,mkUnit,step,get FX(){return FX;}};
+</script>
+<div id="demo-pad"><button type="button" data-k="ArrowLeft">←</button><button type="button" data-k="ArrowUp">↑</button><button type="button" data-k="ArrowDown">↓</button><button type="button" data-k="ArrowRight">→</button><button type="button" data-k="h">Hold</button><button type="button" data-k="r">Recruit</button></div>
+<script>
+(function(){
+  var pad=document.getElementById('demo-pad');
+  if(!pad)return;
+  function fire(type,key,shift){
+    document.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
+    window.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
+  }
+  var held=null;
+  function down(ev){
+    var b=ev.target.closest('button[data-k]'); if(!b)return;
+    ev.preventDefault();
+    held=b; fire('keydown', b.getAttribute('data-k'), b.hasAttribute('data-shift'));
+  }
+  function up(ev){
+    if(!held)return;
+    fire('keyup', held.getAttribute('data-k'), held.hasAttribute('data-shift'));
+    held=null;
+  }
+  pad.addEventListener('pointerdown',down);
+  addEventListener('pointerup',up);
+  addEventListener('pointercancel',up);
+})();
+</script>
+</body></html>

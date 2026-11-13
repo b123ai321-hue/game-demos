@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Ash Hollow — watch a people invent themselves</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+
+#demo-pad{position:fixed;left:8px;right:8px;bottom:8px;z-index:9999;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;pointer-events:none;touch-action:manipulation}
+#demo-pad button{pointer-events:auto;touch-action:manipulation;min-width:44px;min-height:44px;padding:8px 10px;font:16px/1 system-ui,-apple-system,sans-serif;background:#000000bb;color:#fff;border:1px solid #ffffff55;border-radius:8px}
+html,body{touch-action:manipulation}
+
+html,body{margin:0;height:100%;background:#1b1712;overflow:hidden;font:13px/1.35 system-ui,-apple-system,Segoe UI,sans-serif;color:#f1e6d2}
+canvas{display:block}
+#top{position:fixed;top:0;left:0;right:0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 12px;background:linear-gradient(#20180fee,#20180f00);pointer-events:none}
+#top .t{font-weight:800;letter-spacing:.6px;color:#ffe2b0}
+.pill{background:#00000066;border:1px solid #ffffff22;border-radius:12px;padding:3px 10px;white-space:nowrap}
+#age{color:#ffcf7a;font-weight:700}
+#lorebar{width:110px;height:7px;background:#0007;border-radius:4px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:6px}
+#lorefill{height:100%;width:0;background:linear-gradient(90deg,#b8622a,#ffd27a);display:block}
+#bar{position:fixed;bottom:10px;left:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+button{background:#3a2c1f;color:#f1e6d2;border:1px solid #6b5238;border-radius:6px;padding:6px 10px;font:inherit;cursor:pointer}
+button:hover{background:#4a3828}
+button.on{background:#7a4a20;border-color:#ffb35c}
+button.quiet{background:transparent;border-color:#ffffff22;opacity:.7;font-size:12px;padding:5px 8px}
+button:disabled{opacity:.35;cursor:default}
+#side{position:fixed;top:46px;right:10px;width:262px;display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 60px);overflow:auto}
+.card{background:#1f1811e6;border:1px solid #5a4430;border-radius:8px;padding:8px 10px}
+.card h3{margin:0 0 5px;font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:#d9a25e}
+#log div{margin:2px 0;font-size:12px;opacity:.92}
+#log div b,#realm b{color:#ffcf7a;font-weight:600}
+.meter{height:5px;background:#0007;border-radius:3px;margin:1px 0 5px}
+.meter i{display:block;height:100%;border-radius:3px}
+.lbl{display:flex;justify-content:space-between;font-size:11px;opacity:.85}
+#beliefs div,#inv div{font-size:12px;margin:3px 0}
+#beliefs i,#inv i{opacity:.7}
+#hint{position:fixed;bottom:12px;right:12px;font-size:11px;opacity:.55;text-align:right;pointer-events:none}
+#banner{position:fixed;top:24%;left:0;right:0;text-align:center;pointer-events:none;opacity:0;transition:opacity .8s}
+#banner .a{font-size:34px;font-weight:800;color:#ffd27a;text-shadow:0 2px 10px #000}
+#banner .b{font-size:15px;color:#f1e6d2;text-shadow:0 1px 6px #000}
+#caption{position:fixed;top:52px;left:50%;transform:translateX(-50%);max-width:min(560px,60vw);text-align:center;background:#120d08d9;border:1px solid #8a6a40;border-radius:10px;padding:7px 14px;font-size:14px;opacity:0;transition:opacity .5s;pointer-events:none}
+#caption small{display:block;font-size:11px;opacity:.7;margin-top:2px}
+#paused{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px;font-weight:800;letter-spacing:6px;color:#ffffffcc;text-shadow:0 2px 8px #000;display:none;pointer-events:none}
+#wm{position:fixed;inset:0;background:#0e0b08f2;display:none}
+#wm canvas{position:absolute;inset:0}
+#wmside{position:absolute;top:12px;right:12px;width:300px;max-height:calc(100vh - 24px);overflow:auto}
+#wmtitle{position:absolute;top:12px;left:16px;font-size:18px;font-weight:800;color:#ffd27a;text-shadow:0 2px 6px #000}
+#wmtitle small{display:block;font-size:12px;font-weight:400;color:#f1e6d2;opacity:.75}
+#wmclose{position:absolute;bottom:14px;left:16px}
+#wmideas{position:absolute;bottom:14px;left:230px}
+.fac{display:flex;gap:6px;align-items:flex-start;margin:4px 0;font-size:12px}
+.sw{width:11px;height:11px;border-radius:3px;margin-top:2px;flex:none}
+</style></head>
+<body>
+<canvas id="c"></canvas>
+<div id="top">
+  <span class="t">ASH HOLLOW</span>
+  <span class="pill"><span id="age">Bare Hands</span> <span id="agesub" style="opacity:.7"></span><span id="lorebar"><span id="lorefill"></span></span></span>
+  <span class="pill" id="gov">Band</span>
+  <span class="pill" id="clock">Early Autumn · 12,000 BCE</span>
+  <span class="pill" id="speech">Speech: none</span>
+  <span class="pill" id="pop">People 4</span>
+</div>
+<div id="caption"></div>
+<div id="side">
+  <div class="card"><h3>Watching</h3><div id="sel"></div></div>
+  <div class="card"><h3>The people</h3><div id="realm"></div></div>
+  <div class="card"><h3>Inventions</h3><div id="inv"></div></div>
+  <div class="card"><h3>Crafting &amp; resources</h3><div id="craft"></div></div>
+  <div class="card"><h3>Beliefs</h3><div id="beliefs"></div></div>
+  <div class="card"><h3>Memory</h3><div id="log"></div></div>
+</div>
+<div id="bar">
+  <button id="bPause" title="Space">⏸ Pause</button>
+  <button id="bSpeed" title="keys 1–7: 1× 2× 4× 8× 16× 25× 50×">Speed 1×</button>
+  <button id="bDir" class="on" title="C — auto camera follows interesting moments">🎥 Director on</button>
+  <button id="bWorld" title="M" disabled>🗺 World map</button>
+  <button id="bWatch" title="V — cycle between peoples · H home" disabled>👁 Watch another people</button>
+  <button id="bNew" class="quiet" title="Erase the saved world and start again from 4 people">✦ New world</button> <span id="saved" style="font-size:11px;opacity:.6;margin-left:6px"></span>
+  <button id="bPred" class="quiet" title="Optional. P drops one at the forest edge; or click this, then click the land">🐾 Loose a Gloamjaw (optional)</button>
+  <button id="bStranger" class="quiet" title="X — a stranger from a far continent brings a breakthrough to the people you are watching. At most once every 3,000 years.">🧭 A stranger (X)</button>
+</div>
+<div id="hint">Sit back — the camera follows what matters.<br>Drag / wheel / click a person to look yourself · Space pause · C director · V watch another people · H home</div>
+<div id="banner"><div class="a" id="ba"></div><div class="b" id="bb"></div></div>
+<div id="paused">PAUSED</div>
+<div id="visiting" style="display:none;position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#1b1712e6;border:1px solid #8a6a40;color:#f1e6d2;padding:6px 12px;border-radius:8px;font:13px system-ui;z-index:5"></div>
+<div id="wm"><canvas id="wmc"></canvas><div id="wmtitle">The Known World<small id="wmsub"></small></div>
+  <div id="wmside" class="card"><h3>Peoples &amp; realms</h3><div id="wmleg"></div></div>
+  <button id="wmclose">← Back to Ash Hollow (M)</button><button id="wmideas" title="Colour the world by the ideas each people holds (I)">💡 Ideas (I)</button></div>
+<script src="mind.js"></script>
+<script src="sim.js"></script>
+<script src="world.js"></script>
+<script src="diplomacy.js"></script>
+<script src="ripples.js"></script>
+<script src="thought.js"></script>
+<script src="disasters.js"></script>
+<script src="stranger.js"></script>
+<script src="visit.js"></script>
+<script src="save.js"></script>
+<script src="render.js"></script>
+<div id="demo-pad"><button type="button" data-k="w">W</button><button type="button" data-k="a">A</button><button type="button" data-k="s">S</button><button type="button" data-k="d">D</button><button type="button" data-k="+">+</button><button type="button" data-k="-">−</button></div>
+<script>
+(function(){
+  var pad=document.getElementById('demo-pad');
+  if(!pad)return;
+  function fire(type,key,shift){
+    document.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
+    window.dispatchEvent(new KeyboardEvent(type,{key:key,bubbles:true,cancelable:true,shiftKey:!!shift}));
+  }
+  var held=null;
+  function down(ev){
+    var b=ev.target.closest('button[data-k]'); if(!b)return;
+    ev.preventDefault();
+    held=b; fire('keydown', b.getAttribute('data-k'), b.hasAttribute('data-shift'));
+  }
+  function up(ev){
+    if(!held)return;
+    fire('keyup', held.getAttribute('data-k'), held.hasAttribute('data-shift'));
+    held=null;
+  }
+  pad.addEventListener('pointerdown',down);
+  addEventListener('pointerup',up);
+  addEventListener('pointercancel',up);
+})();
+</script>
+</body></html>
